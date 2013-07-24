@@ -1,0 +1,32 @@
+# no include ../bochsrc.default
+  
+# Объем памяти который будет размещен на нашей виртуальной
+# машине
+megs: 64
+
+# Используем для дискеты имя нашего образа
+# floppya: 1_44=boot.bin, status=inserted
+# floppya: 1_44=floppy.img, status=inserted
+#ata0-master: type=disk, path=floppy.img, cylinders=1000, heads=16, spt=63
+ata0-master: type=disk, path="disk.img", mode=flat, cylinders=203, heads=16, spt=63
+
+# Назначаем устройство загрузки
+# boot: a
+boot: disk
+
+# Включаем отладку
+magic_break: enabled=1
+
+#floppy_bootsig_check: disabled=1
+
+# Выбираем модуль отображения
+display_library: sdl
+
+# Включаем gdb stub (ненавижу его, но тупые мейнтейнерыубунту не оставили выбора)
+# gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
+
+# Заменим ненавистную строчку про AMD
+cpuid: vendor_string=GenuineIntel
+
+# Включаем поддержку SMP
+cpu: count=4
