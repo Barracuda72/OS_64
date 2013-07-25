@@ -1,16 +1,14 @@
 TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
-CFLAGS:=-I. -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel
-CPPFLAGS:=-I.
+CFLAGS:=-m64 -I. -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel
+CPPFLAGS:=-m64 -I.
 OBJECTS:= ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o page.o phys.o #start.o
 
 PREFIX:=x86_64-linux-gnu
-# AS:=$(PREFIX)-as -g
-AS:=as -g
-CC:=$(PREFIX)-gcc
-# LD:=$(PREFIX)-ld
+AS:=as -g --64
+CC:=gcc
 LD:=ld
-RANLIB:=$(PREFIX)-ranlib
+RANLIB:=ranlib
 
 #$(TARGET): $(OBJECTS)
 #	gcc ${CFLAGS} -c -o ktty.o ktty.c
