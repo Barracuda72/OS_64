@@ -6,6 +6,7 @@
 #include <intr.h>
 #include <smp.h>
 #include <phys.h>
+#include <page.h>
 
 #include <debug.h>
 
@@ -39,6 +40,10 @@ long kernel_start()
 	extern unsigned long kernel_end;
 	unsigned long pool = &kernel_end;
 	mem_init(pool, 0);	// TODO: Исправить!
+
+	unsigned char *new_video = 0xFFFFFFFFC0112000;
+	mount_page(0xB8000, new_video);
+	new_video[0] = 'T';
 	
 	for(;;) asm("hlt");
 	return 0;

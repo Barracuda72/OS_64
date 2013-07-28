@@ -12,7 +12,7 @@ struct _pde_pte_desc	//Структура, описывающая дескрип
         unsigned long cache_enable : 1;	// Кешировние разрешено/запрещено
         unsigned long wasaccess : 1;	// К странице было обращение
         unsigned long waswritten : 1;	// В страницу была произведена запись
-        unsigned long bigpage : 1;	// "Болшая" страница
+        unsigned long bigpage : 1;	// "Большая" страница
         unsigned long globalpage : 1;	// Глобальная страница - не выгружается из кеша TLB при перезагрузке CR3 (PDBR)
         unsigned long reserved : 3;	// Зарезервировано для ОС
         unsigned long address : 40;	// Физический адрес страницы

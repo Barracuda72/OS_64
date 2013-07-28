@@ -73,6 +73,15 @@ void GDT_init(void)
 	g_gdtr[0]=(((unsigned long)GDT_addr)<<16)|0xFFFF;
 	g_gdtr[1]=(((unsigned long)GDT_addr)>>48)&0xFFFF;
 	asm("lgdt g_gdtr");
+	// Заменим значения в сегментных регистрах (там после GRUB остался мусор)
+	asm(" \n \
+		mov $0x10, %%ax\n \
+		mov %%ax, %%ds \n \
+		mov %%ax, %%ss \n \
+		mov %%ax, %%es \n \
+		mov %%ax, %%gs \n \
+		mov %%ax, %%fs \n \
+	":::"rax");
 	//asm("lgdt %0"::"a"(g_gdtr));
 	//flush_cs();
 }

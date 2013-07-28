@@ -86,22 +86,22 @@ void free_page(void *page)
 
 void mount_page_t(void *phys_addr)
 {
-	printf("Mount %l\n", (unsigned long)phys_addr);
+	printf("Mount_t: %l\n", (unsigned long)phys_addr);
 	// Монтирует страницу на временный адрес
 	kernel_pt[0] = calc_page((unsigned long)phys_addr);
 	unsigned long inv_addr = TMP_MOUNT_ADDR; 
-	/*asm("mov %0, %%rax\n \
-	     invlpg (%%rax)"::"m"(inv_addr));*/
-	asm("mov %cr3, %rax\n mov %rax, %cr3");	//HACK
+	asm("mov %0, %%rax\n \
+	     invlpg (%%rax)"::"m"(inv_addr));
+	//asm("mov %cr3, %rax\n mov %rax, %cr3");	//HACK
 }
 
 void umount_page_t()
 {
 	kernel_pt[0].h = 0;
 	unsigned long inv_addr = TMP_MOUNT_ADDR; 
-	/*asm("mov %0, %%rax\n \
-	     invlpg (%%rax)"::"m"(inv_addr));*/
-	asm("mov %cr3, %rax\n mov %rax, %cr3");	//HACK
+	asm("mov %0, %%rax\n \
+	     invlpg (%%rax)"::"m"(inv_addr));
+	//asm("mov %cr3, %rax\n mov %rax, %cr3");	//HACK
 }
 	
 void mount_page(void *phys_addr, void *log_addr)
@@ -111,6 +111,7 @@ void mount_page(void *phys_addr, void *log_addr)
 	pte_desc volatile * volatile p = (pte_desc *)TMP_MOUNT_ADDR;
 
 	mount_page_t((unsigned long)PML4);
+	printf("PML4: %d\n", addr.l.pml4);
 	pte_desc _p = p[addr.l.pml4];
 	printf("P is %l\n", _p.h);
 	BREAK();
@@ -153,7 +154,7 @@ void mount_page(void *phys_addr, void *log_addr)
 
 }
 
-void page_init(unsigned long *last)
+void page_init(unsigned long *last_phys_page)
 {
 	/*
 		!!!
@@ -161,35 +162,54 @@ void page_init(unsigned long *last)
 		поскольку пока включена и идентичная адресация также
 		!!!
 	*/
+
+	/*
+		CAUTION!
+		Pointer ariphmetic!
+		last_p == address of variable that stores address of last phys page
+		last == address of last phys page
+		!!!
+	*/
+        unsigned long *last = (unsigned long *)*last_phys_page;
 	// Временно установим PT ядра на старый адрес
 	kernel_pt = 0xD000;
-	PML4 = *last;
+	PML4 = last;
 	
 	/* PML4 */
-	last[511] = (calc_page((*last) + 0x1000)).h;
+	last[511] = (calc_page(last + 0x200)).h;
 	printf("1 = %l\n", last[511]);
-	*last += 0x1000;
+	last += 0x200;	// 0x1000 / sizeof(unsigned long)
 	/* PDP */
-	last[511] = (calc_page((*last) + 0x1000)).h;
+	last[511] = (calc_page(last + 0x200)).h;
 	printf("2 = %l\n", last[511]);
-	*last += 0x1000;
+	last += 0x200;
 	/* PD */
-	last[0] = (calc_page((*last) + 0x1000)).h;
+	last[0] = (calc_page(last + 0x200)).h;
 	printf("3 = %l\n", last[0]);
-	*last += 0x1000;
+	last += 0x200;
+	BREAK();
 	/* PT */
 	unsigned long i;
 	for(i = 0; i < 0x200000; i += 0x1000)
-		mount_page(i, 0xFFFFFFFFC0000000|i);
+	{
+	//	mount_page(i, 0xFFFFFFFFC0000000+i);
+		last[i>>12] = (calc_page(i)).h;
+	}
 
 	// Установим новую Kernel PT
-	kernel_pt = (pte_desc *)((*last) | 0xFFFFFFFFC0000000);
-	*last += 0x1000;
+	kernel_pt = (pte_desc *)(((unsigned long)last) | 0xFFFFFFFFC0000000);
+	last += 0x200;
 
 	intr_disable();	//Отключим прерывания
-	//asm("mov %0, %%cr3"::"a"((unsigned long)PML4));	//Загрузим PML4
+	BREAK();
+	asm("	movq $0x000ffffffffff000, %%rax \n \
+		andq %%rax, %0 \n \
+		mov %0, %%cr3"
+	::"r"((unsigned long)PML4):"rax");	//Загрузим PML4
 	BREAK();
 	intr_enable();
+
+	*last_phys_page = last;
 
 	printf("Pagination enabled!\n");
 }

@@ -2,6 +2,7 @@
 #include <timer.h>
 #include <kbd.h>
 #include <pagefault.h>
+#include <debug.h>
 
 #define PIC1 0x20
 #define PIC2 0xA0
@@ -142,7 +143,7 @@ void intr_init()
 	//IDT_addr = (char *)IDT_rsrvd;
 	s_intr_install(0x20, &timer_intr, INTR_PRESENT|INTR_INTR_GATE);
 	s_intr_install(0x21, &kbd_intr, INTR_PRESENT|INTR_INTR_GATE);
-	//s_intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE);
+	s_intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE);
 	intr_setup();
 
 	intr_enable();
