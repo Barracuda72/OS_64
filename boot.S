@@ -36,7 +36,6 @@ movl    $(stack + STACK_SIZE), %esp
  * Сигнатура multiboot - eax
  * /
 pushl   %ebx
-pushl   %eax
 
 /* 
    Отображаем первые два мегабайта один-в-один, так что мы можем использовать память, будто и нет никакой страничной адресации
@@ -180,6 +179,8 @@ mov %ebx, %cr0
 
 lgdt gdtpointer	/* Load 80-bit gdt pointer below */
 //ljmp $gdtcode, $startLongMode	/* Load CS with 64-bit segment and flush the instruction cache */
+// Восстановим адрес multiboot-структуры
+popl %edi
 ljmp $8, $startLongMode
 
 .code64
@@ -189,7 +190,6 @@ cli	/* Interrupts are disabled - no IDT set up */
 
 // Корректируем стек
 or $0xFFFFFFFFC0000000, %rsp
-
 /* Вызываем главную функцию. */
 call    kernel_start
 

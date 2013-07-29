@@ -7,11 +7,12 @@
 #include <smp.h>
 #include <phys.h>
 #include <page.h>
+#include <multiboot.h>
 
 #include <debug.h>
 
 /* Главная функция */
-long kernel_start()
+long kernel_start(multiboot_info_t *mb)
 {
 	GDT_init();
 	task_init();
@@ -44,6 +45,7 @@ long kernel_start()
 	unsigned char *new_video = 0xFFFFFFFFC0112000;
 	mount_page(0xB8000, new_video);
 	new_video[0] = 'T';
+	printf("MB = %x\n", mb);
 	
 	for(;;) asm("hlt");
 	return 0;

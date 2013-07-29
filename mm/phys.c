@@ -48,13 +48,13 @@ void clear_phys_map()
 }
 
 void phys_init(unsigned long *last)
-{
+{/*
 	last_phys_page = *last;
-        //pool_addr = (pl_addr>>12)<<12 + 0x1000;
-        //phys_map = (unsigned long *)(pool_addr);
-        //pool_size = pl_size - 0x1000;
+        pool_addr = ((*last)&0xFFFFF000) + 0x1000;
+        phys_map = (unsigned long *)(pool_addr);
+        pool_size = pl_size - 0x1000;
 
-        //printf("pool_addr = 0x%X, size = %X\n", pool_addr, pool_size);
+        printf("pool_addr = 0x%X, size = %X\n", pool_addr, pool_size);
 
-        //clear_phys_map();
+        clear_phys_map();*/
 }
