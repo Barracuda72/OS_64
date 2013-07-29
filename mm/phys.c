@@ -47,11 +47,9 @@ void clear_phys_map()
         for(i = 0; i < (pool_size>>12); i++) phys_map[(i>>5)] |= ((1<<i)%32);
 }
 
-void mem_init(unsigned long pl_addr, unsigned long pl_size)
+void phys_init(unsigned long *last)
 {
-	last_phys_page = (pl_addr&0x0FFFF000) + 0x1000;
-	printf("Last phys page is %l\n", last_phys_page);
-	page_init(&last_phys_page);
+	last_phys_page = *last;
         //pool_addr = (pl_addr>>12)<<12 + 0x1000;
         //phys_map = (unsigned long *)(pool_addr);
         //pool_size = pl_size - 0x1000;

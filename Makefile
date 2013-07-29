@@ -1,8 +1,8 @@
 TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
-CFLAGS:=-m64 -I. -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel
-CPPFLAGS:=-m64 -I.
-OBJECTS:= ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o page.o phys.o #start.o
+CPPFLAGS:=-m64 -I. -I./mm
+CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel
+OBJECTS:= ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o #start.o
 
 PREFIX:=x86_64-linux-gnu
 AS:=as -g --64
@@ -30,7 +30,7 @@ start.o: start.nasm
 	nasm -felf64 start.nasm -o $@
 
 clean:
-	-rm *.o *~ *.bin *.elf
+	-rm ${OBJECTS} *~ *.bin *.elf
 
 disk.img:
 	@echo "BXImage..."
