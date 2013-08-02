@@ -10,7 +10,7 @@ void mem_init(unsigned long pl_addr, unsigned long pl_size)
 	heap = (kmem_header *)(last_page|0xFFFFFFFFC0000000);
         printf("Last phys page is %l\n", last_page);
         page_init(&last_page);
-	phys_init(&last_page);
+	phys_init(&last_page, pl_size);
 }
 
 void *kmalloc(unsigned long size)

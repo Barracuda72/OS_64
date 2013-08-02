@@ -1,7 +1,7 @@
 #ifndef __PHYS_H__
 #define __PHYS_H__
 
-void mem_init(unsigned long pa, unsigned long ps);
+void phys_init(unsigned long *pa, unsigned long ps);
 
 void *alloc_phys_page();
 void free_phys_page(void *p);
