@@ -30,3 +30,6 @@ cpuid: vendor_string=GenuineIntel
 
 # Включаем поддержку SMP
 cpu: count=4
+
+# Включаем вывод отладочных сообщений
+# debug: action=report

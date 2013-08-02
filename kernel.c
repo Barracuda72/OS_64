@@ -45,7 +45,7 @@ long kernel_start(multiboot_info_t *mb)
 	unsigned char *new_video = 0xFFFFFFFFC0112000;
 	mount_page(0xB8000, new_video);
 	new_video[0] = 'T';
-	printf("MB = %x\n", mb);
+	printf("MB = %l\n", mb);
 	
 	for(;;) asm("hlt");
 	return 0;

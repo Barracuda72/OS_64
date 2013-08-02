@@ -2,6 +2,7 @@
 #include <multiboot.h>
 #include <intr.h>
 #include <phys.h>
+#include <klibc.h>
 
 #include <debug.h>
 
@@ -40,7 +41,7 @@ unsigned long find_free_page()
         {
                 if(PML4[i].h == 0) break; //Если попавшийся каталог пуст, выйдем из цикла и создадим в нем хотя бы одну запись
 		//Иначе ищем в нем свободные записи
-                unsigned long *pde = (unsigned long *)(PML4[i].p.address<<12);
+                unsigned long *pde = (unsigned long *)(unsigned long)(PML4[i].p.address<<12);
                 for(j = 0; j<0x1000; j++)
                 {
                         if(pde[j] == 0) return ((i<<22) + (j<<12));
@@ -61,7 +62,7 @@ void *alloc_page()
 	i = (res>>12)&0x3FF;
 	pte_desc page = create_page();
 	//printf("page = %X\n", page);
-	pte_desc *tmp = (pte_desc *)(PML4[j].p.address<<12);
+	pte_desc *tmp = (pte_desc *)(unsigned long)(PML4[j].p.address<<12);
 	tmp[i] = page;
 	return (void *)res;
 }
@@ -77,18 +78,18 @@ void free_page(void *page)
 	pte_desc addr = PML4[i];
 	//printf("addr = %X\n",addr.h);
 
-	pte_desc *p = (addr.p.address<<12);
+	pte_desc *p = (pte_desc *)(unsigned long)(addr.p.address<<12);
 	phys = (p[j].p.address<<12);
 	p[j].h = (unsigned long)0x00000000;
 	//printf("phys = %X\n", phys);
-	free_phys_page(phys);
+	free_phys_page((void *)phys);
 }
 
 void mount_page_t(void *phys_addr)
 {
 	printf("Mount_t: %l\n", (unsigned long)phys_addr);
 	// Монтирует страницу на временный адрес
-	kernel_pt[0] = calc_page((unsigned long)phys_addr);
+	kernel_pt[0] = calc_page(phys_addr);
 	unsigned long inv_addr = TMP_MOUNT_ADDR; 
 	asm("mov %0, %%rax\n \
 	     invlpg (%%rax)"::"m"(inv_addr));
@@ -110,7 +111,7 @@ void mount_page(void *phys_addr, void *log_addr)
 	addr.h = (unsigned long)log_addr;
 	pte_desc volatile * volatile p = (pte_desc *)TMP_MOUNT_ADDR;
 
-	mount_page_t((unsigned long)PML4);
+	mount_page_t((void *)PML4);
 	printf("PML4: %d\n", addr.l.pml4);
 	pte_desc _p = p[addr.l.pml4];
 	printf("P is %l\n", _p.h);
@@ -125,7 +126,7 @@ void mount_page(void *phys_addr, void *log_addr)
 	umount_page_t();
 
 	// Монтируем в пространство ядра PDP
-	mount_page_t(_p.h&0xFFFFFFFFFFFFF000);
+	mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
 	_p = p[addr.l.pdp];
 	if(_p.h == 0)
 	{ 
@@ -136,7 +137,7 @@ void mount_page(void *phys_addr, void *log_addr)
 	umount_page_t();
 
 	// PD
-	mount_page_t(_p.h&0xFFFFFFFFFFFFF000);
+	mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
 	_p = p[addr.l.pd];
 	if(_p.h == 0)
 	{ 
@@ -147,7 +148,7 @@ void mount_page(void *phys_addr, void *log_addr)
 	umount_page_t();
 
 	// PT
-	mount_page_t(_p.h&0xFFFFFFFFFFFFF000);
+	mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
 	p[addr.l.pt] = calc_page(phys_addr);
 
 	umount_page_t();
@@ -166,34 +167,38 @@ void page_init(unsigned long *last_phys_page)
 	/*
 		CAUTION!
 		Pointer ariphmetic!
-		last_p == address of variable that stores address of last phys page
+		last_phys_page == address of variable that stores address of last phys page
 		last == address of last phys page
 		!!!
 	*/
         unsigned long *last = (unsigned long *)*last_phys_page;
 	// Временно установим PT ядра на старый адрес
-	kernel_pt = 0xD000;
-	PML4 = last;
+	kernel_pt = (void *)0xD000;
+	PML4 = (void *)last;
 	
 	/* PML4 */
+	zeromem(last, 4096);
 	last[511] = (calc_page(last + 0x200)).h;
 	printf("1 = %l\n", last[511]);
 	last += 0x200;	// 0x1000 / sizeof(unsigned long)
 	/* PDP */
+	zeromem(last, 4096);
 	last[511] = (calc_page(last + 0x200)).h;
 	printf("2 = %l\n", last[511]);
 	last += 0x200;
 	/* PD */
+	zeromem(last, 4096);
 	last[0] = (calc_page(last + 0x200)).h;
 	printf("3 = %l\n", last[0]);
 	last += 0x200;
-	BREAK();
+	//BREAK();
 	/* PT */
+	zeromem(last, 4096);
 	unsigned long i;
-	for(i = 0; i < 0x200000; i += 0x1000)
+	for(i = 0xB8000; i <= (unsigned long)last; i += 0x1000)
 	{
 	//	mount_page(i, 0xFFFFFFFFC0000000+i);
-		last[i>>12] = (calc_page(i)).h;
+		last[i>>12] = (calc_page((void *)i)).h;
 	}
 
 	// Установим новую Kernel PT
@@ -201,7 +206,7 @@ void page_init(unsigned long *last_phys_page)
 	last += 0x200;
 
 	intr_disable();	//Отключим прерывания
-	BREAK();
+	//BREAK();
 	asm("	movq $0x000ffffffffff000, %%rax \n \
 		andq %%rax, %0 \n \
 		mov %0, %%cr3"
@@ -209,7 +214,7 @@ void page_init(unsigned long *last_phys_page)
 	BREAK();
 	intr_enable();
 
-	*last_phys_page = last;
+	*last_phys_page = (unsigned long)last;
 
 	printf("Pagination enabled!\n");
 }

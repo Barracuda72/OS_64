@@ -11,6 +11,10 @@ void ungetc(char c);
 
 char *strncpy(char *dest, char *src, int len);
 
+void *memset(void *mem, int c, unsigned int n);
+
+void *zeromem(void *mem, unsigned int n);
+
 //Для printf
 #define va_start(v,l) __builtin_va_start(v,l)
 #define va_arg(v,l)   __builtin_va_arg(v,l)

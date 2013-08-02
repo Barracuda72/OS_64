@@ -153,3 +153,16 @@ char *strncpy(char *dest, char *src, int len)
 	return dest;
 }
 
+void *memset(void *s, int c, unsigned int n)
+{ 
+  unsigned char *s1 = s;
+  unsigned int i;
+  for (i = 0; i < n; i++)
+    s1[i] = (char)c;
+  return s;
+}
+
+void *zeromem(void *s, unsigned int n)
+{
+  return memset(s, 0, n);
+}

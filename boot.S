@@ -29,12 +29,10 @@ multiboot_header:
  	 */
 
 multiboot_entry:
-/* Инициализируем стек. * /
-movl    $(stack + STACK_SIZE), %esp
 /* Передаем в ядро 2 параметра из multiboot:
  * Адрес информационной структуры - ebx
  * Сигнатура multiboot - eax
- * /
+ */
 pushl   %ebx
 
 /* 
@@ -187,10 +185,12 @@ ljmp $8, $startLongMode
 
 startLongMode:
 cli	/* Interrupts are disabled - no IDT set up */
-
+/* Инициализируем стек. */
+movq    $(stack + STACK_SIZE), %rsp
 // Корректируем стек
 or $0xFFFFFFFFC0000000, %rsp
 /* Вызываем главную функцию. */
+//xchg %bx, %bx
 call    kernel_start
 
 loop:
