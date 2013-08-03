@@ -35,8 +35,8 @@ cli
  * Адрес информационной структуры - ebx
  * Сигнатура multiboot - eax
  */
-pushl   %ebx
-
+pushl %ebx
+pushl %eax
 /* 
    Отображаем первые два мегабайта один-в-один, так что мы можем использовать память, будто и нет никакой страничной адресации
    Кроме того, нужно отобразить ядро и в верхнюю память (по адресу 0xFFFFFFFFC0000000) 
@@ -177,8 +177,9 @@ mov %ebx, %cr0
 
 lgdt gdtpointer	/* Load 80-bit gdt pointer below */
 //ljmp $gdtcode, $startLongMode	/* Load CS with 64-bit segment and flush the instruction cache */
-// Восстановим адрес multiboot-структуры
-popl %edi
+// Восстановим адрес multiboot-структуры и Magic
+popl %eax
+popl %ebx
 ljmp $8, $startLongMode
 
 .code64
@@ -189,6 +190,11 @@ cli	/* Interrupts are disabled - no IDT set up */
 movq    $(stack + STACK_SIZE), %rsp
 // Корректируем стек
 or $0xFFFFFFFFC0000000, %rsp
+// Передаем параметры от Multiboot-загрузчика
+xor %rsi, %rsi
+xor %rdi, %rdi
+mov %eax, %edi
+mov %ebx, %esi
 /* Вызываем главную функцию. */
 //xchg %bx, %bx
 call    kernel_start

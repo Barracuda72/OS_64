@@ -14,12 +14,13 @@ pte_desc *kernel_pt;	// PT ядра
 pte_desc create_page()
 {
 	pte_desc page;
+	page.h = 0;
 	//printf("create_page 1");
 	page.p.address = ((unsigned long)alloc_phys_page())>>12;
 	//printf("create_page 2");
 	page.p.exists = 1;
 	page.p.writable = 1;
-	//printf("create_page = %X\n", page);
+	printf("create_page = %l\n", page.h);
 	return page;
 }
 
@@ -87,7 +88,7 @@ void free_page(void *page)
 
 void mount_page_t(void *phys_addr)
 {
-	printf("Mount_t: %l\n", (unsigned long)phys_addr);
+	//printf("Mount_t: %l\n", (unsigned long)phys_addr);
 	// Монтирует страницу на временный адрес
 	kernel_pt[0] = calc_page(phys_addr);
 	unsigned long inv_addr = TMP_MOUNT_ADDR; 
@@ -107,14 +108,15 @@ void umount_page_t()
 	
 void mount_page(void *phys_addr, void *log_addr)
 {
+	printf("Mounting 0x%X - 0x%l\n", phys_addr, log_addr);
 	linear addr;
 	addr.h = (unsigned long)log_addr;
 	pte_desc volatile * volatile p = (pte_desc *)TMP_MOUNT_ADDR;
 
 	mount_page_t((void *)PML4);
-	printf("PML4: %d\n", addr.l.pml4);
+	//printf("PML4: %d\n", addr.l.pml4);
 	pte_desc _p = p[addr.l.pml4];
-	printf("P is %l\n", _p.h);
+	//printf("P is %l\n", _p.h);
 	BREAK();
 	// Если необходимый каталог не существует
 	if(_p.h == 0)
@@ -179,17 +181,17 @@ void page_init(unsigned long *last_phys_page)
 	/* PML4 */
 	zeromem(last, 4096);
 	last[511] = (calc_page(last + 0x200)).h;
-	printf("1 = %l\n", last[511]);
+	//printf("1 = %l\n", last[511]);
 	last += 0x200;	// 0x1000 / sizeof(unsigned long)
 	/* PDP */
 	zeromem(last, 4096);
 	last[511] = (calc_page(last + 0x200)).h;
-	printf("2 = %l\n", last[511]);
+	//printf("2 = %l\n", last[511]);
 	last += 0x200;
 	/* PD */
 	zeromem(last, 4096);
 	last[0] = (calc_page(last + 0x200)).h;
-	printf("3 = %l\n", last[0]);
+	//printf("3 = %l\n", last[0]);
 	last += 0x200;
 	//BREAK();
 	/* PT */
@@ -211,7 +213,7 @@ void page_init(unsigned long *last_phys_page)
 		andq %%rax, %0 \n \
 		mov %0, %%cr3"
 	::"r"((unsigned long)PML4):"rax");	//Загрузим PML4
-	BREAK();
+	//BREAK();
 	intr_enable();
 
 	*last_phys_page = (unsigned long)last;
