@@ -2,7 +2,7 @@ TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
 CPPFLAGS:=-m64 -I. -I./mm
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel
-OBJECTS:= ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o #start.o
+OBJECTS:= ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o 
 
 PREFIX:=x86_64-linux-gnu
 AS:=as -g --64
@@ -10,24 +10,8 @@ CC:=gcc
 LD:=ld
 RANLIB:=ranlib
 
-#$(TARGET): $(OBJECTS)
-#	gcc ${CFLAGS} -c -o ktty.o ktty.c
-#	gcc ${CFLAGS} -c -o kernel.o kernel.c
-#	gcc ${CFLAGS} -c -o klibc.o klibc.c
-#	gcc ${CFLAGS} -c -o cpuid.o cpuid.c
-#	gcc ${CFLAGS} -c -o ioport.o ioport.c
-#	gcc ${CFLAGS} -c -o intr.o intr.c
-#	gcc ${CFLAGS} -c -o gdt.o gdt.c
-#	gcc ${CFLAGS} -c -o task.o task.c
-#	nasm -felf64 start.nasm -o start.o
-#	$(LD) -melf_x86_64 --oformat binary -Ttext 0x20000 -o kernel.bin start.o kernel.o ktty.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o -z max-page-size=0x1000
-#	nasm -fbin boot.nasm -o $@
-
 boot.elf: boot.o $(OBJECTS)
 	$(LD) -Tkernel.lds -o $@ boot.o $(OBJECTS) -z max-page-size=0x1000 -m elf_x86_64
-
-start.o: start.nasm
-	nasm -felf64 start.nasm -o $@
 
 clean:
 	-rm ${OBJECTS} *~ *.bin *.elf
