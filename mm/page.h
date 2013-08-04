@@ -45,6 +45,7 @@ typedef union
 void page_init(unsigned long *last);
 
 void mount_page(void *physical, void *logical);
+void umount_page(void *logical);
 void *alloc_page();
 void free_page(void *p);
 

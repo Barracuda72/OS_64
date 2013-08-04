@@ -20,7 +20,7 @@ pte_desc create_page()
 	//printf("create_page 2");
 	page.p.exists = 1;
 	page.p.writable = 1;
-	printf("create_page = %l\n", page.h);
+	//printf("create_page = %l\n", page.h);
 	return page;
 }
 
@@ -117,11 +117,11 @@ void mount_page(void *phys_addr, void *log_addr)
 	//printf("PML4: %d\n", addr.l.pml4);
 	pte_desc _p = p[addr.l.pml4];
 	//printf("P is %l\n", _p.h);
-	BREAK();
+	//BREAK();
 	// Если необходимый каталог не существует
 	if(_p.h == 0)
 	{
-		printf("!\n");
+		//printf("!\n");
 		_p = create_page();
 		p[addr.l.pml4] = _p;
 	}
@@ -132,7 +132,7 @@ void mount_page(void *phys_addr, void *log_addr)
 	_p = p[addr.l.pdp];
 	if(_p.h == 0)
 	{ 
-		printf("! !\n");
+		//printf("! !\n");
 		_p = create_page();
 		p[addr.l.pdp] = _p;
 	}
@@ -143,7 +143,7 @@ void mount_page(void *phys_addr, void *log_addr)
 	_p = p[addr.l.pd];
 	if(_p.h == 0)
 	{ 
-		printf("! ! !\n");
+		//printf("! ! !\n");
 		_p = create_page();
 		p[addr.l.pd] = _p;
 	}
@@ -155,6 +155,51 @@ void mount_page(void *phys_addr, void *log_addr)
 
 	umount_page_t();
 
+}
+
+void umount_page(void *log_addr)
+{
+	//printf("Unmounting 0x%l...", log_addr);
+	linear addr;
+	addr.h = (unsigned long)log_addr;
+	pte_desc volatile * volatile p = (pte_desc *)TMP_MOUNT_ADDR;
+
+	mount_page_t((void *)PML4);
+	//printf("PML4: %d\n", addr.l.pml4);
+	pte_desc _p = p[addr.l.pml4];
+	//printf("P is %l\n", _p.h);
+	//BREAK();
+	umount_page_t();
+	// Если необходимый каталог не существует
+	if(_p.h == 0)
+	{
+		return;
+	}
+
+	// Монтируем в пространство ядра PDP
+	mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
+	_p = p[addr.l.pdp];
+	umount_page_t();
+	if(_p.h == 0)
+	{ 
+		return;
+	}
+
+	// PD
+	mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
+	_p = p[addr.l.pd];
+	umount_page_t();
+	if(_p.h == 0)
+	{ 
+		return;
+	}
+
+	// PT
+	mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
+	p[addr.l.pt].h = p[addr.l.pt].h&0xFFFFFFFFFFFFFFFE;
+
+	umount_page_t();
+	//printf(" done\n");
 }
 
 void page_init(unsigned long *last_phys_page)
