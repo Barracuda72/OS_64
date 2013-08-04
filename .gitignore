@@ -1,0 +1,8 @@
+# Ignore objects
+*.o
+# Ignore preprocessed assembler files
+*.s
+# Ignore images
+*.img
+# Ignore target
+*.elf
