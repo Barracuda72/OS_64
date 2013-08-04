@@ -42,11 +42,6 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 */
 	get_s();
 
-/*
-	ktty_puts("Pagefault emulation...\n");
-	unsigned long *addr = 0xFFFFFFFFF0000000;
-	addr[10] = 5;	// Fault!
-*/
 	smp_init();
 	extern unsigned long kernel_end;
 	unsigned long pool = &kernel_end;
@@ -57,6 +52,11 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 	mount_page(0xB8000, new_video);
 	new_video[0] = 'Q';
 	umount_page(new_video);
+
+	ktty_puts("Pagefault emulation...\n");
+	unsigned long *addr = 0xFFFFFFFFF0000000;
+	addr[10] = 5;	// Fault!
+
 	for(;;) asm("hlt");
 	return 0;
 }
