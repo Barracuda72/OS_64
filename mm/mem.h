@@ -1,6 +1,7 @@
 #ifndef __MEM_H__
 #define __MEM_H__
 
+#include <multiboot.h>
 #define KMEM_MAGIC 0xF0B0DEFC
 
 /*
@@ -23,7 +24,7 @@ typedef struct _kmem_header
   struct _kmem_header *prev;	// Указатель на предыдущий кусочек
 } kmem_header __attribute((packed));
 
-void mem_init(unsigned long pl_addr, unsigned long pl_size);
+void mem_init(unsigned long pl_addr, unsigned long pl_size, multiboot_info_t *m);
 
 void *kmalloc(unsigned long size);
 void kfree(void *p);
