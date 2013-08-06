@@ -28,12 +28,11 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 	}
 
         // Общая информация о памяти
-        printf ("mem_lower = %dKB, mem_upper = %dKB\n",
-               (unsigned int) mb->mem_lower, (unsigned int) (mb->mem_upper));
+        //printf ("mem_lower = %dKB, mem_upper = %dKB\n",
+        //       (unsigned int) mb->mem_lower, (unsigned int) (mb->mem_upper));
 	intr_init();
 
-	ktty_puts("Welcome to 64-bit OS written in C!\n");
-	printf("OS build date %s %s\n", __DATE__, __TIME__);
+	printf("OS_64 build date: %s %s\n", __DATE__, __TIME__);
 	get_s();
 
 	smp_init();
@@ -46,6 +45,11 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 	unsigned long *addr = 0xFFFFFFFFF0000000;
 	addr[10] = 5;	// Fault!
 */
+
+	unsigned char *ch = kmalloc(223);
+	void *gb = kmalloc(0x10000);
+	void *h = kmalloc(0x992871);
+	printf("Allocd: %l, %l, %l\n",ch, gb,h);
 	for(;;) asm("hlt");
 	return 0;
 }
