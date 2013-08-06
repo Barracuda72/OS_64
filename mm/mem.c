@@ -1,7 +1,10 @@
 #include <mem.h>
 #include <multiboot.h>
 
+#include <debug.h>
+
 kmem_header *kernel_heap;
+unsigned long kernel_hlim;
 
 void mem_init(unsigned long pl_addr, unsigned long pl_size, 
 		multiboot_info_t *mb)
@@ -12,9 +15,11 @@ void mem_init(unsigned long pl_addr, unsigned long pl_size,
         //printf("Last phys page is %l\n", last_page);
         page_init(&last_page);
 	phys_init(&last_page, pl_size, mb);
+	// Размер кучи ~1Gb
+	kernel_hlim = 0x40000000 - last_page - sizeof(kmem_header);
 	kernel_heap = (kmem_header *)(last_page|0xFFFFFFFFC0000000);
 	kernel_heap->magic = KMEM_MAGIC;
-	kernel_heap->size = 0x40000000 - last_page; // ~1 GB
+	kernel_heap->size = kernel_hlim; // ~1 GB
 	kernel_heap->free = 1;
 	kernel_heap->prev = 0;
 	printf("Memory init complete\n");
@@ -22,6 +27,44 @@ void mem_init(unsigned long pl_addr, unsigned long pl_size,
 
 void *kmalloc(unsigned long size)
 {
+	BREAK();
+	if ((size == 0) || (size >= kernel_hlim))
+	  return 0;
+
+	kmem_header *head = kernel_heap;
+	while ((head < ((unsigned long)kernel_heap + kernel_hlim)) && 
+		((head->size < size) || !(head->free)))
+	{
+		//printf("MM: chunk %l, s %d - %d\n", 
+		//	head, head->size, head->free);
+		head = (unsigned long)head + head->size + sizeof(kmem_header);
+	}
+
+	// Если кончилась память
+	if (head >= ((unsigned long)kernel_heap + kernel_hlim))
+	  return 0;
+
+	// Если фрагмент можно и нужно разбить на два
+	if (head->size > (size + sizeof(kmem_header)))
+	{
+	  kmem_header *next = (unsigned long)head + size + sizeof(kmem_header);
+	  next->size = head->size - size - sizeof(kmem_header);
+	  next->free = 1;
+	  next->magic = KMEM_MAGIC;
+	  next->prev = head;
+	  // Коррекируем ссылку у бывшего последующим фрагмента
+	  if (((unsigned long)head + head->size) < 
+		((unsigned long)kernel_heap + kernel_hlim))
+	  {
+	    kmem_header *wnext = (unsigned long)head 
+				+ head->size + sizeof(kmem_header);
+	    wnext -> prev = next;
+	  }
+
+	  head -> size = size;
+	}
+	head -> free = 0;
+	return (unsigned long)head + sizeof(kmem_header);
 }
 
 void kfree(void *p)
