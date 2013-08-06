@@ -37,19 +37,19 @@ extern unsigned long kernel_heap;
 
 void _page_fault(unsigned char errcode, unsigned long addr, unsigned long rip)
 {
-        printf("PF: a = %l, f = %b, rip = %l\n", 
-	  addr, errcode, rip);
-
 	// Если произошла ошибка при обращении к несуществующей странице
 	// внутри кучи ядра, выделим страницу
 	if ((addr >= kernel_heap) && 
 	   (!(errcode&PF_PRESENT) && !(errcode&PF_USER)))
 	{
-	  printf("Kernel heap fault, recovering...\n");
+	  //printf("Kernel heap fault, recovering...\n");
 	  mount_page(alloc_phys_page(), addr&0xFFFFFFFFFFFFF000L);
 	  //BREAK();
 	  return;
 	}
+        printf("PF: a = %l, f = %b, rip = %l\n", 
+	  addr, errcode, rip);
+
         for(;;) asm("hlt");
 }
 
