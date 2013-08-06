@@ -75,7 +75,7 @@ void *alloc_phys_page()
         ph_map[i*2 + k] = (itmp|( 1<<j));
 	j = j + k*32;
 #endif
-        printf("Alloc p 0x%l\n", (64*i + j)<<12);
+        //printf("Alloc p 0x%l\n", (64*i + j)<<12);
         //unsigned long *zero = (unsigned long *)(((64*i + j)<<12) + pool_addr);
         //for(k = 0; k<0x400; k++) zero[k] = 0x0000000000000000L;
         //printf("alloc_pp 3");
@@ -87,7 +87,7 @@ void free_phys_page(void *page)
         if(page == 0) return;
         unsigned long pageaddr = (unsigned long)page;
         pageaddr = pageaddr >> 12;
-        printf("1\n");
+        //printf("1\n");
         phys_map[pageaddr>>6] = 
           phys_map[pageaddr>>6]&(~(1<<(pageaddr%64)));
 }
@@ -145,12 +145,12 @@ void phys_init(unsigned long *last, unsigned long size,
 	     // Вот и пусть себе лежит
 	     if (mmap->base_addr == 0x100000)
 		mmap->base_addr = (((*last)>>18) + 1) << 18;
-
+/*
              printf ("base_addr = 0x%l,"
                      " length = 0x%l\n",
                      (unsigned long) mmap->base_addr,
                      (unsigned long) mmap->length);
-
+*/
 	     for (i = (mmap->base_addr >> 18);
 		  i < ((mmap->base_addr + mmap->length) >> 18);
 		  i++)
