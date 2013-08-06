@@ -2,7 +2,7 @@ TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
 CPPFLAGS:=-m64 -I. -I./mm
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel
-OBJECTS:= ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o 
+OBJECTS:= ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o mutex.o
 
 PREFIX:=x86_64-linux-gnu
 AS:=as -g --64
@@ -56,6 +56,10 @@ cp:
 boot.s: boot.S
 
 boot.o: boot.s
+
+mutex.s: mutex.S
+
+mutex.o: mutex.s
 
 dist:
 	@export CD="`echo ${PWD} | sed -e 's|.*/||'`"

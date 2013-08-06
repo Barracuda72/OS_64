@@ -8,6 +8,7 @@
 #include <phys.h>
 #include <page.h>
 #include <multiboot.h>
+#include <mutex.h>
 
 #include <debug.h>
 
@@ -52,6 +53,13 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 	mount_page(0xB8000, new_video);
 	new_video[0] = 'Q';
 	umount_page(new_video);
+
+	unsigned char mtx;
+	mutex_init(&mtx);
+	mutex_lock(&mtx);
+	ktty_puts("Mutex locked!\n");
+	mutex_unlock(&mtx);
+	ktty_puts("Mutex unlocked!\n");
 
 	ktty_puts("Pagefault emulation...\n");
 	unsigned long *addr = 0xFFFFFFFFF0000000;
