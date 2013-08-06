@@ -34,13 +34,6 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 
 	ktty_puts("Welcome to 64-bit OS written in C!\n");
 	printf("OS build date %s %s\n", __DATE__, __TIME__);
-/*	
-	printf("CPU vendor: %s\n", CPU_get_vendor_string());
-	printf("CPU Family: %i\n", CPU_get_info_family());
-	printf("CPU Model: %i\n", CPU_get_info_model());
-	printf("CPU Stepping: %i\n", CPU_get_info_stepping());
-	printf("CPU Type: %i\n", CPU_get_info_type());
-*/
 	get_s();
 
 	smp_init();
@@ -48,23 +41,11 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 	unsigned long pool = &kernel_end;
 	mem_init(pool, (mb->mem_upper>>10)+2, mb);	// TODO: Исправить!
 
-	// Тест сразу подсистем физической и логической памяти
-	unsigned char *new_video = 0x7ABEFAEDF000;	// Совершенно левый адрес
-	mount_page(0xB8000, new_video);
-	new_video[0] = 'Q';
-	umount_page(new_video);
-
-	unsigned char mtx;
-	mutex_init(&mtx);
-	mutex_lock(&mtx);
-	ktty_puts("Mutex locked!\n");
-	mutex_unlock(&mtx);
-	ktty_puts("Mutex unlocked!\n");
-
+/*
 	ktty_puts("Pagefault emulation...\n");
 	unsigned long *addr = 0xFFFFFFFFF0000000;
 	addr[10] = 5;	// Fault!
-
+*/
 	for(;;) asm("hlt");
 	return 0;
 }
