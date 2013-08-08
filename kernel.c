@@ -12,48 +12,50 @@
 
 #include <debug.h>
 
-/* Главная функция */
+/* 
+ * Главная функция 
+ */
 long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 {
-	GDT_init();
-	task_init();
-	ktty_init();
+  GDT_init();
+  task_init();
+  ktty_init();
 
-	if (mb_magic != MULTIBOOT_LOADER_MAGIC)
-	{
-	  printf("Sorry, this kernel relies heavily on information,\n");
-	  printf("provided by Multiboot-compiliant bootloader!\n");
-	  printf("System halted.");
-	  return -1;
-	}
+  if (mb_magic != MULTIBOOT_LOADER_MAGIC)
+  {
+    printf("Sorry, this kernel relies heavily on information,\n");
+    printf("provided by Multiboot-compiliant bootloader!\n");
+    printf("System halted.");
+    return -1;
+  }
 
-        // Общая информация о памяти
-        //printf ("mem_lower = %dKB, mem_upper = %dKB\n",
-        //       (unsigned int) mb->mem_lower, (unsigned int) (mb->mem_upper));
-	intr_init();
+  // Общая информация о памяти
+  //printf ("mem_lower = %dKB, mem_upper = %dKB\n",
+  //       (unsigned int) mb->mem_lower, (unsigned int) (mb->mem_upper));
+  intr_init();
 
-	printf("OS_64 build date: %s %s\n", __DATE__, __TIME__);
-	get_s();
+  printf("OS_64 build date: %s %s\n", __DATE__, __TIME__);
+  get_s();
 
-	smp_init();
-	extern unsigned long kernel_end;
-	unsigned long pool = &kernel_end;
-	mem_init(pool, (mb->mem_upper>>10)+2, mb);	// TODO: Исправить!
+  smp_init();
+  extern unsigned long kernel_end;
+  unsigned long pool = &kernel_end;
+  mem_init(pool, (mb->mem_upper>>10)+2, mb);  // TODO: Исправить!
 
 /*
-	ktty_puts("Pagefault emulation...\n");
-	unsigned long *addr = 0xFFFFFFFFF0000000;
-	addr[10] = 5;	// Fault!
+  ktty_puts("Pagefault emulation...\n");
+  unsigned long *addr = 0xFFFFFFFFF0000000;
+  addr[10] = 5;  // Fault!
 */
 
-	unsigned char *ch = kmalloc(223);
-	void *gb = kmalloc(0x10000);
-	void *h = kmalloc(0x9928);
-	printf("Allocd: %l, %l, %l\n",ch, gb,h);
-        kfree(gb);
-	kfree(ch);
-	kfree(h);
-	for(;;) asm("hlt");
-	return 0;
+  unsigned char *ch = kmalloc(223);
+  void *gb = kmalloc(0x10000);
+  void *h = kmalloc(0x9928);
+  printf("Allocd: %l, %l, %l\n",ch, gb,h);
+  kfree(gb);
+  kfree(ch);
+  kfree(h);
+  for(;;) asm("hlt");
+  return 0;
 }
 

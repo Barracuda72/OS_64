@@ -1,12 +1,10 @@
 #include <gdt.h>
-//#include <page.h>	//FIXME: Подключить страничную память!
 
-//unsigned long *GDT_addr;
-unsigned long GDT_addr[16] = {0};	//FIXME: заменить!
+unsigned long GDT_addr[16] = {0};
 unsigned long g_gdtr[2];
 
 /*************************************************
-	    ВАЖНОЕ ЗАМЕЧАНИЕ
+      ВАЖНОЕ ЗАМЕЧАНИЕ
 
   На самом деле, необходимости в строгой GDT нет.
   Процессор в 64-разрядном режиме ложит кирпич на
@@ -41,90 +39,90 @@ unsigned long g_gdtr[2];
   
 **************************************************/
 
-//extern void flush_cs(void);
-
-//Функция помещает запись в GDT о КОНКРЕТНОМ сегменте
+/*
+ * Помещает запись в GDT о КОНКРЕТНОМ сегменте
+ */
 void GDT_put(unsigned long seg, unsigned long data)
 {
-	GDT_addr[seg] = data;
+  GDT_addr[seg] = data;
 }
 
-//Находит в GDT свободный дескриптор и помещает туда запись о сегменте
+/*
+ * Находит в GDT свободный дескриптор и помещает туда запись о сегменте
+ */
 unsigned int GDT_autoput(unsigned long data)
 {
-	unsigned int seg;
-	for(seg = 1; (seg < 8192)&&(GDT_addr[seg] != 0); seg++);
-	GDT_put(seg, data);
-	return seg;
+  unsigned int seg;
+  for(seg = 1; (seg < 8192)&&(GDT_addr[seg] != 0); seg++);
+  GDT_put(seg, data);
+  return seg;
 }
 
 void GDT_init(void)
-{
-	//Мы работаем уже при включенной страничной адресации
-	//FIXME: заменить!
-	//GDT_addr = (unsigned long *)alloc_phys_page();
-	
-	//Нулевой дескриптор GDT не используется
-	GDT_put(0,0);
-	//Сегмент кода
-	GDT_smartput(1, 0x00000000, 0xFFFFFFFF, SEG_64BIT_CODE | SEG_NOTSYS | SEG_PRESENT | SEG_CODE_EO);
-	//Сегмент данных
-	GDT_smartput(2, 0x00000000, 0xFFFFFFFF, SEG_NOTSYS | SEG_PRESENT | SEG_DATA_RW);
-	g_gdtr[0]=(((unsigned long)GDT_addr)<<16)|0xFFFF;
-	g_gdtr[1]=(((unsigned long)GDT_addr)>>48)&0xFFFF;
-	asm("lgdt g_gdtr");
-	// Заменим значения в сегментных регистрах (там после GRUB остался мусор)
-	asm(" \n \
-		mov $0x10, %%ax\n \
-		mov %%ax, %%ds \n \
-		mov %%ax, %%ss \n \
-		mov %%ax, %%es \n \
-		mov %%ax, %%gs \n \
-		mov %%ax, %%fs \n \
-	":::"rax");
-	//asm("lgdt %0"::"a"(g_gdtr));
-	//flush_cs();
+{  
+  // Нулевой дескриптор GDT не используется
+  GDT_put(0,0);
+  // Сегмент кода ядра
+  GDT_smartput(1, 0x00000000, 0xFFFFFFFF, SEG_64BIT_CODE | SEG_NOTSYS | SEG_PRESENT | SEG_CODE_EO);
+  // Сегмент данных ядра
+  GDT_smartput(2, 0x00000000, 0xFFFFFFFF, SEG_NOTSYS | SEG_PRESENT | SEG_DATA_RW);
+  g_gdtr[0]=(((unsigned long)GDT_addr)<<16)|0xFFFF;
+  g_gdtr[1]=(((unsigned long)GDT_addr)>>48)&0xFFFF;
+  asm("lgdt g_gdtr");
+  // Заменим значения в сегментных регистрах (там после GRUB остался мусор)
+  asm(" \n \
+    mov $0x10, %%ax\n \
+    mov %%ax, %%ds \n \
+    mov %%ax, %%ss \n \
+    mov %%ax, %%es \n \
+    mov %%ax, %%gs \n \
+    mov %%ax, %%fs \n \
+  ":::"rax");
 }
 
-/* Функция берет большую часть некрасивой работы по преобразованию 
-	удобочитаемого представления лимита, базы и флагов в кривое
-	Intelовское */
+/* 
+ * Функция берет большую часть некрасивой работы по преобразованию 
+ * удобочитаемого представления лимита, базы и флагов в кривое
+ * Intel'овское 
+ */
 unsigned int GDT_smartput(unsigned long seg, unsigned long base, unsigned long limit, unsigned long flags)
 {
-	unsigned long data;
-	
-	if(limit>0x000FFFFF)
-	{
-		limit = limit >> 12;
-		flags |= SEG_BIG;
-	}
+  unsigned long data;
+  
+  if(limit>0x000FFFFF)
+  {
+    limit = limit >> 12;
+    flags |= SEG_BIG;
+  }
 
-	//Кошмар просто
-	data = (limit&0x0000FFFF) | ((base<<16)&0xFFFF0000) | ((((base>>16)&0x000000FF)|(base&0xFF000000)|(limit&0x000F0000)|flags) << 32);
-	GDT_put(seg, data);
+  // Кошмар просто
+  data = (limit&0x0000FFFF) | ((base<<16)&0xFFFF0000) | ((((base>>16)&0x000000FF)|(base&0xFF000000)|(limit&0x000F0000)|flags) << 32);
+  GDT_put(seg, data);
 
-	if((flags&SEG_TSS64) == SEG_TSS64)
-	{
-		/*
-			Обрабатываем 64-бит TSS. Для этого нам необходимы два дескриптора:
-			В первом будет лежать оставшаяся часть адреса,
-			во втором - все как обычно
-		*/
-		GDT_put(++seg, base>>32);
-		//base &= 0xFFFFFFFF;
-		seg--;
-	}
+  if((flags&SEG_TSS64) == SEG_TSS64)
+  {
+    /*
+     * Обрабатываем 64-бит TSS. Для этого нам необходимы два дескриптора:
+     * В первом будет лежать оставшаяся часть адреса,
+     * во втором - все как обычно
+     */
+    GDT_put(++seg, base>>32);
+    //base &= 0xFFFFFFFF;
+    seg--;
+  }
 
-	/*if((flags&SEG_TSS64) == SEG_TSS64)
-		return seg-1;
-	else*/
-		return seg;
+  /*if((flags&SEG_TSS64) == SEG_TSS64)
+    return seg-1;
+  else*/
+    return seg;
 }
 
-//Да-да, вы догадались =)
+/* 
+ * Да-да, вы догадались =)
+ */
 unsigned int GDT_smartaput(unsigned long base, unsigned long limit, unsigned long flags)
 {
-	unsigned int seg;
+  unsigned int seg;
         for(seg = 1; (seg < 8192)&&(GDT_addr[seg] != 0); seg++);
         seg = GDT_smartput(seg, base, limit, flags);
         return seg;

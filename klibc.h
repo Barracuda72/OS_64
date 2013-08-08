@@ -15,7 +15,7 @@ void *memset(void *mem, int c, unsigned int n);
 
 void *zeromem(void *mem, unsigned int n);
 
-//Для printf
+// Для printf
 #define va_start(v,l) __builtin_va_start(v,l)
 #define va_arg(v,l)   __builtin_va_arg(v,l)
 #define va_end(v)     __builtin_va_end(v)
@@ -23,3 +23,4 @@ void *zeromem(void *mem, unsigned int n);
 typedef __builtin_va_list va_list;
 
 #endif //__KLIBC_H__
+

@@ -19,10 +19,10 @@
 // Заголовок кусочка памяти в куче
 typedef struct _kmem_header
 {
-  unsigned int magic;	// Магическое число
-  unsigned int size : 31;	// Размер кусочка
+  unsigned int magic;  // Магическое число
+  unsigned int size : 31;  // Размер кусочка
   unsigned int free : 1;
-  struct _kmem_header *prev;	// Указатель на предыдущий кусочек
+  struct _kmem_header *prev;  // Указатель на предыдущий кусочек
 } kmem_header __attribute((packed));
 #pragma pack()
 
@@ -31,3 +31,4 @@ void mem_init(unsigned long pl_addr, unsigned long pl_size, multiboot_info_t *m)
 void *kmalloc(unsigned long size);
 void kfree(void *p);
 #endif //__MEM_H__
+

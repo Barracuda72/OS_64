@@ -12,7 +12,7 @@
 #define PF_WRITE   (1<<1)
 #define PF_USER    (1<<2)
 
-void page_fault(void);	// IRQ handler
+void page_fault(void);  // IRQ handler
 asm("page_fault: \n \
  push %rax \n \
  push %rdi \n \
@@ -37,20 +37,21 @@ extern unsigned long kernel_heap;
 
 void _page_fault(unsigned char errcode, unsigned long addr, unsigned long rip)
 {
-	// Если произошла ошибка при обращении к несуществующей странице
-	// внутри кучи ядра, выделим страницу
-	if ((addr >= kernel_heap) && 
-	   (!(errcode&PF_PRESENT) && !(errcode&PF_USER)))
-	{
-	  //printf("Kernel heap fault, recovering...\n");
-	  mount_page(alloc_phys_page(), addr&0xFFFFFFFFFFFFF000L);
-	  //BREAK();
-	  return;
-	}
-        printf("PF: a = %l, f = %b, rip = %l\n", 
-	  addr, errcode, rip);
+  // Если произошла ошибка при обращении к несуществующей странице
+  // внутри кучи ядра, выделим страницу
+  if ((addr >= kernel_heap) && 
+      (!(errcode&PF_PRESENT) && !(errcode&PF_USER)))
+  {
+    //printf("Kernel heap fault, recovering...\n");
+    mount_page(alloc_phys_page(), addr&0xFFFFFFFFFFFFF000L);
+    //BREAK();
+    return;
+  }
+  
+  printf("PF: a = %l, f = %b, rip = %l\n", 
+         addr, errcode, rip);
 
-        for(;;) asm("hlt");
+  for(;;) asm("hlt");
 }
 
 #endif //__PAGEFAULT_H__

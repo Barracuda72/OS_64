@@ -8,88 +8,75 @@
 .globl  start
 
 start:
-	jmp     multiboot_entry
+  jmp     multiboot_entry
 
 /* Выравниваем заголовок multiboot по границе 4 байт. */
 .align  4
  
 /* Заголовок Multiboot. */
 multiboot_header:
-	/* Сигнатура Multiboot */
-	.long   MULTIBOOT_HEADER_MAGIC
+  /* Сигнатура Multiboot */
+  .long   MULTIBOOT_HEADER_MAGIC
 
-	/* Флаги */
-	.long   MULTIBOOT_HEADER_FLAGS
+  /* Флаги */
+  .long   MULTIBOOT_HEADER_FLAGS
 
-	/* Контрольная сумма */
- 	.long   MULTIBOOT_HEADER_CHKSM
+  /* Контрольная сумма */
+   .long   MULTIBOOT_HEADER_CHKSM
 
- 	/* Так как мы используем ELF, то остальные поля 
- 	 * определять нет необходимости.
- 	 */
+  /* Так как мы используем ELF, то остальные поля 
+   * определять нет необходимости.
+   */
 
 multiboot_entry:
-cld
-cli
+  cld
+  cli
 /* Передаем в ядро 2 параметра из multiboot:
  * Адрес информационной структуры - ebx
  * Сигнатура multiboot - eax
  */
-pushl %ebx
-pushl %eax
+  pushl %ebx
+  pushl %eax
 /*
  * Проверяем, поддерживает ли процессор long mode
  */
-mov $0x80000001, %eax
-cpuid
-and $0x20000000, %edx
-jz no_x86_64
-/* 
-   Отображаем первые два мегабайта один-в-один, так что мы можем использовать память, будто и нет никакой страничной адресации
-   Кроме того, нужно отобразить ядро и в верхнюю память (по адресу 0xFFFFFFFFC0000000) 
-*/
+  mov $0x80000001, %eax
+  cpuid
+  and $0x20000000, %edx
+  jz no_x86_64
 
 /* 
-   Строим таблицы страниц
-   Они будут выглядеть примерно так:
+ * Отображаем первые два мегабайта один-в-один, так что мы можем
+ * использовать память, будто и нет никакой страничной адресации.
+ * Кроме того, нужно отобразить ядро и в верхнюю память (по адресу 
+ * 0xFFFFFFFFC0000000) 
+ */
 
- Последние 4 бита:
+/* 
+
+ Последние 8 бит страницы:
  Бит 0 - Страница существует
  Бит 1 - Запись разрешена
  Бит 2 - Ring 3 имеет доступ к странице
  Бит 3 - Кеширование write through
  Бит 7 - Большая страница
 
- PML4 :
- dq 0x000000000000b00f = 00000000 00000000  00000000 00000000  00000000 00000000  10010000 00001111 
- times 511 dq 0x0000000000000000
-
- PDP : 
- dq 0x000000000000c00f = 00000000 00000000  00000000 00000000  00000000 00000000  10100000 00001111
- times 511 dq 0x0000000000000000
-
- PD : // Покрывает сразу 2 мегабайта -> PT не нужна (уже не покрывает, нужна)
- dq 0x000000000000d00f = 00000000 00000000  00000000 00000000  00000000 00000000  10100000 00001111
- times 511 dq 0x0000000000000000 
-
- PT :
- dq 0x000000000000010f = 00000000 00000000  00000000 00000000  00000000 00000000  00000000 00001111
- times 511 dq 0x0000000000000000 
+ Строим временные таблицы страниц
 
  Для каждой таблицы установим:
  PML4 - 0 и 511
  PDP - 0 и 511
  PD - 0 и 0
 
- На самом деле, надо выделять отдельные PDP и PD для 511 и 510 элементов.
+ На самом деле, надо выделять отдельные записи для 0 и 511 элементов.
  Но так как в оригинальных таблицах эти записи не используются, можно их заюзать.
  В любом случае, это временно - до тех пор, пока страничная адресация не будет
  установлена окончательно
 */
 
-xor %esi, %esi
-xor %edi, %edi
-xor %eax, %eax
+  xor %esi, %esi
+  xor %edi, %edi
+  xor %eax, %eax
 
 /* 
    Базовый адрес для всех таблиц
@@ -99,132 +86,134 @@ xor %eax, %eax
    PT   = 0xD000
 */
 
-mov $0xA000, %di
+  mov $0xA000, %di
 
 /* PML4 */
 // 0 элемент
-mov $0xb00f, %ax
-stosw
+  mov $0xb00f, %ax
+  stosw
 
-xor %ax, %ax
-mov $0x07FB, %cx
-rep stosw
+  xor %ax, %ax
+  mov $0x07FB, %cx
+  rep stosw
 
 // 511 элемент
-mov $0xb00f, %ax
-stosw
+  mov $0xb00f, %ax
+  stosw
 
-xor %ax, %ax
-mov $3, %cx
-rep stosw
+  xor %ax, %ax
+  mov $3, %cx
+  rep stosw
 
 /* PDP */
 // 0 элемент
-mov $0xc00f, %ax
-stosw
+  mov $0xc00f, %ax
+  stosw
 
-xor %ax, %ax
-mov $0x07FB, %cx
-rep stosw
+  xor %ax, %ax
+  mov $0x07FB, %cx
+  rep stosw
 
 // 511 элемент
-mov $0xc00f, %ax
-stosw
+  mov $0xc00f, %ax
+  stosw
 
-xor %ax, %ax
-mov $3, %cx
-rep stosw
+  xor %ax, %ax
+  mov $3, %cx
+  rep stosw
 
 /* PD */
 // 0 элемент
-mov $0xd00f, %ax
-stosw
+  mov $0xd00f, %ax
+  stosw
 
-xor %ax, %ax
-mov $0x07FF, %cx
-rep stosw
+  xor %ax, %ax
+  mov $0x07FF, %cx
+  rep stosw
 
 /* PT */
 /* Первые два мегабайта отображаются здесь */
-mov $0x400, %cx
-xor %eax, %eax
-mov $0xf, %eax
+  mov $0x400, %cx
+  xor %eax, %eax
+  mov $0xf, %eax
 
 loo1:
-mov %eax, (%edi)
-add $4, %edi
-movl $0, (%edi)
-add $4, %edi
-add $0x1000, %eax
-dec %cx
-jnz loo1
+  mov %eax, (%edi)
+  add $4, %edi
+  movl $0, (%edi)
+  add $4, %edi
+  add $0x1000, %eax
+  dec %cx
+  jnz loo1
 
-/* Entering long mode... */
-mov $0xA0, %eax	/* Set PAE and PGE */
-mov %eax, %cr4
-mov $0x0000a000, %edx
+/* Входим в длинный режим... */
+  mov $0xA0, %eax  /* Set PAE and PGE */
+  mov %eax, %cr4
+  mov $0x0000a000, %edx
 
-/* Point CR3 at PML4 */
-mov %edx, %cr3
-mov $0xC0000080, %ecx 	/* Specify EFER MSR */
-rdmsr	
+/* Загружаем в CR3 адрес PML4 */
+  mov %edx, %cr3
+  mov $0xC0000080, %ecx   /* Указываем EFER MSR */
+  rdmsr  
 
-/* Enable long mode */
-or $0x00000100, %eax
-wrmsr
-mov %cr0, %ebx
+/* Включаем длинный режим */
+  or $0x00000100, %eax
+  wrmsr
+  mov %cr0, %ebx
 
-/* Activate long mode */
-or $0x80000001, %ebx
+/* И входим в него */
+  or $0x80000001, %ebx
 
-/* by enabling paging and protection simultaneously */
-mov %ebx, %cr0
+/* одновременно включая защиту и страничную адресацию */
+  mov %ebx, %cr0
 
-//xchg %bx, %bx
-
-lgdt gdtpointer	/* Load 80-bit gdt pointer below */
-//ljmp $gdtcode, $startLongMode	/* Load CS with 64-bit segment and flush the instruction cache */
+  lgdt gdtpointer  /* Загружаем 80-битный указатель на GDT */
 // Восстановим адрес multiboot-структуры и Magic
-popl %eax
-popl %ebx
-ljmp $8, $startLongMode
+  popl %eax
+  popl %ebx
+// Сбрасываем кэш инструкций и помещаем в CS адрес 64-битного
+// сегмента кода
+  ljmp $8, $startLongMode
 
+/*
+ * Вызывается при недоступности 64-битного режима
+ */
 no_x86_64:
-mov $x86_64_err, %esi
-mov $0xB8000, %edi
-mov $52, %ecx
-mov $0x7, %ah
+  mov $x86_64_err, %esi
+  mov $0xB8000, %edi
+  mov $52, %ecx // strlen(x86_64_err)
+  mov $0x7, %ah // = white on black, no flash
 
 loo3:
-movb (%esi), %al
-stosw
-inc %esi
-loop loo3
+  movb (%esi), %al
+  stosw
+  inc %esi
+  loop loo3
 
 loo2:
-hlt
-jmp loo2
+  hlt
+  jmp loo2
 
 .code64
 
 startLongMode:
-cli	/* Interrupts are disabled - no IDT set up */
+/* Отключим прерывания - IDT не установлена */
+  cli
 /* Инициализируем стек. */
-movq    $(stack + STACK_SIZE), %rsp
+  movq    $(stack + STACK_SIZE), %rsp
 // Корректируем стек
-or $0xFFFFFFFFC0000000, %rsp
+  or $0xFFFFFFFFC0000000, %rsp
 // Передаем параметры от Multiboot-загрузчика
-xor %rsi, %rsi
-xor %rdi, %rdi
-mov %eax, %edi
-mov %ebx, %esi
-/* Вызываем главную функцию. */
-//xchg %bx, %bx
-call    kernel_start
+  xor %rsi, %rsi
+  xor %rdi, %rdi
+  mov %eax, %edi
+  mov %ebx, %esi
+/* Вызываем главную функцию ядра. */
+  call    kernel_start
 
 loop:
-hlt
-jmp loop	// Hang up
+  hlt
+  jmp loop  // Hang up
 
 x86_64_err:
 .asciz "You processor are not x86_64 capable! System halted."
@@ -232,19 +221,13 @@ x86_64_err:
 /* Область нашего временного стека. */
 .comm   stack, STACK_SIZE
 
-/* Global Descriptor table */
+/* Временная Global Descriptor Table */
 gdt:
-.quad 0x0000000000000000	/* First descriptor filled with 0 */
-//.equ gdtcode, $ - gdt
-.quad 0x0020980000000000	/* Code */
-//.equ gdtdata, $ - gdt
-.quad 0x0000900000000000	/* Data */
+.quad 0x0000000000000000  /* Первый дескриптор - нулевой */
+.quad 0x0020980000000000  /* Code */
+.quad 0x0000900000000000  /* Data */
 
 gdtpointer:
-//.short $ - gdt - 1	/* 16-bit Base Size (limit) */
-.short 0xFFFF
-.quad gdt	/* 64-bit Base address */
-
-//.globl IDT_rsrvd
-//.comm IDT_rsrvd, PAGE_SIZE
+.short 0xFFFF /* 16-bit Base Size (limit) */
+.quad gdt  /* 64-bit Base address */
 

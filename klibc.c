@@ -97,37 +97,37 @@ void vprintf(const char *fmt, va_list args)
 
       switch (*fmt) {
       case 's':
-	ktty_puts(va_arg(args, char *));
-	break;
-	
+        ktty_puts(va_arg(args, char *));
+        break;
+  
       case 'c':
-	ktty_putc(va_arg(args, unsigned int));
-	break;
-	
+        ktty_putc(va_arg(args, unsigned int));
+        break;
+  
       case 'd':
       case 'i':
-	putdec(va_arg(args, unsigned int));
-	break;
+        putdec(va_arg(args, unsigned int));
+        break;
 
       case 'x':
-	puthex(va_arg(args, unsigned int));
-	break;
-	
+        puthex(va_arg(args, unsigned int));
+        break;
+  
       case 'X':
-	puthexi(va_arg(args, unsigned int));
-	break;
+        puthexi(va_arg(args, unsigned int));
+        break;
 
       case 'l':
-	puthexl(va_arg(args, unsigned long));
-	break;
+        puthexl(va_arg(args, unsigned long));
+        break;
 
       case 'b':
-	putbin(va_arg(args, unsigned int));
-	break;
-
-/*      case 'z':
-	textcolor(va_arg(args,unsigned int));
-	break;
+        putbin(va_arg(args, unsigned int));
+        break;
+/*
+      case 'z':
+        textcolor(va_arg(args,unsigned int));
+        break;
 */
       }
       
@@ -145,12 +145,12 @@ void vprintf(const char *fmt, va_list args)
 
 char *strncpy(char *dest, char *src, int len)
 {
-	int i;
-	for(i = 0; (i < len)&&(src[i] != 0); i++)
-		dest[i] = src[i];
-	for(i; i < len; i++)
-		dest[i] = 0;
-	return dest;
+  int i;
+  for(i = 0; (i < len)&&(src[i] != 0); i++)
+    dest[i] = src[i];
+  for(i; i < len; i++)
+    dest[i] = 0;
+  return dest;
 }
 
 void *memset(void *s, int c, unsigned int n)
@@ -166,3 +166,4 @@ void *zeromem(void *s, unsigned int n)
 {
   return memset(s, 0, n);
 }
+

@@ -1,75 +1,81 @@
 #include <ktty.h>
 
-#define SCREEN_HEIGHT	25
-#define SCREEN_WIDTH	80
-//#define SCREEN_START_COLOUR	0xB8000	//Начало видеопамяти для цветных видеоадаптеров
-#define SCREEN_START_COLOUR 0xFFFFFFFFC00B8000	// 64-bit, да!
-#define SCREEN_START_MONO	0xB0000 //Начало видеопамяти для монохромных адаптеров
-#define SCREEN_SIZE	(SCREEN_HEIGHT*SCREEN_WIDTH)
+#define SCREEN_HEIGHT  25
+#define SCREEN_WIDTH  80
+//#define SCREEN_START_COLOUR  0xB8000  // Начало видеопамяти для цветных видеоадаптеров
+#define SCREEN_START_COLOUR 0xFFFFFFFFC00B8000
+#define SCREEN_START_MONO  0xB0000 //Начало видеопамяти для монохромных адаптеров
+#define SCREEN_SIZE  (SCREEN_HEIGHT*SCREEN_WIDTH)
 
 static unsigned long screen_base = 0;
 static unsigned long screen_pos = 0;
 static unsigned char ktty_attribute = 0x07;
 
-/* Процедура инициализации */
+/* 
+ * Процедура инициализации 
+ */
 void ktty_init(void)
 {
-	//Определяем тип видео
-	//char c = (*(unsigned short *)0x410)&0x30;
-	/*if(c == 0x30) //Монохромный
-		screen_base = SCREEN_START_MONO;
-	else*/	//Цветной
-		screen_base = SCREEN_START_COLOUR;
-	ktty_attribute = 0x07;
-	ktty_clear();
+  // Определяем тип видео
+  //char c = (*(unsigned short *)0x410)&0x30;
+  /*if(c == 0x30) //Монохромный
+    screen_base = SCREEN_START_MONO;
+  else*/  //Цветной
+    screen_base = SCREEN_START_COLOUR;
+  ktty_attribute = 0x07;
+  ktty_clear();
 }
 
-/* Очистка экрана */
+/* 
+ * Очистка экрана 
+ */
 void ktty_clear(void)
 {
-	long i;
-	for(i = 0; i < SCREEN_SIZE*2; i++)
-		*((unsigned char *)(screen_base + i)) = 0x0;
+  long i;
+  for(i = 0; i < SCREEN_SIZE*2; i++)
+    *((unsigned char *)(screen_base + i)) = 0x0;
 
-	screen_pos = 0;
+  screen_pos = 0;
 }
 
-/* Сдвиг экрана вверх */
+/*
+ * Сдвиг экрана вверх 
+ */
 void ktty_shift(void)
 {
-	long i;
-	for(i = 0; i < (SCREEN_SIZE - SCREEN_WIDTH)*2; i++)
-		*((unsigned char *)(screen_base + i)) = *((unsigned char *)(screen_base + i + SCREEN_WIDTH*2));
+  long i;
+  for(i = 0; i < (SCREEN_SIZE - SCREEN_WIDTH)*2; i++)
+    *((unsigned char *)(screen_base + i)) = *((unsigned char *)(screen_base + i + SCREEN_WIDTH*2));
 
-	for(; i < SCREEN_SIZE*2; i++)
-		*((unsigned char *)(screen_base + i)) = 0x0;
+  for(; i < SCREEN_SIZE*2; i++)
+    *((unsigned char *)(screen_base + i)) = 0x0;
 
-	screen_pos = SCREEN_SIZE - SCREEN_WIDTH;
+  screen_pos = SCREEN_SIZE - SCREEN_WIDTH;
 }
 
 void ktty_putc(char c)
 {
-	switch (c) {
-		case '\n':
-			screen_pos += SCREEN_WIDTH;
-			screen_pos -= screen_pos%SCREEN_WIDTH;
-			break;
-		default:
-			*((unsigned char *)(screen_base + screen_pos*2)) = c;
-			*((unsigned char *)(screen_base + screen_pos*2 + 1)) = ktty_attribute;
-			screen_pos++;
-			break;
-	}
-	
-	if(screen_pos >= SCREEN_SIZE) ktty_shift();
+  switch (c) {
+    case '\n':
+      screen_pos += SCREEN_WIDTH;
+      screen_pos -= screen_pos%SCREEN_WIDTH;
+      break;
+    default:
+      *((unsigned char *)(screen_base + screen_pos*2)) = c;
+      *((unsigned char *)(screen_base + screen_pos*2 + 1)) = ktty_attribute;
+      screen_pos++;
+      break;
+  }
+  
+  if(screen_pos >= SCREEN_SIZE) ktty_shift();
 }
 
 void ktty_puts(char *s)
 {
-	while(*s)
-	{
-		ktty_putc(*s);
-		*s++;
-	}
+  while(*s)
+  {
+    ktty_putc(*s);
+    *s++;
+  }
 }
 
