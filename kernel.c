@@ -18,7 +18,7 @@
 long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 {
   GDT_init();
-  task_init();
+  tss_init();
   ktty_init();
 
   if (mb_magic != MULTIBOOT_LOADER_MAGIC)
@@ -41,27 +41,7 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
   unsigned long pool = &kernel_end;
   mem_init(pool, (mb->mem_upper>>10)+2, mb);  // TODO: Исправить!
 
-/*
-  ktty_puts("Pagefault emulation...\n");
-  unsigned long *addr = 0xFFFFFFFFF0000000;
-  addr[10] = 5;  // Fault!
-*/
-
-  // Тест смены стека
-  change_stack();
-  printf("Stack changed!\n");
-
-  unsigned char *ch = kmalloc(223);
-  void *gb = kmalloc(0x10000);
-  void *h = kmalloc(0x9928);
-  printf("Allocd: %l, %l, %l\n",ch, gb,h);
-  kfree(gb);
-  kfree(ch);
-  kfree(h);
-
-  // Тест дупликации таблиц страниц
-  unsigned long cr3 = copy_pages();
-  asm("mov %0, %%cr3\n"::"r"(cr3));
+  task_init();
 
   printf("Kernel alive, up and running!\n");
 

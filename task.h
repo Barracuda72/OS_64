@@ -23,9 +23,26 @@ typedef struct _TSS64
   short r4;    //Зарезервировано
   unsigned short IOMapAddr;  
 } TSS64;
+
+/*
+ * Структура, описывающая задачу
+ */
+typedef struct _task
+{
+  unsigned int pid;
+  unsigned long rip;
+  unsigned long rsp;
+  unsigned long rbp;
+  unsigned long cr3;
+  struct _task *next;
+} task;
 #pragma pack()
 
+void tss_init();
+
 void task_init(void);
+
+void task_switch();
 
 void change_stack();
 #endif  //__TASK_H_

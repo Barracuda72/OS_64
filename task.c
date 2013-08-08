@@ -15,8 +15,10 @@ TSS64 IntrTss;
 
 unsigned long intr_s[1024];
 unsigned short s = 0;  // Селектор задачи ядра
+volatile task *curr = 0; // Текущая выполняемая задача
+unsigned long next_pid = 1;
 
-void task_init()
+void tss_init()
 {
   IntrTss.rsp0 = (unsigned long)&intr_s[1022];
   IntrTss.rsp1 = (unsigned long)&intr_s[1022];
@@ -34,8 +36,18 @@ void task_init()
   s = CALC_SELECTOR(s, SEG_GDT | SEG_RPL0);
   
   //BREAK();
-
   asm("ltr s");
+}
+
+void task_init()
+{
+  curr = kmalloc(sizeof(task));
+  curr->pid = next_pid++;
+  curr->rsp = 0;
+  curr->rbp = 0;
+  curr->rip = 0;
+  curr->cr3 = 0;
+  curr->next = curr; // Закольцовываем
 }
 
 /*
@@ -65,3 +77,59 @@ void change_stack()
   //BREAK();
 }
 
+/*
+ * Своровано из учебника James'M
+ * Позже перепишу более красиво
+ */
+unsigned long read_rip();
+asm("\n \
+read_rip: \n \
+  pop %rax \n \
+  jmp *%rax \n \
+");
+
+void task_switch()
+{
+  if (curr == 0)
+    return;
+  ktty_putc('S');
+
+  unsigned long rsp, rbp, rip, cr3;
+  asm ("mov %%rsp, %0":"=r"(rsp));
+  asm ("mov %%rbp, %0":"=r"(rbp));
+  asm ("mov %%cr3, %0":"=r"(cr3));
+
+  rip = read_rip();
+  // Если мы только что переключили задачу
+  if (rip == 0xDEADC0DEDEADBEEF)
+    return;
+
+  // Иначе - начнем переключение
+  curr->rip = rip;
+  curr->rsp = rsp;
+  curr->rbp = rbp;
+  curr->cr3 = cr3;
+
+  curr = curr->next;
+
+  rsp = curr->rsp;
+  rbp = curr->rbp;
+  cr3 = curr->cr3&0x000FFFFFFFFFF000; // Hack?
+  
+  asm volatile("         \
+    cli;                 \
+    mov %0, %%rcx;       \
+    mov %1, %%rsp;       \
+    mov %2, %%rbp;       \
+    xchg %%bx, %%bx; \
+    mov %3, %%cr3;       \
+    mov $0xDEADC0DEDEADBEEF, %%rax; \
+    sti;                 \
+    jmp *%%rcx           "
+  : : "r"(rip), "r"(rsp), "r"(rbp), "r"(cr3));
+}
+
+void get_c()
+{
+  printf("Curr: %l\n", curr);
+}

@@ -1,7 +1,7 @@
 TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
 CPPFLAGS:=-m64 -I. -I./mm
-CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel
+CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -Wconversion
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 OBJECTS:= boot.o ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o mutex.o
 
