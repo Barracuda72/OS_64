@@ -48,8 +48,11 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 
 	unsigned char *ch = kmalloc(223);
 	void *gb = kmalloc(0x10000);
-	void *h = kmalloc(0x992871);
+	void *h = kmalloc(0x9928);
 	printf("Allocd: %l, %l, %l\n",ch, gb,h);
+        kfree(gb);
+	kfree(ch);
+	kfree(h);
 	for(;;) asm("hlt");
 	return 0;
 }

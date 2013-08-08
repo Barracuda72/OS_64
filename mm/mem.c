@@ -27,7 +27,7 @@ void mem_init(unsigned long pl_addr, unsigned long pl_size,
 
 void *kmalloc(unsigned long size)
 {
-	BREAK();
+	//BREAK();
 	if ((size == 0) || (size >= kernel_hlim))
 	  return 0;
 
@@ -35,8 +35,8 @@ void *kmalloc(unsigned long size)
 	while ((head < ((unsigned long)kernel_heap + kernel_hlim)) && 
 		((head->size < size) || !(head->free)))
 	{
-		//printf("MM: chunk %l, s %d - %d\n", 
-		//	head, head->size, head->free);
+		printf("MM: chunk %l, s %d - %d\n", 
+			head, head->size, head->free);
 		head = (unsigned long)head + head->size + sizeof(kmem_header);
 	}
 
@@ -69,5 +69,54 @@ void *kmalloc(unsigned long size)
 
 void kfree(void *p)
 {
+  if (p == 0)
+    return;
+  /*
+   * Основная идея:
+   * Освобождаем блок, затем смотрим на последующий; если он
+   * свободен, присоединяем его. Аналогично смотрим на предыдущий,
+   * если он свободен - присоединяемся к нему.
+   * Если размер получившегося в итоге блока больше размера страницы, 
+   * то можно попробовать освободить физическую память; с другой 
+   * стороны, ядро крайне редко использует kmalloc для выделения
+   * памяти под временные буфера - большей частью они будут оставаться
+   * на протяжении всего выполнения программы.
+   */
+   kmem_header *ptr = (unsigned long)p - sizeof(kmem_header);
+   ptr->free = 1;
+   kmem_header *prev = ptr->prev;
+   if ((prev != 0) && (prev->magic == KMEM_MAGIC) && (prev->free == 1))
+   {
+     prev -> size += ptr->size + sizeof(kmem_header);
+     ptr->magic = 0;
+     ptr->size = 0;
+     ptr->prev = 0;
+
+     ptr = prev;
+   }
+
+   kmem_header *next = (unsigned long)ptr + ptr->size + sizeof(kmem_header);
+   if ((next != 0) &&
+	((unsigned long)next < (unsigned long)kernel_heap + kernel_hlim) 
+	&& (next->magic == KMEM_MAGIC) && (next->free == 1))
+   {
+       ptr->size += next->size + sizeof(kmem_header);
+       next->magic = 0;
+       next->size = 0;
+       next->prev = 0;
+       next = (unsigned long)ptr + ptr->size + sizeof(kmem_header);
+   }
+
+   if ((next != 0) &&
+	((unsigned long)next < (unsigned long)kernel_heap + kernel_hlim) 
+	&& (next->magic == KMEM_MAGIC))
+     // Обновляем указатель на предыдущий элемент
+     next -> prev = ptr;
+
+   //printf("Freed %X bytes\n", ptr->size);
+   if (ptr->size >= 0x1000)
+   {
+     // Есть резон попробовать освободить физическую память
+   }
 }
 
