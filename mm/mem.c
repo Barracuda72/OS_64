@@ -36,8 +36,8 @@ void *kmalloc(unsigned long size)
   while ((head < ((unsigned long)kernel_heap + kernel_hlim)) && 
     ((head->size < size) || !(head->free)))
   {
-    printf("MM: chunk %l, s %d - %d\n", 
-      head, head->size, head->free);
+    //printf("MM: chunk %l, s %d - %d\n", 
+    //  head, head->size, head->free);
     head = (unsigned long)head + head->size + sizeof(kmem_header);
   }
 

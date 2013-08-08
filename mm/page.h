@@ -48,5 +48,6 @@ void mount_page(void *physical, void *logical);
 void umount_page(void *logical);
 void *alloc_page();
 void free_page(void *p);
+void *copy_pages();
 
 #endif //__PAGE_H__

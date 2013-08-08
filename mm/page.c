@@ -2,6 +2,7 @@
 #include <multiboot.h>
 #include <intr.h>
 #include <phys.h>
+#include <mem.h>
 #include <klibc.h>
 
 #include <debug.h>
@@ -117,7 +118,7 @@ void umount_page_t()
   
 void mount_page(void *phys_addr, void *log_addr)
 {
-  printf("Mounting 0x%X - 0x%l\n", phys_addr, log_addr);
+  //printf("Mounting 0x%X - 0x%l\n", phys_addr, log_addr);
   linear addr;
   addr.h = (unsigned long)log_addr;
   pte_desc volatile * volatile p = (pte_desc *)TMP_MOUNT_ADDR;
@@ -209,6 +210,96 @@ void umount_page(void *log_addr)
 
   umount_page_t();
   //printf(" done\n");
+}
+
+void read_page(void *phys_addr, void *buf)
+{
+  volatile void *tmp = TMP_MOUNT_ADDR;
+
+  mount_page_t(phys_addr);
+  memcpy(buf, tmp, 4096);
+  umount_page_t();
+}
+
+void write_page(void *phys_addr, void *buf)
+{
+  volatile void *tmp = TMP_MOUNT_ADDR;
+
+  mount_page_t(phys_addr);
+  memcpy(tmp, buf, 4096);
+  umount_page_t();
+}
+
+
+/*
+ * Копирует определенный каталог страниц
+ * k - глубина вложенности:
+ * 4 - pml4
+ * 3 - pdp
+ * 2 - pde
+ * 1 - pte
+ * 0 - копируем обычную страницу
+ */
+void *copy_page(void *phys_addr, int k)
+{
+
+//  printf("Remapping %l...\n", phys_addr);
+  volatile pte_desc *buf = kmalloc(4096);
+  unsigned long addr;
+  read_page(phys_addr, buf);
+
+  if (k > 0)
+  {
+    unsigned int i;
+    for (i = 0; i < 512; i++)
+    {
+      addr = buf[i].p.address<<12;
+      if (addr != 0x0000000000000000L)
+      {
+        /*
+         * Тут мы используем неболшой хак
+         * Дело в том, что нам известна только kernel_pte
+         * Она идет нулевой записью в kernel_pde
+         * Соответственно, если при попытке копирования
+         * pde наталкиваемся на адрес kernel_pte, то это
+         * pde ядра, и ее не нужно копировать - просто
+         * возвращаем ее адрес обратно.
+         * Условия в if расположены в порядке убывания
+         * частоты срабатывания
+         */
+        BREAK();
+        if ((k == 1) && (i == 0) && 
+            (addr == (((unsigned long)kernel_pt)&0x0FFFFFFF)))
+          return phys_addr;
+	else
+        {
+          buf[i].h = (buf[i].h&0x1F)
+                     |(unsigned long)(copy_page(addr, k-1));
+        }
+      }
+    }
+  }
+
+  void *p = alloc_phys_page();
+  write_page(p, buf);
+  kfree(buf);
+  return p;
+}
+
+/*
+ * Функция возвращает новый каталог страниц, аналогичный
+ * уже имеющемуся. Страницы ядра подключаются как есть,
+ * (просто записывается ссылка на PT ядра), остальные
+ * имеющиеся - копируются.
+ */
+void *copy_pages()
+{
+  // Функция не оптимальна, но зато относительно проста
+
+  unsigned long cr3;
+  asm("mov %%cr3, %0\n":"=r"(cr3));
+
+  return copy_page(cr3, 4);
 }
 
 void page_init(unsigned long *last_phys_page)

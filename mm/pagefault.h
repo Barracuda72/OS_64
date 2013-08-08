@@ -51,6 +51,7 @@ void _page_fault(unsigned char errcode, unsigned long addr, unsigned long rip)
   printf("PF: a = %l, f = %b, rip = %l\n", 
          addr, errcode, rip);
 
+  BREAK();
   for(;;) asm("hlt");
 }
 

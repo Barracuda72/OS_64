@@ -55,6 +55,14 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
   kfree(gb);
   kfree(ch);
   kfree(h);
+
+  // Тест дупликации таблиц страниц
+  unsigned long cr3 = copy_pages();
+  BREAK();
+  asm("mov %0, %%cr3\n"::"r"(cr3));
+
+  printf("Kernel alive, up and running!\n");
+
   for(;;) asm("hlt");
   return 0;
 }

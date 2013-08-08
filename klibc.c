@@ -167,3 +167,13 @@ void *zeromem(void *s, unsigned int n)
   return memset(s, 0, n);
 }
 
+void *memcpy(void *dest, const void *src, unsigned int n)
+{
+  char *d = (char *)dest;
+  char *s = (char *)src;
+  unsigned int i;
+  for(i = 0; i < n; i++)
+    d[i] = s[i];
+
+  return dest;
+}
