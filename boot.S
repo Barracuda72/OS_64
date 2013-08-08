@@ -37,6 +37,13 @@ cli
  */
 pushl %ebx
 pushl %eax
+/*
+ * Проверяем, поддерживает ли процессор long mode
+ */
+mov $0x80000001, %eax
+cpuid
+and $0x20000000, %edx
+jz no_x86_64
 /* 
    Отображаем первые два мегабайта один-в-один, так что мы можем использовать память, будто и нет никакой страничной адресации
    Кроме того, нужно отобразить ядро и в верхнюю память (по адресу 0xFFFFFFFFC0000000) 
@@ -182,6 +189,22 @@ popl %eax
 popl %ebx
 ljmp $8, $startLongMode
 
+no_x86_64:
+mov $x86_64_err, %esi
+mov $0xB8000, %edi
+mov $52, %ecx
+mov $0x7, %ah
+
+loo3:
+movb (%esi), %al
+stosw
+inc %esi
+loop loo3
+
+loo2:
+hlt
+jmp loo2
+
 .code64
 
 startLongMode:
@@ -202,6 +225,9 @@ call    kernel_start
 loop:
 hlt
 jmp loop	// Hang up
+
+x86_64_err:
+.asciz "You processor are not x86_64 capable! System halted."
 
 /* Область нашего временного стека. */
 .comm   stack, STACK_SIZE
