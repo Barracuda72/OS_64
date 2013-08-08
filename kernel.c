@@ -35,7 +35,6 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
   intr_init();
 
   printf("OS_64 build date: %s %s\n", __DATE__, __TIME__);
-  get_s();
 
   smp_init();
   extern unsigned long kernel_end;
@@ -48,6 +47,10 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
   addr[10] = 5;  // Fault!
 */
 
+  // Тест смены стека
+  change_stack();
+  printf("Stack changed!\n");
+
   unsigned char *ch = kmalloc(223);
   void *gb = kmalloc(0x10000);
   void *h = kmalloc(0x9928);
@@ -58,7 +61,6 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 
   // Тест дупликации таблиц страниц
   unsigned long cr3 = copy_pages();
-  BREAK();
   asm("mov %0, %%cr3\n"::"r"(cr3));
 
   printf("Kernel alive, up and running!\n");

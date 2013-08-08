@@ -267,7 +267,7 @@ void *copy_page(void *phys_addr, int k)
          * Условия в if расположены в порядке убывания
          * частоты срабатывания
          */
-        BREAK();
+        //BREAK();
         if ((k == 1) && (i == 0) && 
             (addr == (((unsigned long)kernel_pt)&0x0FFFFFFF)))
           return phys_addr;

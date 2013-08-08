@@ -1,11 +1,14 @@
 #include <task.h>
 #include <gdt.h>
 #include <klibc.h>
+#include <mem.h>
+#include <multiboot.h>
 
 #include <debug.h>
 
 /*
- * Инициализируем многозадачность (громко сказано - просто устанавливаем стек для прерываний)
+ * Инициализируем многозадачность (громко сказано - просто 
+ * устанавливаем стек для прерываний)
  */
 
 TSS64 IntrTss;
@@ -35,8 +38,30 @@ void task_init()
   asm("ltr s");
 }
 
-void get_s(void)
+/*
+ * Создает новый стек и переключается на него
+ */
+void change_stack()
 {
-  printf("Task %d running...\n", s);
+  extern unsigned long stack;
+  unsigned long stack_old = &stack;
+  unsigned long stack_end = (unsigned long) stack_old + STACK_SIZE;
+  unsigned long *new_stack = kmalloc(STACK_SIZE);
+  memcpy(new_stack, stack_old, STACK_SIZE);
+  unsigned long offset = (unsigned long)new_stack - (unsigned long)stack_old;
+  unsigned long i;
+  for (i = 0; i < STACK_SIZE; i++)
+  {
+    if ((new_stack[i] >= stack_end) && 
+        (new_stack[i] <= (unsigned long)stack_old))
+    {
+      new_stack[i] += offset;
+    }
+  } 
+
+  // Перемещаем стек
+  asm volatile("add %0, %%rsp\n \
+                add %0, %%rbp\n" :: "r" (offset)); 
+  //BREAK();
 }
 

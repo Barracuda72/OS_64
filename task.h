@@ -26,6 +26,6 @@ typedef struct _TSS64
 #pragma pack()
 
 void task_init(void);
-void get_s(void);
 
+void change_stack();
 #endif  //__TASK_H_
