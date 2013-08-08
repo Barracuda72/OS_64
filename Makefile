@@ -2,16 +2,16 @@ TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
 CPPFLAGS:=-m64 -I. -I./mm
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel
-OBJECTS:= ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o mutex.o
+ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
+OBJECTS:= boot.o ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o mutex.o
 
 PREFIX:=x86_64-linux-gnu
-AS:=as -g --64
 CC:=gcc
 LD:=ld
 RANLIB:=ranlib
 
-boot.elf: boot.o $(OBJECTS)
-	$(LD) -Tkernel.lds -o $@ boot.o $(OBJECTS) -z max-page-size=0x1000 -m elf_x86_64
+$(TARGET): $(OBJECTS)
+	$(LD) -Tkernel.lds -o $@ $(OBJECTS) -z max-page-size=0x1000 -m elf_x86_64
 
 clean:
 	-rm ${OBJECTS} *~ *.bin *.elf
@@ -45,7 +45,7 @@ du:
 	@sudo losetup -d /dev/loop0
 	@sudo rmdir mnt
 
-cp:
+cp: $(TARGET)
 	@mkdir -p mnt
 	@sudo mount -o loop,offset=1048576 disk.img mnt
 	@sudo cp boot.elf mnt
@@ -53,18 +53,11 @@ cp:
 	@sudo umount mnt
 	@rmdir mnt
 
-boot.s: boot.S
-
-boot.o: boot.s
-
-mutex.s: mutex.S
-
-mutex.o: mutex.s
-
 dist:
 	@export CD="`echo ${PWD} | sed -e 's|.*/||'`"
 	@cd ${PWD} && cd .. && tar -c ${CD} | bzip2 > "${CD}_`date +'%y%m%d_%H%M%S'`.tar.bz2"
 
 gdb:
-	@bochs -q&
-	@gdb boot.elf -ex "target remote localhost:1234"
+	@qemu-system-x86_64 -s -S -hda disk.img&
+	@gdb boot.elf -ex "target remote localhost:1234" -ex "set arch i386" \
+		-ex "b *0x100000"
