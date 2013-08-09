@@ -2,16 +2,21 @@ TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
 CPPFLAGS:=-m64 -I. -I./mm
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -Wconversion
-ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
+#ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
+ASFLAGS:= --64 -g
+LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
 OBJECTS:= boot.o ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o mutex.o
 
 PREFIX:=x86_64-linux-gnu
 CC:=gcc
 LD:=ld
 RANLIB:=ranlib
+NM:=nm
 
 $(TARGET): $(OBJECTS)
-	$(LD) -Tkernel.lds -o $@ $(OBJECTS) -z max-page-size=0x1000 -m elf_x86_64
+	$(LD) -Tkernel.lds -o $@ $(OBJECTS) $(LDFLAGS)
+	$(NM) $@ | cut -d' ' -f1,3 | sed -e 's/^\(ffffffff\|00000000\)//g' \
+		> ldsym
 
 clean:
 	-rm ${OBJECTS} *~ *.bin *.elf
