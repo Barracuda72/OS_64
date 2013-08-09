@@ -1,3 +1,7 @@
+# Ignore hidden files
+.*
+# Ignore ldsym
+ldsym
 # Ignore objects
 *.o
 # Ignore preprocessed assembler files
