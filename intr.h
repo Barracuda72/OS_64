@@ -24,6 +24,7 @@ void intr_disable();
  push %rdi \n \
  push %rbp \n \
  call _" #func " \n \
+" #func "_end: \n \
  movb $0x20, %al \n \
  outb %al, $0x20 \n \
  pop %rbp \n \
@@ -33,7 +34,9 @@ void intr_disable();
  pop %rcx \n \
  pop %rbx \n \
  pop %rax \n \
- iretq \n");\
+ iretq \n \
+ .globl " #func "_end \n \
+");\
  void _ ## func(void)
 
 #define INTR_CALL_GATE  0x0C

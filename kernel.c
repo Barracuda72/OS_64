@@ -45,7 +45,22 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 
   printf("Kernel alive, up and running!\n");
 
-  for(;;) asm("hlt");
+  // Тест многозадачности
+  if (task_fork() == 0)
+  {
+    // Дочерняя задача
+    for(;;) 
+    {
+      ktty_putc('C');
+      asm("hlt");
+    }
+  } else {
+    for(;;) 
+    {
+      ktty_putc('P');
+      asm("hlt");
+    }
+  }
   return 0;
 }
 

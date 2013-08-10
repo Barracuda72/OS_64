@@ -29,20 +29,29 @@ typedef struct _TSS64
  */
 typedef struct _task
 {
-  unsigned int pid;
+  unsigned long pid;
   unsigned long rip;
   unsigned long rsp;
-  unsigned long rbp;
+  unsigned long rflags;
   unsigned long cr3;
   struct _task *next;
 } task;
+
+typedef struct _tregs
+{
+  unsigned long rip;
+  unsigned long cs;
+  unsigned long rflags;
+  unsigned long rsp;
+  unsigned long ss;
+} task_regs;
 #pragma pack()
 
 void tss_init();
 
 void task_init(void);
 
-void task_switch();
+unsigned long task_switch(task_regs *r);
 
-void change_stack();
+int task_fork();
 #endif  //__TASK_H_
