@@ -4,15 +4,16 @@
 #include <intr.h>
 #include <ioport.h>
 #include <ktty.h>
+#include <stdint.h>
 
 /*
  * Обработчик прерывания клавиатуры
  */
 IRQ_HANDLER(kbd_intr)
 {
-  unsigned char scancode;
-  //unsigned char ascii;
-  unsigned char creg;
+  uint8_t scancode;
+  //uint8_t ascii;
+  uint8_t creg;
 
   // Прочитаем скан-код из порта 0x60
   scancode = inb(0x60);

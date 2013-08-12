@@ -31,57 +31,57 @@
 /* Заголовок таблицы секций ELF. */
 typedef struct elf_section_header_table
 {
-  unsigned int num;
-  unsigned int size;
-  unsigned int addr;
-  unsigned int shndx;
+  uint32_t num;
+  uint32_t size;
+  uint32_t addr;
+  uint32_t shndx;
 } elf_section_header_table_t;
 
   
 typedef struct {
-  unsigned long   sh_name;
-  unsigned long   sh_type;
-  unsigned long   sh_flags;
-  unsigned long   sh_addr;
-  unsigned long   sh_offset;
-  unsigned long   sh_size;
-  unsigned long   sh_link;
-  unsigned long   sh_info;
-  unsigned long   sh_addralign;
-  unsigned long   sh_entsize;
+  uint64_t   sh_name;
+  uint64_t   sh_type;
+  uint64_t   sh_flags;
+  uint64_t   sh_addr;
+  uint64_t   sh_offset;
+  uint64_t   sh_size;
+  uint64_t   sh_link;
+  uint64_t   sh_info;
+  uint64_t   sh_addralign;
+  uint64_t   sh_entsize;
 } Elf32_Shdr;
 
 /* Информационная структура multiboot. */
 typedef struct multiboot_info
 {
-  unsigned int flags8;
-  unsigned int mem_lower;
-  unsigned int mem_upper;
-  unsigned int boot_device;
-  unsigned int cmdline;
-  unsigned int mods_count;
-  unsigned int mods_addr;
+  uint32_t flags8;
+  uint32_t mem_lower;
+  uint32_t mem_upper;
+  uint32_t boot_device;
+  uint32_t cmdline;
+  uint32_t mods_count;
+  uint32_t mods_addr;
   elf_section_header_table_t elf_sec;
-  unsigned int mmap_length;
-  unsigned int mmap_addr;
+  uint32_t mmap_length;
+  uint32_t mmap_addr;
 } multiboot_info_t;
   
 /* Структура, описывающая модуль */
 typedef struct module_info
 {
-  unsigned int mod_start;
-  unsigned int mod_end;
-  unsigned int string;
-  unsigned int reserved;
+  uint32_t mod_start;
+  uint32_t mod_end;
+  uint32_t string;
+  uint32_t reserved;
 } module_info_t;
 
 #pragma pack(1)
 typedef struct mmap_info
 {
-  unsigned int size;
-  unsigned long base_addr;
-  unsigned long length;
-  unsigned int type;
+  uint32_t size;
+  uint64_t base_addr;
+  uint64_t length;
+  uint32_t type;
 } mmap_info_t __attribute__((packed));
 #pragma pack()
 

@@ -1,15 +1,16 @@
 #include <klibc.h>
+#include <stdint.h>
 #include <ktty.h>
 
-void putdec(unsigned int byte);
-void puthexi(unsigned int dword);
-void puthex(unsigned char byte);
-void puthexd(unsigned char byte);
+void putdec(uint32_t byte);
+void puthexi(uint32_t dword);
+void puthex(uint8_t byte);
+void puthexd(uint8_t byte);
 void vprintf(const char *fmt, va_list args);
 
-void putdec(unsigned int byte)
+void putdec(uint32_t byte)
 {
-  unsigned char b1;
+  uint8_t b1;
   int b[30];
   signed int nb;
   int i=0;
@@ -30,7 +31,7 @@ void putdec(unsigned int byte)
   }
 }
 
-void puthexi(unsigned int dword)
+void puthexi(uint32_t dword)
 {
   puthex( (dword & 0xFF000000) >>24);
   puthex( (dword & 0x00FF0000) >>16);
@@ -38,7 +39,7 @@ void puthexi(unsigned int dword)
   puthex( (dword & 0x000000FF));
 }
 
-void puthexl(unsigned long qword)
+void puthexl(uint64_t qword)
 {
   puthex( (qword & 0xFF00000000000000) >>56);
   puthex( (qword & 0x00FF000000000000) >>48);
@@ -50,7 +51,7 @@ void puthexl(unsigned long qword)
   puthex( (qword & 0x00000000000000FF));
 }
 
-void puthex(unsigned char byte)
+void puthex(uint8_t byte)
 {
  unsigned  char lb, rb;
 
@@ -63,13 +64,13 @@ void puthex(unsigned char byte)
   puthexd(rb);
 }
 
-void puthexd(unsigned char digit)
+void puthexd(uint8_t digit)
 {
   char table[]="0123456789ABCDEF";
    ktty_putc(table[digit]);
 }
 
-void putbin(unsigned char byte)
+void putbin(uint8_t byte)
 {
         int i = 0;
         for (i = 0; i <8; i++)  puthexd(((byte<<i)>>7)&0x01);
@@ -101,32 +102,32 @@ void vprintf(const char *fmt, va_list args)
         break;
   
       case 'c':
-        ktty_putc(va_arg(args, unsigned int));
+        ktty_putc(va_arg(args, uint32_t));
         break;
   
       case 'd':
       case 'i':
-        putdec(va_arg(args, unsigned int));
+        putdec(va_arg(args, uint32_t));
         break;
 
       case 'x':
-        puthex(va_arg(args, unsigned int));
+        puthex(va_arg(args, uint32_t));
         break;
   
       case 'X':
-        puthexi(va_arg(args, unsigned int));
+        puthexi(va_arg(args, uint32_t));
         break;
 
       case 'l':
-        puthexl(va_arg(args, unsigned long));
+        puthexl(va_arg(args, uint64_t));
         break;
 
       case 'b':
-        putbin(va_arg(args, unsigned int));
+        putbin(va_arg(args, uint32_t));
         break;
 /*
       case 'z':
-        textcolor(va_arg(args,unsigned int));
+        textcolor(va_arg(args,uint32_t));
         break;
 */
       }
@@ -153,25 +154,25 @@ char *strncpy(char *dest, char *src, int len)
   return dest;
 }
 
-void *memset(void *s, int c, unsigned int n)
+void *memset(void *s, int c, uint32_t n)
 { 
-  unsigned char *s1 = s;
-  unsigned int i;
+  uint8_t *s1 = s;
+  uint32_t i;
   for (i = 0; i < n; i++)
     s1[i] = (char)c;
   return s;
 }
 
-void *zeromem(void *s, unsigned int n)
+void *zeromem(void *s, uint32_t n)
 {
   return memset(s, 0, n);
 }
 
-void *memcpy(void *dest, const void *src, unsigned int n)
+void *memcpy(void *dest, const void *src, uint32_t n)
 {
   char *d = (char *)dest;
   char *s = (char *)src;
-  unsigned int i;
+  uint32_t i;
   for(i = 0; i < n; i++)
     d[i] = s[i];
 

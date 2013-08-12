@@ -1,7 +1,9 @@
 #ifndef __INTR_H__
 #define __INTR_H__
 
-void intr_install(unsigned char vector, void (*func)(), unsigned char type, unsigned char pc, unsigned short selec);
+#include <stdint.h>
+
+void intr_install(uint8_t vector, void (*func)(), uint8_t type, uint8_t pc, uint16_t selec);
 
 void intr_init();
 

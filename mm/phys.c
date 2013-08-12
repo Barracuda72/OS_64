@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <phys.h>
 #include <page.h>
 
@@ -30,12 +31,12 @@
  * участков, и по скорости будет не хуже поиска одной страницы).
  */
 
-unsigned long *phys_map;        // Карта физической памяти
-unsigned long phys_size;        // Размер карты
+uint64_t *phys_map;        // Карта физической памяти
+uint64_t phys_size;        // Размер карты
 
 void *alloc_phys_page()
 {
-  unsigned long i,j,k,tmp;
+  uint64_t i,j,k,tmp;
   // Начинаем поиски с первого мегабайта
   for (i = (1<<2); (i < phys_size) && 
                    (phys_map[i] == 0xFFFFFFFFFFFFFFFFL); i++);
@@ -57,8 +58,8 @@ void *alloc_phys_page()
    * Возможно, конкретно здесь баг проявляется из-за
    * сборки на 32-битной машине.
    */
-  unsigned int *ph_map = (unsigned int *)phys_map;
-  unsigned int itmp;
+  uint32_t *ph_map = (uint32_t *)phys_map;
+  uint32_t itmp;
   for (k = 0; k < 2; k++)
   {
     itmp = ph_map[i*2 + k];
@@ -74,7 +75,7 @@ void *alloc_phys_page()
   j = j + k*32;
 #endif
   //printf("Alloc p 0x%l\n", (64*i + j)<<12);
-  //unsigned long *zero = (unsigned long *)(((64*i + j)<<12) + pool_addr);
+  //uint64_t *zero = (uint64_t *)(((64*i + j)<<12) + pool_addr);
   //for(k = 0; k<0x400; k++) zero[k] = 0x0000000000000000L;
   //printf("alloc_pp 3");
   return (void *)((64*i + j)<<12);
@@ -83,14 +84,14 @@ void *alloc_phys_page()
 void free_phys_page(void *page)
 {
   if(page == 0) return;
-  unsigned long pageaddr = (unsigned long)page;
+  uint64_t pageaddr = (uint64_t)page;
   pageaddr = pageaddr >> 12;
   //printf("1\n");
   phys_map[pageaddr>>6] = 
   phys_map[pageaddr>>6]&(~(1<<(pageaddr%64)));
 }
 
-void phys_init(unsigned long *last, unsigned long size,
+void phys_init(uint64_t *last, uint64_t size,
     multiboot_info_t *mb)
 {
   /* На входе - размер ОЗУ в мегабайтах и первая свободная страница
@@ -98,7 +99,7 @@ void phys_init(unsigned long *last, unsigned long size,
    * 4096 байт/стр * 8 бит/байт = 32768 страницах, или 128 мегабайтах
    */
   // Подключаем страницы из области битовой карты
-  phys_map = (unsigned long *)(0xFFFFFFFFC0000000|*last);
+  phys_map = (uint64_t *)(0xFFFFFFFFC0000000|*last);
   phys_size = size << 2;  // (size << 20) >> 18
   //BREAK();
   int sz;
@@ -110,23 +111,23 @@ void phys_init(unsigned long *last, unsigned long size,
   // Помечаем всю карту как занятую, за исключением явно указанных
   // в mmap свободных мест
   //BREAK();
-        unsigned long i;
+        uint64_t i;
         for (i = 0; i < phys_size; i++) 
           phys_map[i] = 0xFFFFFFFFFFFFFFFFL;
 
   // Сверхопасный трюк - выдергивание себя самое за шнурки!
-  mount_page(mb, 0xFFFFFFFFC0000000|(unsigned long)mb);
-  mb = (multiboot_info_t *)(0xFFFFFFFFC0000000|(unsigned long)mb);
+  mount_page(mb, 0xFFFFFFFFC0000000|(uint64_t)mb);
+  mb = (multiboot_info_t *)(0xFFFFFFFFC0000000|(uint64_t)mb);
   mmap_info_t *mmap = (mmap_info_t *) (mb->mmap_addr);
-  mount_page(mmap, 0xFFFFFFFFC0000000|(unsigned long)mmap);
-  mmap = (mmap_info_t *)(0xFFFFFFFFC0000000|(unsigned long)mmap);
+  mount_page(mmap, 0xFFFFFFFFC0000000|(uint64_t)mmap);
+  mmap = (mmap_info_t *)(0xFFFFFFFFC0000000|(uint64_t)mmap);
 
   //BREAK();
   for (;
-       (unsigned long) mmap < 
-         ((0xFFFFFFFFC0000000|((unsigned long)mb->mmap_addr))
+       (uint64_t) mmap < 
+         ((0xFFFFFFFFC0000000|((uint64_t)mb->mmap_addr))
          + mb->mmap_length);
-       mmap = (mmap_info_t *) ((unsigned long) mmap
+       mmap = (mmap_info_t *) ((uint64_t) mmap
          + mmap->size + sizeof (mmap->size)))
     if (mmap->type == 1)
     {
@@ -137,8 +138,8 @@ void phys_init(unsigned long *last, unsigned long size,
 /*
        printf ("base_addr = 0x%l,"
                " length = 0x%l\n",
-               (unsigned long) mmap->base_addr,
-               (unsigned long) mmap->length);
+               (uint64_t) mmap->base_addr,
+               (uint64_t) mmap->length);
 */
        for (i = (mmap->base_addr >> 18);
             i < ((mmap->base_addr + mmap->length) >> 18);
@@ -146,7 +147,7 @@ void phys_init(unsigned long *last, unsigned long size,
          phys_map[i] = 0L;
     }
   umount_page(mb);
-  umount_page(0xFFFFFFFFC0000000|(unsigned long)(mb->mmap_addr));
+  umount_page(0xFFFFFFFFC0000000|(uint64_t)(mb->mmap_addr));
   printf("Init phys mem map complete - %dMB\n", size);
 }
 

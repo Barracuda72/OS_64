@@ -1,9 +1,11 @@
 #ifndef __GDT_H__
 #define __GDT_H__
 
+#include <stdint.h>
+
 void GDT_init();
-unsigned int GDT_smartput(unsigned long seg, unsigned long base, unsigned long limit, unsigned long flags);
-unsigned int GDT_smartaput(unsigned long base, unsigned long limit, unsigned long flags);
+uint32_t GDT_smartput(uint64_t seg, uint64_t base, uint64_t limit, uint64_t flags);
+uint32_t GDT_smartaput(uint64_t base, uint64_t limit, uint64_t flags);
 
 // Флаги для GDT_smart*()
 #define SEG_DPL0  0x00000000

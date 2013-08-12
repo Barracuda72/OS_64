@@ -1,4 +1,5 @@
 #include <cpuid.h>
+#include <stdint.h>
 
 /*
  * Функции получения инфо о процессоре
@@ -32,7 +33,7 @@ char *CPU_get_vendor_string(void)
 /*
  * Возвращает основную информацию
  */
-unsigned int CPU_get_info(void)
+uint32_t CPU_get_info(void)
 {
   int data[5];
   data[0] = 1;
@@ -49,7 +50,7 @@ unsigned int CPU_get_info(void)
 /*
  * Возвращает информацию о расширениях
  */
-unsigned int CPU_get_xinfo(void)
+uint32_t CPU_get_xinfo(void)
 {
   int data[5];
   data[0] = 1;

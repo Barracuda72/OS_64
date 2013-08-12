@@ -1,6 +1,7 @@
 #ifndef __MEM_H__
 #define __MEM_H__
 
+#include <stdint.h>
 #include <multiboot.h>
 #define KMEM_MAGIC 0xF0B0DEFC
 
@@ -19,16 +20,16 @@
 // Заголовок кусочка памяти в куче
 typedef struct _kmem_header
 {
-  unsigned int magic;  // Магическое число
-  unsigned int size : 31;  // Размер кусочка
-  unsigned int free : 1;
+  uint32_t magic;  // Магическое число
+  uint32_t size : 31;  // Размер кусочка
+  uint32_t free : 1;
   struct _kmem_header *prev;  // Указатель на предыдущий кусочек
 } kmem_header __attribute((packed));
 #pragma pack()
 
-void mem_init(unsigned long pl_addr, unsigned long pl_size, multiboot_info_t *m);
+void mem_init(uint64_t pl_addr, uint64_t pl_size, multiboot_info_t *m);
 
-void *kmalloc(unsigned long size);
+void *kmalloc(uint64_t size);
 void kfree(void *p);
 #endif //__MEM_H__
 

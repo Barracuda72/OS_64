@@ -3,6 +3,7 @@
 #include <klibc.h>
 #include <mem.h>
 #include <multiboot.h>
+#include <stdint.h>
 
 #include <debug.h>
 
@@ -13,24 +14,24 @@
 
 TSS64 IntrTss;
 
-unsigned long intr_s[1024];
-unsigned short s = 0;  // Селектор задачи ядра
+uint64_t intr_s[1024];
+uint16_t s = 0;  // Селектор задачи ядра
 volatile task *curr = 0; // Текущая выполняемая задача
-unsigned long next_pid = 1;
+uint64_t next_pid = 1;
 
 void tss_init()
 {
-  IntrTss.rsp0 = (unsigned long)&intr_s[1022];
-  IntrTss.rsp1 = (unsigned long)&intr_s[1022];
-  IntrTss.rsp2 = (unsigned long)&intr_s[1022];
+  IntrTss.rsp0 = (uint64_t)&intr_s[1022];
+  IntrTss.rsp1 = (uint64_t)&intr_s[1022];
+  IntrTss.rsp2 = (uint64_t)&intr_s[1022];
   
-  IntrTss.ist1 = (unsigned long)&intr_s[1022];
-  IntrTss.ist2 = (unsigned long)&intr_s[1022];
-  IntrTss.ist3 = (unsigned long)&intr_s[1022];
-  IntrTss.ist4 = (unsigned long)&intr_s[1022];
-  IntrTss.ist5 = (unsigned long)&intr_s[1022];
-  IntrTss.ist6 = (unsigned long)&intr_s[1022];
-  IntrTss.ist7 = (unsigned long)&intr_s[1022];
+  IntrTss.ist1 = (uint64_t)&intr_s[1022];
+  IntrTss.ist2 = (uint64_t)&intr_s[1022];
+  IntrTss.ist3 = (uint64_t)&intr_s[1022];
+  IntrTss.ist4 = (uint64_t)&intr_s[1022];
+  IntrTss.ist5 = (uint64_t)&intr_s[1022];
+  IntrTss.ist6 = (uint64_t)&intr_s[1022];
+  IntrTss.ist7 = (uint64_t)&intr_s[1022];
   
   s = GDT_smartaput(&IntrTss, sizeof(TSS64), SEG_PRESENT | SEG_TSS64);
   s = CALC_SELECTOR(s, SEG_GDT | SEG_RPL0);
@@ -54,19 +55,19 @@ void task_init()
 /*
  * Создает новый стек и переключается на него
  */
-unsigned long change_stack()
+uint64_t change_stack()
 {
-  extern unsigned long stack;
-  unsigned long stack_old = &stack;
-  unsigned long stack_end = (unsigned long) stack_old + STACK_SIZE;
-  unsigned long *new_stack = kmalloc(STACK_SIZE);
+  extern uint64_t stack;
+  uint64_t stack_old = &stack;
+  uint64_t stack_end = (uint64_t) stack_old + STACK_SIZE;
+  uint64_t *new_stack = kmalloc(STACK_SIZE);
   memcpy(new_stack, stack_old, STACK_SIZE);
-  unsigned long offset = (unsigned long)new_stack - (unsigned long)stack_old;
-  unsigned long i;
+  uint64_t offset = (uint64_t)new_stack - (uint64_t)stack_old;
+  uint64_t i;
   for (i = 0; i < STACK_SIZE; i++)
   {
     if ((new_stack[i] >= stack_end) && 
-        (new_stack[i] <= (unsigned long)stack_old))
+        (new_stack[i] <= (uint64_t)stack_old))
     {
       new_stack[i] += offset;
     }
@@ -83,7 +84,7 @@ unsigned long change_stack()
  * Своровано из учебника James'M
  * Позже перепишу более красиво
  */
-unsigned long read_rip_old();
+uint64_t read_rip_old();
 asm("\n \
 read_rip_old: \n \
   pop %rax \n \
@@ -95,7 +96,7 @@ read_rip_old: \n \
  * чтобы все выглядело, будто задача была прервана.
  * Ну и за одним возвращает адрес возврата.
  */
-unsigned long read_rip(unsigned long cr3, unsigned long *rsp_off);
+uint64_t read_rip(uint64_t cr3, uint64_t *rsp_off);
 asm("\n \
 read_rip: \n \
   movq %rsp, %rax \n \
@@ -167,7 +168,7 @@ rt: \n \
 */
 int task_fork()
 {
-  unsigned long rip, off, cr3, rflags;
+  uint64_t rip, off, cr3, rflags;
   intr_disable();
   
   off = change_stack();
@@ -194,7 +195,7 @@ int task_fork()
 
 int __task_fork()
 {
-  unsigned long rsp, rbp, rip, cr3, off;
+  uint64_t rsp, rbp, rip, cr3, off;
   intr_disable();
   task *new = kmalloc(sizeof(task));
   new->pid = next_pid++;
@@ -274,7 +275,7 @@ ts_end:     \n \
 ");
 */
 
-unsigned long task_switch(task_regs *r)
+uint64_t task_switch(task_regs *r)
 {
   // В r - стек прерывания
   if (curr != 0)
@@ -301,7 +302,7 @@ void __task_switch()
     return;
   ktty_putc('S');
 
-  unsigned long rsp, rbp, rip, cr3;
+  uint64_t rsp, rbp, rip, cr3;
   asm ("mov %%rsp, %0":"=r"(rsp));
   asm ("mov %%rbp, %0":"=r"(rbp));
   asm ("mov %%cr3, %0":"=r"(cr3));

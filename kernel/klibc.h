@@ -1,6 +1,8 @@
 #ifndef __KLIBC_H__
 #define __KLIBC_H__
 
+#include <stdint.h>
+
 void printf(const char *fmt, ...);
 
 void getsn(void);
@@ -11,11 +13,11 @@ void ungetc(char c);
 
 char *strncpy(char *dest, char *src, int len);
 
-void *memset(void *mem, int c, unsigned int n);
+void *memset(void *mem, int c, uint32_t n);
 
-void *zeromem(void *mem, unsigned int n);
+void *zeromem(void *mem, uint32_t n);
 
-void *memcpy(void *dest, const void *src, unsigned int n);
+void *memcpy(void *dest, const void *src, uint32_t n);
 
 // Для printf
 #define va_start(v,l) __builtin_va_start(v,l)

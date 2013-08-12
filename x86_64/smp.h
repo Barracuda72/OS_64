@@ -5,6 +5,8 @@
 #ifndef __SMP_H__
 #define __SMP_H__
 
+#include <stdint.h>
+
 // Идентификатор структуры, описывающей SMP
 #define SMP_MAGIC 0x5F504D5F  // "_MP_"
 
@@ -14,43 +16,43 @@
 // Структура SMP
 typedef struct
 {
-  unsigned int magic;    // "_MP_"
-  unsigned int config;    // Указатель на структуру, описывающую систему
-  unsigned char lenght;    // Длина структуры в 16-байтовых блоках. Всегда 1
-  unsigned char version;    // Версия спецификации
-  unsigned char chksum;    // Контрольная сумма
-  unsigned char features[5];  // Поддерживаемые возможности
+  uint32_t magic;    // "_MP_"
+  uint32_t config;    // Указатель на структуру, описывающую систему
+  uint8_t lenght;    // Длина структуры в 16-байтовых блоках. Всегда 1
+  uint8_t version;    // Версия спецификации
+  uint8_t chksum;    // Контрольная сумма
+  uint8_t features[5];  // Поддерживаемые возможности
 } SMP;
 
 // Структура конфигурации
 typedef struct
 {
-  unsigned int magic;    // "PCMP"
-  unsigned short lenght;    // Размер структуры
-  unsigned char revision;    // Ревизия спецификации (один фиг)
-  unsigned char chksum;    // Контрольная сумма
+  uint32_t magic;    // "PCMP"
+  uint16_t lenght;    // Размер структуры
+  uint8_t revision;    // Ревизия спецификации (один фиг)
+  uint8_t chksum;    // Контрольная сумма
   char oemid[8];      // Идентификатор производителя (материнской платы? процессора?)
   char productid[12];    // Идетнификатор продукта (какого?)
-  unsigned int oem_tbl;    // Указатель на таблицу OEM информации
-  unsigned short oem_sz;    // Размер этой таблицы
-  unsigned short count;    // Количество нижеследующих записей
-  unsigned int lapic_addr;  // Адрес локального APIC
-  unsigned short e_lenght;  // Размер расширенной таблицы
-  unsigned char e_chksum;    // Контрольная сумма для расширенной таблицы, если таблицы нет - 0
+  uint32_t oem_tbl;    // Указатель на таблицу OEM информации
+  uint16_t oem_sz;    // Размер этой таблицы
+  uint16_t count;    // Количество нижеследующих записей
+  uint32_t lapic_addr;  // Адрес локального APIC
+  uint16_t e_lenght;  // Размер расширенной таблицы
+  uint8_t e_chksum;    // Контрольная сумма для расширенной таблицы, если таблицы нет - 0
 } SMP_config __attribute((packed));
 
 // Описание процессора
 typedef struct
 {
-  unsigned char type;    // Всегда 0 - это процессор
-  unsigned char lapic_id;    // Local APIC ID
-  unsigned char lapic_version;  // Версия Local APIC
-  unsigned char enabled : 1;  // 1 бит - процессор включен
-  unsigned char bsp : 1;    // Это Bootstrap Processor?
-  unsigned char reserved : 6;  // Оставшиеся 6 бит
-  unsigned int cpu_sig;    // Сигнатура процессора (как по CPUID)
-  unsigned int cpu_features;  // Возможности процессора (как по CPUID)
-  unsigned long reserved2;    // Дополним до 20 байт
+  uint8_t type;    // Всегда 0 - это процессор
+  uint8_t lapic_id;    // Local APIC ID
+  uint8_t lapic_version;  // Версия Local APIC
+  uint8_t enabled : 1;  // 1 бит - процессор включен
+  uint8_t bsp : 1;    // Это Bootstrap Processor?
+  uint8_t reserved : 6;  // Оставшиеся 6 бит
+  uint32_t cpu_sig;    // Сигнатура процессора (как по CPUID)
+  uint32_t cpu_features;  // Возможности процессора (как по CPUID)
+  uint64_t reserved2;    // Дополним до 20 байт
 } SMP_proc __attribute((packed));
 
 // Инициализация SMP

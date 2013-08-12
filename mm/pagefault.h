@@ -7,6 +7,7 @@
 #include <page.h>
 
 #include <debug.h>
+#include <stdint.h>
 
 #define PF_PRESENT (1<<0)
 #define PF_WRITE   (1<<1)
@@ -33,9 +34,9 @@ asm("page_fault: \n \
 ");
 
 // Адрес структуры кучи ядра
-extern unsigned long kernel_heap;
+extern uint64_t kernel_heap;
 
-void _page_fault(unsigned char errcode, unsigned long addr, unsigned long rip)
+void _page_fault(uint8_t errcode, uint64_t addr, uint64_t rip)
 {
   // Если произошла ошибка при обращении к несуществующей странице
   // внутри кучи ядра, выделим страницу

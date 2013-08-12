@@ -2,6 +2,8 @@
 #include <timer.h>
 #include <kbd.h>
 #include <pagefault.h>
+#include <stdint.h>
+
 #include <debug.h>
 
 #define PIC1 0x20
@@ -25,7 +27,7 @@
 #define  ICW4_BUF_MASTER  0x0C    /* Buffered mode/master */
 #define  ICW4_SFNM  0x10    /* Special fully nested (not) */
 
-unsigned long IDT[256*2];
+uint64_t IDT[256*2];
 
 char *IDT_addr;
 char *IDT_reg;
@@ -39,25 +41,25 @@ char *IDT_reg;
  * Фактически, эта функция создает (или изменяет) соответствующий дескриптор в таблице IDT
  */
 
-void intr_install(unsigned char vector, void (*func)(), unsigned char type, unsigned char ist, unsigned short selector)
+void intr_install(uint8_t vector, void (*func)(), uint8_t type, uint8_t ist, uint16_t selector)
 {
-   unsigned char i;
-   unsigned char b[16];
+   uint8_t i;
+   uint8_t b[16];
 
-  b[0] =  (unsigned long)func & 0x00000000000000FF;  // Младшие два
-  b[1] = ((unsigned long)func & 0x000000000000FF00) >> 8;  // байта адреса функции
+  b[0] =  (uint64_t)func & 0x00000000000000FF;  // Младшие два
+  b[1] = ((uint64_t)func & 0x000000000000FF00) >> 8;  // байта адреса функции
   b[2] = selector&0xFF;  // Селектор сегмента
   b[3] = selector>>8;  // кода
   b[4] = ist&0x07;  // Поле Interrupt Stack Table
   b[5] = type&0xFF;  // Тип функции-обработчика
-  b[6] = ( (unsigned long)func & 0x0000000000FF0000) >> 16;  // Средние
-  b[7] = ( (unsigned long)func & 0x00000000FF000000) >> 24;  // два байта
+  b[6] = ( (uint64_t)func & 0x0000000000FF0000) >> 16;  // Средние
+  b[7] = ( (uint64_t)func & 0x00000000FF000000) >> 24;  // два байта
   
   // Специфично для 64-бит
-  b[8] = ( (unsigned long)func & 0x000000FF00000000) >> 32;  // Старшие четыре байта
-  b[9] = ( (unsigned long)func & 0x0000FF0000000000) >> 40;
-  b[10] = ( (unsigned long)func & 0x00FF000000000000) >> 48;
-  b[11] = ( (unsigned long)func & 0xFF00000000000000) >> 56;
+  b[8] = ( (uint64_t)func & 0x000000FF00000000) >> 32;  // Старшие четыре байта
+  b[9] = ( (uint64_t)func & 0x0000FF0000000000) >> 40;
+  b[10] = ( (uint64_t)func & 0x00FF000000000000) >> 48;
+  b[11] = ( (uint64_t)func & 0xFF00000000000000) >> 56;
   
   b[12] = 0x00;  // Зарезервировано
   b[13] = 0x00;
@@ -73,21 +75,21 @@ void intr_install(unsigned char vector, void (*func)(), unsigned char type, unsi
 /*
  * Устанавливает системное прерывание
  */
-inline void s_intr_install(unsigned char vector, void (*func)(), unsigned char type)
+inline void s_intr_install(uint8_t vector, void (*func)(), uint8_t type)
 {
   intr_install(vector, func, type, SYS_IST, SYS_CODE_SELECTOR);
 }
 
 void intr_setup()
 {
-  IDT_reg = (char *)((unsigned long)IDT_addr + 256*16);
-  unsigned short *table_limit;
-  unsigned long *table_address;
-  table_limit = (unsigned short *)IDT_reg;
-  table_address = (unsigned long *)(((unsigned long)IDT_reg) + 2); 
+  IDT_reg = (char *)((uint64_t)IDT_addr + 256*16);
+  uint16_t *table_limit;
+  uint64_t *table_address;
+  table_limit = (uint16_t *)IDT_reg;
+  table_address = (uint64_t *)(((uint64_t)IDT_reg) + 2); 
 
   *table_limit = 256*16 - 1;
-  *table_address = (unsigned long)IDT_addr;
+  *table_address = (uint64_t)IDT_addr;
 
   // Установим вектор прерываний в 0x20
   outb(PIC1_COMMAND, ICW1_INIT | ICW1_INTERVAL4 | ICW1_ICW4); // Инициализация
@@ -102,7 +104,7 @@ void intr_setup()
   outb(PIC1_DATA, ICW4_8086);
   outb(PIC2_DATA, ICW4_8086);
 
-  asm("lidt 0(,%0,)"::"a"((unsigned long)IDT_reg));
+  asm("lidt 0(,%0,)"::"a"((uint64_t)IDT_reg));
 }
 
 /* 
@@ -110,7 +112,7 @@ void intr_setup()
  * 0-7 - прерывания первого контроллера
  * 8-15 - прерывания второго контроллера
  */
-void unmask_irq(unsigned char irq)
+void unmask_irq(uint8_t irq)
 {
   if(irq > 15) return;
   char mask = inb(0x21 + 8*(irq>>3));
@@ -121,7 +123,7 @@ void unmask_irq(unsigned char irq)
 /*
  * Запрещает прерывание
  */
-void mask_irq(unsigned char irq)
+void mask_irq(uint8_t irq)
 {
   if(irq > 15) return;
   char mask = inb(0x21 + 8*(irq>>3));

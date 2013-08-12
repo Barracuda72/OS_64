@@ -15,7 +15,7 @@
 /* 
  * Главная функция 
  */
-long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
+long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 {
   GDT_init();
   tss_init();
@@ -31,14 +31,14 @@ long kernel_start(unsigned long mb_magic, multiboot_info_t *mb)
 
   // Общая информация о памяти
   //printf ("mem_lower = %dKB, mem_upper = %dKB\n",
-  //       (unsigned int) mb->mem_lower, (unsigned int) (mb->mem_upper));
+  //       (uint32_t) mb->mem_lower, (uint32_t) (mb->mem_upper));
   intr_init();
 
   printf("OS_64 build date: %s %s\n", __DATE__, __TIME__);
 
   smp_init();
-  extern unsigned long kernel_end;
-  unsigned long pool = &kernel_end;
+  extern uint64_t kernel_end;
+  uint64_t pool = &kernel_end;
   mem_init(pool, (mb->mem_upper>>10)+2, mb);  // TODO: Исправить!
 
   task_init();

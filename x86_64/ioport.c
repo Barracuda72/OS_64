@@ -1,13 +1,14 @@
 #include <ioport.h>
+#include <stdint.h>
 
-void outb(unsigned short port, unsigned char byte)
+void outb(uint16_t port, uint8_t byte)
 {
   asm("outb %b0, %w1"::"a"(byte),"d"(port));
 }
 
-unsigned char inb(unsigned short port)
+uint8_t inb(uint16_t port)
 {
-  unsigned char result;
+  uint8_t result;
   asm("inb %w1, %b0":"=a"(result):"d"(port));
   return result;
 }

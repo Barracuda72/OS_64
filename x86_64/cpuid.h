@@ -1,10 +1,12 @@
 #ifndef __CPUID_H__
 #define __CPUID_H__
 
+#include <stdint.h>
+
 // Функции
 char *CPU_get_vendor_string(void);
-unsigned int CPU_get_info(void);
-unsigned int CPU_get_xinfo(void);
+uint32_t CPU_get_info(void);
+uint32_t CPU_get_xinfo(void);
 
 // Макросы
 

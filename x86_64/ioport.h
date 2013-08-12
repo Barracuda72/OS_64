@@ -1,8 +1,10 @@
 #ifndef __IOPORT_H__
 #define __IOPORT_H__
 
-void outb(unsigned short port, unsigned char byte);
+#include <stdint.h>
 
-unsigned char inb(unsigned short port);
+void outb(uint16_t port, uint8_t byte);
+
+uint8_t inb(uint16_t port);
 
 #endif //__IOPORT_H__

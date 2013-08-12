@@ -1,7 +1,8 @@
 #include <gdt.h>
+#include <stdint.h>
 
-unsigned long GDT_addr[16] = {0};
-unsigned long g_gdtr[2];
+uint64_t GDT_addr[16] = {0};
+uint64_t g_gdtr[2];
 
 /*************************************************
       ВАЖНОЕ ЗАМЕЧАНИЕ
@@ -42,7 +43,7 @@ unsigned long g_gdtr[2];
 /*
  * Помещает запись в GDT о КОНКРЕТНОМ сегменте
  */
-void GDT_put(unsigned long seg, unsigned long data)
+void GDT_put(uint64_t seg, uint64_t data)
 {
   GDT_addr[seg] = data;
 }
@@ -50,9 +51,9 @@ void GDT_put(unsigned long seg, unsigned long data)
 /*
  * Находит в GDT свободный дескриптор и помещает туда запись о сегменте
  */
-unsigned int GDT_autoput(unsigned long data)
+uint32_t GDT_autoput(uint64_t data)
 {
-  unsigned int seg;
+  uint32_t seg;
   for(seg = 1; (seg < 8192)&&(GDT_addr[seg] != 0); seg++);
   GDT_put(seg, data);
   return seg;
@@ -66,8 +67,8 @@ void GDT_init(void)
   GDT_smartput(1, 0x00000000, 0xFFFFFFFF, SEG_64BIT_CODE | SEG_NOTSYS | SEG_PRESENT | SEG_CODE_EO);
   // Сегмент данных ядра
   GDT_smartput(2, 0x00000000, 0xFFFFFFFF, SEG_NOTSYS | SEG_PRESENT | SEG_DATA_RW);
-  g_gdtr[0]=(((unsigned long)GDT_addr)<<16)|0xFFFF;
-  g_gdtr[1]=(((unsigned long)GDT_addr)>>48)&0xFFFF;
+  g_gdtr[0]=(((uint64_t)GDT_addr)<<16)|0xFFFF;
+  g_gdtr[1]=(((uint64_t)GDT_addr)>>48)&0xFFFF;
   asm("lgdt g_gdtr");
   // Заменим значения в сегментных регистрах (там после GRUB остался мусор)
   asm(" \n \
@@ -85,9 +86,9 @@ void GDT_init(void)
  * удобочитаемого представления лимита, базы и флагов в кривое
  * Intel'овское 
  */
-unsigned int GDT_smartput(unsigned long seg, unsigned long base, unsigned long limit, unsigned long flags)
+uint32_t GDT_smartput(uint64_t seg, uint64_t base, uint64_t limit, uint64_t flags)
 {
-  unsigned long data;
+  uint64_t data;
   
   if(limit>0x000FFFFF)
   {
@@ -120,9 +121,9 @@ unsigned int GDT_smartput(unsigned long seg, unsigned long base, unsigned long l
 /* 
  * Да-да, вы догадались =)
  */
-unsigned int GDT_smartaput(unsigned long base, unsigned long limit, unsigned long flags)
+uint32_t GDT_smartaput(uint64_t base, uint64_t limit, uint64_t flags)
 {
-  unsigned int seg;
+  uint32_t seg;
         for(seg = 1; (seg < 8192)&&(GDT_addr[seg] != 0); seg++);
         seg = GDT_smartput(seg, base, limit, flags);
         return seg;

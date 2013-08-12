@@ -1,15 +1,16 @@
 #include <smp.h>
 #include <klibc.h>
 #include <ktty.h>
+#include <stdint.h>
 
 void smp_init(void)
 {
 /*
  * Попытка прочитать SMP
  */
-  unsigned int *addr = 0xFFFFFFFFC0000000;  // По этому адресу отображен первый мегабайт памяти
+  uint32_t *addr = 0xFFFFFFFFC0000000;  // По этому адресу отображен первый мегабайт памяти
   int i;
-  unsigned char found = 0;
+  uint8_t found = 0;
 /*
  * Сигнатура может быть в нескольких местах:
  * 1) Первый килобайт Extended BIOS Data Area (хз где это)
@@ -45,7 +46,7 @@ void smp_init(void)
       char oem[9] = {0};
       char product[13] = {0};
       // Описание системы расположено по адресу s->config
-      SMP_config *sc = (SMP_config *)( (unsigned long)addr + (unsigned long)(s->config) );
+      SMP_config *sc = (SMP_config *)( (uint64_t)addr + (uint64_t)(s->config) );
       //printf("SC is %l\n", sc);
       printf("Specification revision 1.%d\n", sc->revision);
       strncpy(oem, sc->oemid, 8);
@@ -55,7 +56,7 @@ void smp_init(void)
       printf("Manufacturer %s, board %s\n", oem, product);
       printf("Local APIC at addr %X\n", sc->lapic_addr);
 
-      char *addr2 = (char *)((unsigned long)sc + sizeof(SMP_config));
+      char *addr2 = (char *)((uint64_t)sc + sizeof(SMP_config));
       SMP_proc *p;
       for (i = 0; i < sc->count; i++)
       {
