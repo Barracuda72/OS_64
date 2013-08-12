@@ -1,11 +1,26 @@
 TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
-CPPFLAGS:=-m64 -I. -I./mm
+CPPFLAGS:=-m64 -I. -I./mm -I./x86_64 -I./kernel
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -Wconversion
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 #ASFLAGS:= --64 -g
 LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
-OBJECTS:= boot.o ktty.o kernel.o klibc.o cpuid.o ioport.o intr.o gdt.o task.o smp.o mm/page.o mm/phys.o mm/mem.o mutex.o timer.o
+OBJECTS:= \
+	x86_64/boot.o \
+	kernel/ktty.o \
+	kernel/kernel.o \
+	kernel/klibc.o \
+	x86_64/cpuid.o \
+	x86_64/ioport.o \
+	x86_64/intr.o \
+	x86_64/gdt.o \
+	kernel/task.o \
+	x86_64/smp.o \
+	mm/page.o \
+	mm/phys.o \
+	mm/mem.o \
+	x86_64/mutex.o \
+	x86_64/timer.o
 
 PREFIX:=x86_64-linux-gnu
 CC:=gcc

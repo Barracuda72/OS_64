@@ -7,7 +7,7 @@ SECTIONS
   . = 0x100000;
   .boot :
   {
-     boot.o(.text)
+     *boot.o(.text)
   }  
   
   . += 0xFFFFFFFFC0000000;
