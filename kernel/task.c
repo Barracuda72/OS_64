@@ -33,8 +33,8 @@ void tss_init()
   IntrTss.ist6 = (uint64_t)&intr_s[1022];
   IntrTss.ist7 = (uint64_t)&intr_s[1022];
   
-  s = GDT_smartaput(&IntrTss, sizeof(TSS64), SEG_PRESENT | SEG_TSS64);
-  s = CALC_SELECTOR(s, SEG_GDT | SEG_RPL0);
+  s = GDT_smartaput(&IntrTss, sizeof(TSS64), SEG_PRESENT | SEG_TSS64 | SEG_DPL3);
+  s = CALC_SELECTOR(s, SEG_GDT | SEG_RPL3);
   
   //BREAK();
   asm("ltr s");

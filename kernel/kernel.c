@@ -45,13 +45,17 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 
   printf("Kernel alive, up and running!\n");
 
+  char *test_text = "Syscall %d test\n";
+
   // Тест многозадачности
   if (task_fork() == 0)
   {
     // Дочерняя задача
     for(;;) 
     {
-      ktty_putc('C');
+      //ktty_putc('C');
+      // Тест системных вызовов
+      syscall_test_out(test_text, 51);
       asm("hlt");
     }
   } else {

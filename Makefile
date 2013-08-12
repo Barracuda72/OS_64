@@ -20,7 +20,8 @@ OBJECTS:= \
 	mm/phys.o \
 	mm/mem.o \
 	x86_64/mutex.o \
-	x86_64/timer.o
+	x86_64/timer.o \
+	kernel/syscall.o
 
 PREFIX:=x86_64-linux-gnu
 CC:=gcc

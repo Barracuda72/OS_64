@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 void GDT_init();
-uint32_t GDT_smartput(uint64_t seg, uint64_t base, uint64_t limit, uint64_t flags);
-uint32_t GDT_smartaput(uint64_t base, uint64_t limit, uint64_t flags);
+uint64_t GDT_smartput(uint64_t seg, uint64_t base, uint64_t limit, uint64_t flags);
+uint64_t GDT_smartaput(uint64_t base, uint64_t limit, uint64_t flags);
 
 // Флаги для GDT_smart*()
 #define SEG_DPL0  0x00000000

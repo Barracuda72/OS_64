@@ -3,6 +3,7 @@
 #include <kbd.h>
 #include <pagefault.h>
 #include <stdint.h>
+#include <syscall.h>
 
 #include <debug.h>
 
@@ -147,6 +148,7 @@ void intr_init()
   s_intr_install(0x20, &timer_intr, INTR_PRESENT|INTR_INTR_GATE);
   s_intr_install(0x21, &kbd_intr, INTR_PRESENT|INTR_INTR_GATE);
   s_intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE);
+  s_intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE);
   intr_setup();
 
   intr_enable();
