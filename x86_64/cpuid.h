@@ -7,6 +7,11 @@
 char *CPU_get_vendor_string(void);
 uint32_t CPU_get_info(void);
 uint32_t CPU_get_xinfo(void);
+// ecx = msr
+uint32_t CPU_read_MSR(uint32_t msr);
+
+void CPU_write_MSR(uint32_t msr, uint32_t eax, uint32_t edx);
+
 
 // Макросы
 

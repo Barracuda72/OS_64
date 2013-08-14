@@ -36,11 +36,11 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 
   printf("OS_64 build date: %s %s\n", __DATE__, __TIME__);
 
-  smp_init();
   extern uint64_t kernel_end;
   uint64_t pool = &kernel_end;
   mem_init(pool, (mb->mem_upper>>10)+2, mb);  // TODO: Исправить!
 
+  smp_init();
   task_init();
 
   printf("Kernel alive, up and running!\n");

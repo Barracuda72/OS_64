@@ -2,6 +2,8 @@
 #include <klibc.h>
 #include <ktty.h>
 #include <stdint.h>
+#include <page.h>
+#include <apic.h>
 
 void smp_init(void)
 {
@@ -19,6 +21,8 @@ void smp_init(void)
  * 4) В конце физической памяти (опять хз где конкретно)
  * Посему проверим только варианты 2 и 3
  */
+  // Подключим страницу, ее нет в адресном пространстве адра
+  mount_page(0x9F000, 0xFFFFFFFFC009F000);
   for(i = (0x9FC00>>2); i < (0xA0000>>2); i++)
     if(addr[i] == SMP_MAGIC)
     {
@@ -26,8 +30,10 @@ void smp_init(void)
       found = 1;
       break;
     }
+
+  // А этот адрес уже примонтирован
   if(!found)
-    for(i = (0xE0000>>2); i < (0x100000>>2); i++)
+    for(i = (0xF0000>>2); i < (0x100000>>2); i++) // FIXME: должно быть 0xE0000!
       if(addr[i] == SMP_MAGIC)
       {
         //printf("Found at addr %X\n",addr+(i));
@@ -55,7 +61,8 @@ void smp_init(void)
       product[12] = 0;
       printf("Manufacturer %s, board %s\n", oem, product);
       printf("Local APIC at addr %X\n", sc->lapic_addr);
-
+      // Инициализируем APIC
+      apic_init(sc->lapic_addr);
       char *addr2 = (char *)((uint64_t)sc + sizeof(SMP_config));
       SMP_proc *p;
       for (i = 0; i < sc->count; i++)
@@ -71,7 +78,7 @@ void smp_init(void)
 
           default:
             printf("Unknown byte %x at %l\n", *addr2, addr2);
-            return;  // TODO: Удалить!
+            i = sc->count;  // TODO: Удалить!
             addr2 += 8;
             break;
         }
@@ -82,5 +89,7 @@ void smp_init(void)
       printf("Using configuration %d\n", s->features[0]);
     }
   }
+  // Отмонтируем
+  umount_page(0xFFFFFFFFC009F000);
 }
 

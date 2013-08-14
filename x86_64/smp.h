@@ -29,10 +29,10 @@ typedef struct
 {
   uint32_t magic;    // "PCMP"
   uint16_t lenght;    // Размер структуры
-  uint8_t revision;    // Ревизия спецификации (один фиг)
+  uint8_t revision;    // Ревизия спецификации
   uint8_t chksum;    // Контрольная сумма
   char oemid[8];      // Идентификатор производителя (материнской платы? процессора?)
-  char productid[12];    // Идетнификатор продукта (какого?)
+  char productid[12];    // Идентификатор продукта (какого?)
   uint32_t oem_tbl;    // Указатель на таблицу OEM информации
   uint16_t oem_sz;    // Размер этой таблицы
   uint16_t count;    // Количество нижеследующих записей
@@ -52,7 +52,7 @@ typedef struct
   uint8_t reserved : 6;  // Оставшиеся 6 бит
   uint32_t cpu_sig;    // Сигнатура процессора (как по CPUID)
   uint32_t cpu_features;  // Возможности процессора (как по CPUID)
-  uint64_t reserved2;    // Дополним до 20 байт
+  uint32_t reserved2;    // Дополним до 20 байт
 } SMP_proc __attribute((packed));
 
 // Инициализация SMP

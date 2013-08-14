@@ -5,6 +5,8 @@
 
 void intr_install(uint8_t vector, void (*func)(), uint8_t type, uint8_t pc, uint16_t selec);
 
+void ext_intr_install(uint8_t vector, void (*func)());
+
 void intr_init();
 
 void intr_setup();

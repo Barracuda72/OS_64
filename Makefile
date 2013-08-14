@@ -21,6 +21,7 @@ OBJECTS:= \
 	mm/mem.o \
 	x86_64/mutex.o \
 	x86_64/timer.o \
+	x86_64/apic.o \
 	kernel/syscall.o
 
 PREFIX:=x86_64-linux-gnu

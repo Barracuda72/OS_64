@@ -3,6 +3,7 @@
 
 /*
  * Функции получения инфо о процессоре
+ * и им сочувствующие
  */
 
 static int tmp[5];
@@ -62,5 +63,18 @@ uint32_t CPU_get_xinfo(void)
     "a"(data[0])
   );
   return data[3];
+}
+
+// ecx = msr
+uint32_t CPU_read_MSR(uint32_t msr)
+{
+  uint32_t eax,edx;
+  asm("rdmsr":"=a"(eax),"=d"(edx):"c"(msr));
+  return eax;
+}
+
+void CPU_write_MSR(uint32_t msr, uint32_t eax, uint32_t edx)
+{
+  asm("wrmsr"::"c"(msr),"a"(eax),"d"(edx));
 }
 

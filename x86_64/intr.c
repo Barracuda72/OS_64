@@ -81,6 +81,15 @@ inline void s_intr_install(uint8_t vector, void (*func)(), uint8_t type)
   intr_install(vector, func, type, SYS_IST, SYS_CODE_SELECTOR);
 }
 
+/*
+ * Экспортируется в другие модули для установки своих
+ * обработчиков прерываний
+ */
+void ext_intr_install(uint8_t vector, void (*func)())
+{
+  s_intr_install(vector, func, INTR_PRESENT|INTR_INTR_GATE);
+}
+
 void intr_setup()
 {
   IDT_reg = (char *)((uint64_t)IDT_addr + 256*16);
@@ -128,7 +137,7 @@ void mask_irq(uint8_t irq)
 {
   if(irq > 15) return;
   char mask = inb(0x21 + 8*(irq>>3));
-  mask = mask||(1<<(irq&7));
+  mask = mask|(1<<(irq&7));
   outb(0x21 + 8*(irq>>3), mask); 
 }
 
@@ -150,7 +159,7 @@ void intr_init()
   s_intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE);
   s_intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE);
   intr_setup();
-
+  mask_irq(0); // отключим PIT - мы будем использовать APIC timer
   intr_enable();
 }
 
