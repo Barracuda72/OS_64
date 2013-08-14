@@ -4,6 +4,8 @@
 .code16
 .globl _start
 _start:
+  cld
+  cli
   // По адресу 0x1000 будет наш временный буфер
   xor %ax, %ax
   mov %ax, %es
@@ -62,22 +64,23 @@ _start:
   // То установим его
   mov $0x4F02, %ax
   mov %cx, %bx
+  //or $0x90, %bx // Включим использование фреймбуфера
   int $0x10 // SetVideoMode
 
 .l4:
+  // Включим адресную линию A20
+  inb $0x60, %al
+  or $2, %al
+  outb %al, $0x60
   // Переходим в 32-bit режим
   mov %cr0, %eax
   or $1, %eax
   mov %eax, %cr0
   lgdt gdtr
-  inb $0x60, %al
-  or $2, %al
-  outb %al, $0x60
   ljmp $0x08, $code32
 
 .code32
 code32:
-  cli
   mov $0x10, %ax
   mov %ax, %es
   mov %ax, %ds
