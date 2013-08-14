@@ -82,3 +82,8 @@ gdb:
 	@qemu-system-x86_64 -s -S -hda disk.img&
 	@gdb boot.elf -ex "target remote localhost:1234" -ex "set arch i386" \
 		-ex "b *0x100000"
+
+vesa: vesa.S
+	@gcc -c -o vesa.o vesa.S
+	@ld --oformat binary -Ttext 0x0 vesa.o -o b
+	@dd if=b of=vesa bs=1 skip=31744
