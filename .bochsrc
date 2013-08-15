@@ -33,3 +33,4 @@ cpu: count=4
 
 # Включаем вывод отладочных сообщений
 # debug: action=report
+# log: bochs.log
