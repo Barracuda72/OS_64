@@ -5,6 +5,8 @@
 #include <page.h>
 #include <apic.h>
 
+#include <debug.h>
+
 void smp_init(void)
 {
 /*
@@ -83,7 +85,9 @@ void smp_init(void)
             break;
         }
       }
-
+      // Инициализируем IO APIC (потом перемещу в правильное место)
+      ioapic_init(0xFEC00000);
+      //BREAK();
     } else {
       // Система представляет собой одну из стандартных конфигураций
       printf("Using configuration %d\n", s->features[0]);

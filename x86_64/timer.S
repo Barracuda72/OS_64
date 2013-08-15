@@ -9,13 +9,14 @@ timer_intr:
   // 0x10: %rflags старой задачи
   // 0x18: %rsp старой задачи
   // 0x20: %ss
-  //xchg %bx, %bx
   push %rdi
   // Заменяем стек на стек текущей задачи
   mov  0x20(%rsp), %rdi
   xchg %rdi, %rsp
   // %rdi = указатель на стек прерывания
   // Сохраняем регистры на стек текущей задачи
+  push %r8  // r8
+  push %r9  // r9
   push %rax // %rax
   push %rbx // %rbx
   push %rcx // %rcx
@@ -34,13 +35,12 @@ timer_intr:
   mov  %rdi, %rsp
   call task_switch
   // %rax = стек новой задачи
-  sub  $0x40, %rax
+  sub  $0x50, %rax
   mov  %rax, %rsp
-
-  movb $0x20, %al
-  outb %al, $0x20
-
   //xchg %bx, %bx
+  // PIC EOI
+  // movb $0x20, %al
+  // outb %al, $0x20
   // Восстанавливаем регистры новой задачи
   pop  %rbx
   mov  %rbx, %cr3
@@ -50,7 +50,12 @@ timer_intr:
   mov  0x20(%rsp), %rcx
   mov  0x28(%rsp), %rbx
   mov  0x30(%rsp), %rax
+  mov  0x38(%rsp), %r9
+  mov  0x40(%rsp), %r8
   // Меняем стеки обратно
   xchg %rsp, %rdi
   mov  (%rdi), %rdi
+  // APIC EOI
+  //xchg %bx, %bx
+  call apic_eoi
   iretq

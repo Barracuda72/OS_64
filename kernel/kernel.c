@@ -45,23 +45,28 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 
   printf("Kernel alive, up and running!\n");
 
-  char *test_text = "Syscall %d test\n";
-
+  //char *test_text = "Syscall %d test\n";
+  char *text_video = 0xFFFFFFFFC00B8000;
+  char c = 0;
   // Тест многозадачности
   if (task_fork() == 0)
   {
     // Дочерняя задача
+    // Крутим циферку в верхнем левом углу
     for(;;) 
     {
       //ktty_putc('C');
       // Тест системных вызовов
-      syscall_test_out(test_text, 51);
+      //syscall_test_out(test_text, 51);
+      text_video[1] = c++;
       asm("hlt");
     }
   } else {
+    // Крутим циферку в верхнем правом углу
     for(;;) 
     {
-      ktty_putc('P');
+      //ktty_putc('P');
+      text_video[159] = c++;
       asm("hlt");
     }
   }

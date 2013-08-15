@@ -113,11 +113,13 @@ void free_page(void *page)
  */
 void mount_page_t(void *phys_addr)
 {
+  intr_disable();
   //printf("Mount_t: %l\n", (uint64_t)phys_addr);
   kernel_pt[0] = calc_page(phys_addr);
   uint64_t inv_addr = TMP_MOUNT_ADDR; 
   asm("mov %0, %%rax\n \
        invlpg (%%rax)"::"m"(inv_addr));
+  intr_enable();
 }
 
 void umount_page_t()
@@ -319,7 +321,6 @@ void *copy_pages()
 
   uint64_t cr3;
   asm("mov %%cr3, %0\n":"=r"(cr3));
-
   return copy_page(cr3, 4);
 }
 

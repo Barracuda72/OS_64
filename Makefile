@@ -33,7 +33,8 @@ NM:=nm
 $(TARGET): $(OBJECTS)
 	$(LD) -Tkernel.lds -o $@ $(OBJECTS) $(LDFLAGS)
 	$(NM) $@ | cut -d' ' -f1,3 | sed -e 's/^\(ffffffff\|00000000\)//g' \
-		> ldsym
+	  > ldsym
+	$(NM) $@ | cut -d' ' -f1,3 >> ldsym
 
 clean:
 	-rm ${OBJECTS} *~ *.bin *.elf

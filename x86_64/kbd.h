@@ -5,6 +5,7 @@
 #include <ioport.h>
 #include <ktty.h>
 #include <stdint.h>
+#include <apic.h>
 
 /*
  * Обработчик прерывания клавиатуры
@@ -70,6 +71,8 @@ IRQ_HANDLER(kbd_intr)
 
   // И запишем обратно
   outb(0x61, creg);
+  // Укажем контроллеру APIC, что мы обработали прерывание
+  apic_eoi();
 }
 
 #endif //__KBD_H__

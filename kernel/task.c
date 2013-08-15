@@ -14,7 +14,10 @@
 
 TSS64 IntrTss;
 
+// Стек для прерываний
 uint64_t intr_s[1024];
+// Стек для страничной ошибки
+uint64_t fault_s[1024];
 uint16_t s = 0;  // Селектор задачи ядра
 volatile task *curr = 0; // Текущая выполняемая задача
 uint64_t next_pid = 1;
@@ -26,7 +29,7 @@ void tss_init()
   IntrTss.rsp2 = (uint64_t)&intr_s[1022];
   
   IntrTss.ist1 = (uint64_t)&intr_s[1022];
-  IntrTss.ist2 = (uint64_t)&intr_s[1022];
+  IntrTss.ist2 = (uint64_t)&fault_s[1022];
   IntrTss.ist3 = (uint64_t)&intr_s[1022];
   IntrTss.ist4 = (uint64_t)&intr_s[1022];
   IntrTss.ist5 = (uint64_t)&intr_s[1022];
@@ -101,7 +104,9 @@ asm("\n \
 read_rip: \n \
   movq %rsp, %rax \n \
   addq (%rsi), %rax \n \
-  subq $0x38, %rax # 0x40 займут регистры, минус адрес возврата \n \
+  subq $0x48, %rax # 0x50 займут регистры, минус адрес возврата \n \
+  movq %r8,  0x48(%rax) \n \
+  movq %r9,  0x40(%rax) \n \
   movq $0,   0x38(%rax) # RAX дочерней задачи \n \
   movq %rbx, 0x30(%rax) \n \
   movq %rcx, 0x28(%rax) \n \
@@ -114,58 +119,12 @@ read_rip: \n \
   movq %rdi, 0x08(%rax) \n \
   movq %rdi, 0x00(%rax) # CR3 дочерней задачи \n \
   \n \
-  addq $0x40, %rax \n \
+  addq $0x50, %rax \n \
   movq %rax, (%rsi) # Адрес стека дочерней задачи \n \
   movq (%rsp), %rax # Будущий адрес возврата из прерывания \n \
   ret \n \
 ");
 
-/*
-asm(" \n \
-.globl task_fork \n \
-task_fork: \n \
-  push %rdi \n \
-  push %rbx \n \
-  cli \n \
-  mov $0x30, %edi \n \
-  call kmalloc \n \
-  mov $next_pid, %rdi \n \
-  mov (%rdi), %rbx \n \
-  inc %rbx \n \
-  mov %rbx, (%rdi) \n \
-  mov %rax, %rdi \n \
-  mov %rbx, (%rdi) \n \
-  push %rdi \n \
-  call change_stack \n \
-  pop %rdi \n \
-  mov %rax, %rbx \n \
-  add %rsp, %rbx \n \
-  mov %rbx, 0x10(%rdi) \n \
-  add %rbp, %rax \n \
-  mov %rax, 0x18(%rdi) \n \
-  push %rdi \n \
-  call copy_pages \n \
-  pop %rdi \n \
-  mov %rax, 0x20(%rdi) \n \
-  mov $curr, %rax \n \
-  mov (%rax), %rax \n \
-  mov 0x28(%rax), %rbx \n \
-  mov %rbx, 0x28(%rdi) \n \
-  mov %rdi, 0x28(%rax) \n \
-  xchg %bx, %bx \n \
-  sti \n \
-  hlt \n \
-  mov $0, %rax \n \
-  mov $curr, %rbx \n \
-  cmp %rdi, (%rbx) \n \
-  je rt         \n \
-  mov (%rdi), %rax \n \
-rt: \n \
-  pop %rbx \n \
-  pop %rdi \n \
-  ret \n \
-");
-*/
 int task_fork()
 {
   uint64_t rip, off, cr3, rflags;
@@ -193,88 +152,6 @@ int task_fork()
   return new->pid;
 }
 
-int __task_fork()
-{
-  uint64_t rsp, rbp, rip, cr3, off;
-  intr_disable();
-  task *new = kmalloc(sizeof(task));
-  new->pid = next_pid++;
-  asm volatile("mov %%rsp, %0":"=r"(rsp)); 
-  asm volatile("mov %%rbp, %0":"=r"(rbp));
-  off = change_stack();
-  new->rsp = rsp+off;
-  //new->rbp = rbp+off;
-  new->rip = 0;
-  new->cr3 = copy_pages();
-  // Добавляем задачу в очередь выполнения
-  new->next = curr->next; 
-  curr->next = new;
-
-
-  // Включаем прерывания и ждем переключения задачи
-  //intr_enable();
-  asm volatile(" \n \
-                sti \n \
-                hlt");
-
-  if (curr->pid == new->pid)
-  {
-    // Мы в дочерней задаче
-    return 0;
-  } else {
-    return new->pid;
-  }
-}
-
-/*
- * Мне лень разбираться, почему куча мусора task_switch,
- * написанная "по мотивам" JamesM kernel tutorials не пашет.
- * Я проще напишу на ассемблере.
- */
-/*
-asm("\n \
-.globl task_switch \n \
-task_switch: \n \
-  xchg %bx, %bx \n \
-  mov $curr, %rbx \n \
-  mov (%rbx), %rbx \n \
-  and %rbx, %rbx \n \
-  jz ts_end \n \
-  \n \
-  mov $0x53, %edi \n \
-  call ktty_putc \n \
-  \n \
-  call read_rip \n \
-  mov $0xDEADC0DEDEADBEEF, %rcx \n \
-  cmp %rcx, %rax \n \
-  je ts_end \n \
-  \n \
-  mov %rax, 0x8(%rbx) \n \
-  mov %rsp, 0x10(%rbx) \n \
-  mov %rbp, 0x18(%rbx) \n \
-  mov %cr3, %rcx \n \
-  mov %rcx, 0x20(%rbx) \n \
-  \n \
-  cli \n \
-  mov 0x28(%rbx), %rbx \n \
-  \n \
-  mov $curr, %rcx \n \
-  mov %rbx, (%rcx) \n \
-  \n \
-  mov %rax, %rcx \n \
-  mov 0x10(%rbx), %rsp \n \
-  mov 0x18(%rbx), %rbp \n \
-  mov 0x20(%rbx), %rax \n \
-  mov %rax, %cr3 \n \
-  mov $0xDEADC0DEDEADBEEF, %rax \n \
-  sti \n \
-  jmp *%rcx \n \
-  \n \
-ts_end:     \n \
-  ret        \n \
-");
-*/
-
 uint64_t task_switch(task_regs *r)
 {
   // В r - стек прерывания
@@ -291,50 +168,6 @@ uint64_t task_switch(task_regs *r)
     r->rsp = curr->rsp;
   }
   return r->rsp;
-}
-
-/*
- * А вот и куча мусора
- */
-void __task_switch()
-{
-  if (curr == 0)
-    return;
-  ktty_putc('S');
-
-  uint64_t rsp, rbp, rip, cr3;
-  asm ("mov %%rsp, %0":"=r"(rsp));
-  asm ("mov %%rbp, %0":"=r"(rbp));
-  asm ("mov %%cr3, %0":"=r"(cr3));
-
-  //rip = read_rip();
-  // Если мы только что переключили задачу
-  if (rip == 0xDEADC0DEDEADBEEF)
-    return;
-
-  // Иначе - начнем переключение
-  curr->rip = rip;
-  curr->rsp = rsp;
-  //curr->rbp = rbp;
-  curr->cr3 = cr3;
-
-  curr = curr->next;
-
-  rsp = curr->rsp;
-  //rbp = curr->rbp;
-  cr3 = curr->cr3&0x000FFFFFFFFFF000; // Hack?
-  
-  asm volatile("         \
-    cli;                 \
-    xchg %%bx, %%bx; \
-    mov %0, %%rcx;       \
-    mov %1, %%rsp;       \
-    mov %2, %%rbp;       \
-    mov %3, %%cr3;       \
-    mov $0xDEADC0DEDEADBEEF, %%rax; \
-    sti;                 \
-    jmp *%%rcx           "
-  : : "r"(rip), "r"(rsp), "r"(rbp), "r"(cr3));
 }
 
 void get_c()

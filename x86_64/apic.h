@@ -7,7 +7,11 @@ uint32_t apic_get_base();
 void apic_set_base(uint32_t base);
 uint8_t apic_present();
 void apic_enable();
+void apic_eoi();
 
+void ioapic_init(uint32_t ioapic_addr);
+uint32_t ioapic_read(uint8_t reg);
+void ioapic_write(uint8_t reg, uint32_t val);
 
 /*
  * Регистры APIC

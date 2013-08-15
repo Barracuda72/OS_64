@@ -34,7 +34,8 @@ char *IDT_addr;
 char *IDT_reg;
 
 #define SYS_CODE_SELECTOR 0x8
-#define SYS_IST 1
+#define SYS_IST 1 // Стек для прерываний
+#define PAGE_IST 2 // И отдельный для страничной ошибки
 
 /*
  * Функция intr_install() устанавливает в качестве обработчика vector функцию func. 
@@ -141,22 +142,34 @@ void mask_irq(uint8_t irq)
   outb(0x21 + 8*(irq>>3), mask); 
 }
 
+uint8_t intr_sema = 0;
+
 void intr_enable()
 {
-  asm("sti");
+  if (intr_sema == 0)
+  {
+    printf("Bug: intr_enable!\n");
+    BREAK();
+    asm("hlt");
+  }
+  if (--intr_sema == 0)
+    asm("sti");
 }
 
 void intr_disable()
 {
+  intr_sema++;
   asm("cli");
 }
 
 void intr_init()
 {
+  intr_disable();
   IDT_addr = (char *)(&IDT[0]);
   s_intr_install(0x20, &timer_intr, INTR_PRESENT|INTR_INTR_GATE);
   s_intr_install(0x21, &kbd_intr, INTR_PRESENT|INTR_INTR_GATE);
-  s_intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE);
+  //s_intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE);
+  intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE, PAGE_IST, SYS_CODE_SELECTOR);
   s_intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE);
   intr_setup();
   mask_irq(0); // отключим PIT - мы будем использовать APIC timer

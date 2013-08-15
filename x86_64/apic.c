@@ -20,7 +20,8 @@ apic_spur_isr: \n \
 ");
 
 asm("\n \
-apic_tmr_isr: \n \
+.globl apic_eoi \n \
+apic_eoi: \n \
   push %rax \n \
   mov lapic_addr, %rax \n \
   cmp $0, %rax \n \
@@ -29,7 +30,7 @@ apic_tmr_isr: \n \
   movl $0, (%rax) \n \
 .ret: \n \
   pop %rax \n \
-  iretq \n \
+  ret \n \
 ");
 
 void apic_init(uint32_t lapic_a)
@@ -45,7 +46,7 @@ void apic_init(uint32_t lapic_a)
   lapic_addr = APIC_LAPIC_ADDR;
   mount_page_hw(lapic_a, lapic_addr);
   // Установим прерывания
-  ext_intr_install(0x20, apic_tmr_isr);
+  //ext_intr_install(0x20, apic_tmr_isr);
   ext_intr_install(0x27, apic_spur_isr);
  
   // Инициализируем LAPIC 
@@ -53,9 +54,16 @@ void apic_init(uint32_t lapic_a)
   lapic_addr[APIC_LDR] = (lapic_addr[APIC_LDR]&0x00FFFFFF)|1;
   lapic_addr[APIC_LVT_TMR] = APIC_DISABLE;
   lapic_addr[APIC_LVT_PERF] = APIC_NMI;
-  lapic_addr[APIC_LVT_LINT0] = APIC_DISABLE;
-  lapic_addr[APIC_LVT_LINT1] = APIC_DISABLE;
+  //lapic_addr[APIC_LVT_LINT0] = APIC_DISABLE;
+  lapic_addr[APIC_LVT_LINT0] &= 0xFFFE58FF;  // Delivery = fixed
+  //lapic_addr[APIC_LVT_LINT1] = APIC_DISABLE;
+  lapic_addr[APIC_LVT_LINT1] &= 0xFFFE58FF;
+  lapic_addr[APIC_LVT_LINT1] |= 0x400; // Delivery = NMI
   lapic_addr[APIC_TASKPRIOR] = 0;
+
+  // Подключим линии INTR и NMI к LAPIC
+  outb(0x22, 0x70);
+  outb(0x23, 1);
  
   // Включаем APIC, разрешая "странное" прерывание
   lapic_addr[APIC_SPURIOUS] = 39|APIC_SW_ENABLE;
@@ -91,7 +99,6 @@ void apic_init(uint32_t lapic_a)
   // Посчитаем...
   cpubusfreq = ((0xFFFFFFFF - lapic_addr[APIC_TMRINITCNT]) + 1)*16*19;//*100;
   printf("CPU bus freq: %d\n", cpubusfreq);
-  BREAK();
   tmp = cpubusfreq / quantum / 16;
  
   // Теперь в tmp - нужное нам значение
@@ -139,8 +146,24 @@ void apic_enable()
 
 void ioapic_init(uint32_t ioapic_phys)
 {
+ktty_putc('1');
   ioapic_addr = APIC_IOAPIC_ADDR;
   mount_page_hw(ioapic_phys, ioapic_addr);
+ktty_putc('1');
+  // Маскируем IRQ0 (это PIC)
+  ioapic_write(0x10, 0x10000);
+  ioapic_write(0x11, 0);
+
+ktty_putc('1');
+  // Настройка IRQ1 (клавиатура) на Int21
+  ioapic_write(0x12, 0x21);
+  ioapic_write(0x13, 0);
+
+ktty_putc('1');
+  // Настройка IRQ16 (PCI 1) на Int30
+  ioapic_write(0x30, 0xA030);
+  ioapic_write(0x31, 0);
+  printf("IO APIC init complete\n");
   // FIXME!
 }
 

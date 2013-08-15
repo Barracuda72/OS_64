@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <ktty.h>
 
+#include <debug.h>
+
 void putdec(uint32_t byte);
 void puthexi(uint32_t dword);
 void puthex(uint8_t byte);

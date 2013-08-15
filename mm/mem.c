@@ -45,7 +45,8 @@ void *kmalloc(uint64_t size)
   // Если кончилась память
   if (head >= ((uint64_t)kernel_heap + kernel_hlim))
     return 0;
-
+  //BREAK();
+  printf("H: %l\n", head);
   // Если фрагмент можно и нужно разбить на два
   if (head->size > (size + sizeof(kmem_header)))
   {
