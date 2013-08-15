@@ -37,6 +37,7 @@ enum
 } APIC_REGS;
 
 #define APIC_BASE_MSR 0x1B
+#define APIC_BASE_MSR_BSP    0x100 // Процессор является BSP
 #define APIC_BASE_MSR_ENABLE 0x800
 #define APIC_DISABLE   0x10000
 #define APIC_SW_ENABLE 0x100
@@ -44,4 +45,10 @@ enum
 #define APIC_NMI       (4<<8)
 #define TMR_PERIODIC   0x20000
 #define TMR_BASEDIV    (1<<20)
+
+#define APIC_LAPIC_ADDR 0xFFFFFFFFC00F0000
+#define APIC_IOAPIC_ADDR 0xFFFFFFFFC00F1000
+
+#define IOAPIC_REGSEL 0x00>>2
+#define IOAPIC_REGWIN 0x10>>2
 #endif // __APIC_H__

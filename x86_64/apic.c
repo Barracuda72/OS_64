@@ -8,6 +8,7 @@
 #include <debug.h>
 
 uint32_t *lapic_addr = 0;
+uint32_t *ioapic_addr = 0;
 void apic_spur_isr();
 void apic_tmr_isr();
 // Количество срабатываний таймера в секунду
@@ -41,7 +42,7 @@ void apic_init(uint32_t lapic_a)
   // Примонтируем страницу с регистрами APIC на адрес
   // 0xFFFFFFFFC00F0000. По этому адресу в пространство
   // ядра отображено ПЗУ BIOS. Зачем оно нам?
-  lapic_addr = 0xFFFFFFFFC00F0000;
+  lapic_addr = APIC_LAPIC_ADDR;
   mount_page_hw(lapic_a, lapic_addr);
   // Установим прерывания
   ext_intr_install(0x20, apic_tmr_isr);
@@ -117,14 +118,14 @@ uint8_t apic_present()
 void apic_set_base(uint32_t apic)
 {
   uint32_t edx = 0;
-  uint32_t eax = (apic & 0xfffff000) | APIC_BASE_MSR_ENABLE;
+  uint32_t eax = (apic & 0xfffff100) | APIC_BASE_MSR_ENABLE;
  
   CPU_write_MSR(APIC_BASE_MSR, eax, edx);
 }
  
 uint32_t apic_get_base()
 {
-  return CPU_read_MSR(APIC_BASE_MSR)&0xFFFFF000;
+  return CPU_read_MSR(APIC_BASE_MSR)&0xFFFFF100;
 }
  
 void apic_enable()
@@ -135,3 +136,23 @@ void apic_enable()
   // получать все остальные прерывания
   lapic_addr[APIC_SPURIOUS] |= APIC_SW_ENABLE;
 }
+
+void ioapic_init(uint32_t ioapic_phys)
+{
+  ioapic_addr = APIC_IOAPIC_ADDR;
+  mount_page_hw(ioapic_phys, ioapic_addr);
+  // FIXME!
+}
+
+uint32_t ioapic_read(uint8_t reg)
+{
+  ioapic_addr[IOAPIC_REGSEL] = reg;
+  return ioapic_addr[IOAPIC_REGWIN];
+}
+
+void ioapic_write(uint8_t reg, uint32_t val)
+{
+  ioapic_addr[IOAPIC_REGSEL] = reg;
+  ioapic_addr[IOAPIC_REGWIN] = val;
+}
+
