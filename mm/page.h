@@ -10,7 +10,7 @@ struct _pde_pte_desc  //Структура, описывающая дескри�
   uint64_t writable : 1;  // Страница доступна для записи
   uint64_t r3_access : 1;  // Страница доступна пользователю (уровень привелегий 3)
   uint64_t cache_mode : 1;  // Режим кеширования страницы (write back (0) / write through (1))
-  uint64_t cache_enable : 1;  // Кешировние разрешено/запрещено
+  uint64_t cache_disable : 1;  // Кешировние разрешено/запрещено
   uint64_t wasaccess : 1;  // К странице было обращение
   uint64_t waswritten : 1;  // В страницу была произведена запись
   uint64_t bigpage : 1;  // "Большая" страница
@@ -46,6 +46,7 @@ typedef union
 void page_init(uint64_t *last);
 
 void mount_page(void *physical, void *logical);
+void mount_page_hw(void *physical, void *logical);
 void umount_page(void *logical);
 void *alloc_page();
 void free_page(void *p);

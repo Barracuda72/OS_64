@@ -36,6 +36,17 @@ pte_desc calc_page(void *phys_addr)
   return page;
 }
 
+pte_desc calc_page_hw(void *phys_addr)
+{
+  pte_desc page;
+  page.h = 0;
+  page.p.address = (uint64_t)phys_addr >> 12;
+  page.p.exists = 1;
+  page.p.writable = 1;
+  page.p.cache_disable = 1;
+  return page;
+}
+
 /*
  * TODO:
  * Какой-то старый и непонятный кусок кода.
@@ -117,7 +128,7 @@ void umount_page_t()
        invlpg (%%rax)"::"m"(inv_addr));
 }
   
-void mount_page(void *phys_addr, void *log_addr)
+void mount_page_do(void *log_addr, pte_desc ph)
 {
   //printf("Mounting 0x%X - 0x%l\n", phys_addr, log_addr);
   linear addr;
@@ -162,10 +173,19 @@ void mount_page(void *phys_addr, void *log_addr)
 
   // PT
   mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
-  p[addr.l.pt] = calc_page(phys_addr);
+  p[addr.l.pt] = ph;
 
   umount_page_t();
+}
 
+void mount_page(void *phys, void *log)
+{
+  mount_page_do(log, calc_page(phys));
+}
+
+void mount_page_hw(void *phys, void *log)
+{
+  mount_page_do(log, calc_page_hw(phys));
 }
 
 void umount_page(void *log_addr)

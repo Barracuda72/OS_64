@@ -5,6 +5,8 @@
 #include <intr.h>
 #include <page.h>
 
+#include <debug.h>
+
 uint32_t *lapic_addr = 0;
 void apic_spur_isr();
 void apic_tmr_isr();
@@ -20,7 +22,6 @@ asm("\n \
 apic_tmr_isr: \n \
   push %rax \n \
   mov lapic_addr, %rax \n \
-  mov (%rax), %rax \n \
   cmp $0, %rax \n \
   je .ret \n \
   add $0xB0, %rax #APIC_EOI \n \
@@ -34,17 +35,19 @@ void apic_init(uint32_t lapic_a)
 {
   intr_disable();
   uint32_t tmp, cpubusfreq;
- 
+  // Отключим PIC
+  outb(0x21, 0xFF);
+  outb(0xA1, 0xFF);
   // Примонтируем страницу с регистрами APIC на адрес
   // 0xFFFFFFFFC00F0000. По этому адресу в пространство
   // ядра отображено ПЗУ BIOS. Зачем оно нам?
   lapic_addr = 0xFFFFFFFFC00F0000;
-  mount_page(lapic_a, lapic_addr);
-  //set up isrs
+  mount_page_hw(lapic_a, lapic_addr);
+  // Установим прерывания
   ext_intr_install(0x20, apic_tmr_isr);
   ext_intr_install(0x27, apic_spur_isr);
  
-  //initialize LAPIC to a well known state
+  // Инициализируем LAPIC 
   lapic_addr[APIC_DFR] = 0xFFFFFFFF;
   lapic_addr[APIC_LDR] = (lapic_addr[APIC_LDR]&0x00FFFFFF)|1;
   lapic_addr[APIC_LVT_TMR] = APIC_DISABLE;
@@ -53,48 +56,49 @@ void apic_init(uint32_t lapic_a)
   lapic_addr[APIC_LVT_LINT1] = APIC_DISABLE;
   lapic_addr[APIC_TASKPRIOR] = 0;
  
-  //okay, now we can enable APIC
-  //global enable
-  lapic_addr[APIC_SPURIOUS] = 39;
-  apic_enable();
-  //map APIC timer to an interrupt, and by that enable it in one-shot mode
-  lapic_addr[APIC_LVT_TMR] = 32;
-  //set up divide value to 16
+  // Включаем APIC, разрешая "странное" прерывание
+  lapic_addr[APIC_SPURIOUS] = 39|APIC_SW_ENABLE;
+  //apic_enable();
+  // Указываем таймеру APIC номер прерывания, и этим
+  // включая его в режиме единичного срабатывания
+  lapic_addr[APIC_LVT_TMR] = 32|APIC_SW_ENABLE;
+  // Установим делитель 16
   lapic_addr[APIC_TMRDIV] = 0x03;
  
-  //initialize PIT Ch 2 in one-shot mode
-  //waiting 1 sec could slow down boot time considerably,
-  //so we'll wait 1/100 sec, and multiply the counted ticks
+  // Установим канал 2 PIT в режим единичного срабатывания
+  // Ждем 1/100 секунды
   outb(0x61, (inb(0x61)&0xFD)|1);
   outb(0x43, 0xB2);
-  //1193180/100 Hz = 11931 = 2e9bh
-  outb(0x42, 0x9B); //LSB
-  inb(0x60); //short delay
-  outb(0x42, 0x2E); //MSB
+  // 1193180/100 Hz = 11931 = 0x2E9B
+  outb(0x42, 0x9B); // LSB
+  inb(0x60); // маленькая задержка
+  outb(0x42, 0x2E); // MSB
  
-  //reset PIT one-shot counter (start counting)
+  // Сбросим счетчик PIT (начнем отсчет)
   tmp = inb(0x61)&0xFE;
-  outb(0x61, (uint8_t)tmp);		//gate low
-  outb(0x61, (uint8_t)tmp|1);		//gate high
-  //reset APIC timer (set counter to -1)
+  outb(0x61, (uint8_t)tmp);     // выкл
+  outb(0x61, (uint8_t)tmp|1);   // вкл
+  // Сбросим счетчик таймера APIC (установим в -1)
   lapic_addr[APIC_TMRINITCNT] = 0xFFFFFFFF;
  
-  //now wait until PIT counter reaches zero
+  // Ждем обнуления счетчика PIT
   while(!(inb(0x61)&0x20));
  
-  //stop APIC timer
+  // Остановим таймер APIC
   lapic_addr[APIC_LVT_TMR] = APIC_DISABLE;
  
-  //now do the math...
-  cpubusfreq = ((0xFFFFFFFF - lapic_addr[APIC_TMRINITCNT]) + 1)*16*100;
+  // Посчитаем...
+  cpubusfreq = ((0xFFFFFFFF - lapic_addr[APIC_TMRINITCNT]) + 1)*16*19;//*100;
+  printf("CPU bus freq: %d\n", cpubusfreq);
+  BREAK();
   tmp = cpubusfreq / quantum / 16;
  
-  //sanity check, now tmp holds appropriate number of ticks, use it as APIC timer counter initializer
+  // Теперь в tmp - нужное нам значение
   lapic_addr[APIC_TMRINITCNT] = (tmp < 16 ? 16 : tmp);
-  //finally re-enable timer in periodic mode
+  // Окончательно включаем таймер в периодическом режиме
   lapic_addr[APIC_LVT_TMR] = 32|TMR_PERIODIC;
-  //setting divide value register again not needed by the manuals
-  //although I have found buggy hardware that required it
+  // Повторная установка делителя необходима для некоторого
+  // кривого железа, по мануалам она не нужна
   lapic_addr[APIC_TMRDIV] = 0x03;
   intr_enable();
 }
@@ -103,30 +107,31 @@ void apic_init(uint32_t lapic_a)
 uint8_t apic_present()
 {
 /*
-   uint32_t eax, edx;
-   cpuid(1, &eax, &edx);
-   return edx & CPUID_FLAG_APIC;
+  uint32_t eax, edx;
+  cpuid(1, &eax, &edx);
+  return edx & CPUID_FLAG_APIC;
 */
   return 1;
 }
  
 void apic_set_base(uint32_t apic)
 {
-   uint32_t edx = 0;
-   uint32_t eax = (apic & 0xfffff000) | APIC_BASE_MSR_ENABLE;
+  uint32_t edx = 0;
+  uint32_t eax = (apic & 0xfffff000) | APIC_BASE_MSR_ENABLE;
  
-   CPU_write_MSR(APIC_BASE_MSR, eax, edx);
+  CPU_write_MSR(APIC_BASE_MSR, eax, edx);
 }
  
 uint32_t apic_get_base()
 {
-   return CPU_read_MSR(APIC_BASE_MSR)&0xFFFFF000;
+  return CPU_read_MSR(APIC_BASE_MSR)&0xFFFFF000;
 }
  
 void apic_enable()
 {
-    apic_set_base(apic_get_base());
- 
-    /* Set the Spourious Interrupt Vector Register bit 8 to start receiving interrupts */
-    lapic_addr[APIC_SPURIOUS] |= APIC_SW_ENABLE;
+  apic_set_base(apic_get_base());
+
+  // Включим "странное" прерывание, чтобы начать
+  // получать все остальные прерывания
+  lapic_addr[APIC_SPURIOUS] |= APIC_SW_ENABLE;
 }
