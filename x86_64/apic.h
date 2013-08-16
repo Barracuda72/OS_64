@@ -39,7 +39,40 @@ enum
   APIC_TMRCURRCNT       = 0x390>>2,
   APIC_TMRDIV           = 0x3E0>>2,
 } APIC_REGS;
-
+/*
+Local APIC Register Addresses 
+Offset  Register Name  Software Read/Write
+0x0000h - 0x0010  reserved  -
+0x0020h  Local APIC ID Register Read/Write
+0x0030h  Local APIC ID Version Register Read only
+0x0040h - 0x0070h  reserved  -
+0x0080h  Task Priority Register Read/Write
+0x0090h  Arbitration Priority Register Read only
+0x00A0h  Processor Priority Register Read only
+0x00B0h  EOI Register  Write only
+0x00C0h  reserved  -
+0x00D0h  Logical Destination Register Read/Write
+0x00E0h  Destination Format Register Bits 0-27 Read only, Bits 28-31 Read/Write
+0x00F0h  Spurious-Interrupt Vector Register Bits 0-3 Read only, Bits 4-9 Read/Write
+0x0100h - 0x0170  ISR 0-255 Read only
+0x0180h - 0x01F0h  TMR 0-255 Read only
+0x0200h - 0x0270h  IRR 0-255 Read only
+0x0280h  Error Status Register Read only
+0x0290h - 0x02F0h  reserved  -
+0x0300h  Interrupt Command Register 0-31 Read/Write
+0x0310h  Interrupt Command Register 32-63 Read/Write
+0x0320h  Local Vector Table (Timer) Read/Write
+0x0330h  reserved  -
+0x0340h  Performance Counter LVT Read/Write
+0x0350h  Local Vector Table (LINT0) Read/Write
+0x0360h  Local Vector Table (LINT1) Read/Write
+0x0370h  Local Vector Table (Error) Read/Write
+0x0380h  Initial Count Register for Timer Read/Write
+0x0390h  Current Count Register for Timer Read only
+0x03A0h - 0x03D0h  reserved  -
+0x03E0h  Timer Divide Configuration Register Read/Write
+0x03F0h  reserved  -
+*/
 #define APIC_BASE_MSR 0x1B
 #define APIC_BASE_MSR_BSP    0x100 // Процессор является BSP
 #define APIC_BASE_MSR_ENABLE 0x800
@@ -55,4 +88,5 @@ enum
 
 #define IOAPIC_REGSEL 0x00>>2
 #define IOAPIC_REGWIN 0x10>>2
+#define IOAPIC_ENABLED 0x01
 #endif // __APIC_H__

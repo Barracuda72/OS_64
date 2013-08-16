@@ -45,8 +45,8 @@ typedef struct
 typedef struct
 {
   uint8_t type;    // Всегда 0 - это процессор
-  uint8_t lapic_id;    // Local APIC ID
-  uint8_t lapic_version;  // Версия Local APIC
+  uint8_t apic_id;    // Local APIC ID
+  uint8_t apic_version;  // Версия Local APIC
   uint8_t enabled : 1;  // 1 бит - процессор включен
   uint8_t bsp : 1;    // Это Bootstrap Processor?
   uint8_t reserved : 6;  // Оставшиеся 6 бит
@@ -55,42 +55,46 @@ typedef struct
   uint32_t reserved2;    // Дополним до 20 байт
 } SMP_proc __attribute((packed));
 
+// Описание шины
+typedef struct
+{
+  uint8_t type; // 1 - Шина
+  uint8_t id;
+  uint8_t name[6];
+} SMP_bus __attribute((packed));
+
+// Описание IO APIC
+typedef struct
+{
+  uint8_t type; // 2 - IO APIC
+  uint8_t apic_id;
+  uint8_t apic_version;
+  uint8_t flags;
+  uint32_t address;  
+} SMP_ioapic __attribute((packed));
+
+// Описание источника прерываний
+typedef struct
+{
+  uint8_t type; // 3 - источник прерываний
+  uint8_t irq_type;
+  uint16_t irq_flag;
+  uint8_t src_bus;
+  uint8_t src_bus_irq;
+  uint8_t dst_apic;
+  uint8_t dst_irq;
+} SMP_intrsrc __attribute((packed));
+
+enum
+{
+  SMP_PROCESSOR = 0,
+  SMP_BUS,
+  SMP_IOAPIC,
+  SMP_INTRSRC
+} SMP_ENT;
+
 // Инициализация SMP
 void smp_init(void);
 
-/*
-Local APIC Register Addresses 
-Offset  Register Name  Software Read/Write
-0x0000h - 0x0010  reserved  -
-0x0020h  Local APIC ID Register Read/Write
-0x0030h  Local APIC ID Version Register Read only
-0x0040h - 0x0070h  reserved  -
-0x0080h  Task Priority Register Read/Write
-0x0090h  Arbitration Priority Register Read only
-0x00A0h  Processor Priority Register Read only
-0x00B0h  EOI Register  Write only
-0x00C0h  reserved  -
-0x00D0h  Logical Destination Register Read/Write
-0x00E0h  Destination Format Register Bits 0-27 Read only, Bits 28-31 Read/Write
-0x00F0h  Spurious-Interrupt Vector Register Bits 0-3 Read only, Bits 4-9 Read/Write
-0x0100h - 0x0170  ISR 0-255 Read only
-0x0180h - 0x01F0h  TMR 0-255 Read only
-0x0200h - 0x0270h  IRR 0-255 Read only
-0x0280h  Error Status Register Read only
-0x0290h - 0x02F0h  reserved  -
-0x0300h  Interrupt Command Register 0-31 Read/Write
-0x0310h  Interrupt Command Register 32-63 Read/Write
-0x0320h  Local Vector Table (Timer) Read/Write
-0x0330h  reserved  -
-0x0340h  Performance Counter LVT Read/Write
-0x0350h  Local Vector Table (LINT0) Read/Write
-0x0360h  Local Vector Table (LINT1) Read/Write
-0x0370h  Local Vector Table (Error) Read/Write
-0x0380h  Initial Count Register for Timer Read/Write
-0x0390h  Current Count Register for Timer Read only
-0x03A0h - 0x03D0h  reserved  -
-0x03E0h  Timer Divide Configuration Register Read/Write
-0x03F0h  reserved  -
-*/
 #endif
 

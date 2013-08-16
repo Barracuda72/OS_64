@@ -29,7 +29,7 @@ display_library: sdl
 cpuid: vendor_string=GenuineIntel
 
 # Включаем поддержку SMP
-cpu: count=4
+cpu: count=2
 
 # Включаем вывод отладочных сообщений
 # debug: action=report

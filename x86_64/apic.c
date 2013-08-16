@@ -12,7 +12,7 @@ uint32_t *ioapic_addr = 0;
 void apic_spur_isr();
 void apic_tmr_isr();
 // Количество срабатываний таймера в секунду
-uint32_t quantum = 1;//1000;
+uint32_t quantum = 10;//1000;
 
 asm("\n \
 apic_spur_isr: \n \
@@ -35,7 +35,6 @@ apic_eoi: \n \
 
 void apic_init(uint32_t lapic_a)
 {
-  intr_disable();
   uint32_t tmp, cpubusfreq;
   // Отключим PIC
   outb(0x21, 0xFF);
@@ -70,23 +69,30 @@ void apic_init(uint32_t lapic_a)
   //apic_enable();
   // Указываем таймеру APIC номер прерывания, и этим
   // включая его в режиме единичного срабатывания
-  lapic_addr[APIC_LVT_TMR] = 32|APIC_SW_ENABLE;
+  lapic_addr[APIC_LVT_TMR] = 32;
   // Установим делитель 16
   lapic_addr[APIC_TMRDIV] = 0x03;
  
   // Установим канал 2 PIT в режим единичного срабатывания
-  // Ждем 1/100 секунды
+  // через 1/100 секунды
   outb(0x61, (inb(0x61)&0xFD)|1);
-  outb(0x43, 0xB2);
+  // Команда - "принять делитель в двоичном формате для 
+  // канала 2 и установить режим единичного срабатывания"
+  // (2<<6) - второй канал
+  // (3<<4) - полный делитель
+  // (1<<1) - единичное срабатывание
+  // (0<<0) - делитель - двоичное число (не BCD)
+  outb(0x43, 0xB2); 
   // 1193180/100 Hz = 11931 = 0x2E9B
-  outb(0x42, 0x9B); // LSB
+  outb(0x42, 0x9B); // Младший байт
   inb(0x60); // маленькая задержка
-  outb(0x42, 0x2E); // MSB
+  outb(0x42, 0x2E); // Старший байт
  
   // Сбросим счетчик PIT (начнем отсчет)
   tmp = inb(0x61)&0xFE;
   outb(0x61, (uint8_t)tmp);     // выкл
   outb(0x61, (uint8_t)tmp|1);   // вкл
+  //BREAK();
   // Сбросим счетчик таймера APIC (установим в -1)
   lapic_addr[APIC_TMRINITCNT] = 0xFFFFFFFF;
  
@@ -97,7 +103,7 @@ void apic_init(uint32_t lapic_a)
   lapic_addr[APIC_LVT_TMR] = APIC_DISABLE;
  
   // Посчитаем...
-  cpubusfreq = ((0xFFFFFFFF - lapic_addr[APIC_TMRINITCNT]) + 1)*16*19;//*100;
+  cpubusfreq = ((0xFFFFFFFF - lapic_addr[APIC_TMRCURRCNT]) + 1)*16*100;
   printf("CPU bus freq: %d\n", cpubusfreq);
   tmp = cpubusfreq / quantum / 16;
  
@@ -108,7 +114,6 @@ void apic_init(uint32_t lapic_a)
   // Повторная установка делителя необходима для некоторого
   // кривого железа, по мануалам она не нужна
   lapic_addr[APIC_TMRDIV] = 0x03;
-  intr_enable();
 }
 
 // FIXME!
@@ -146,25 +151,21 @@ void apic_enable()
 
 void ioapic_init(uint32_t ioapic_phys)
 {
-ktty_putc('1');
   ioapic_addr = APIC_IOAPIC_ADDR;
   mount_page_hw(ioapic_phys, ioapic_addr);
-ktty_putc('1');
+
   // Маскируем IRQ0 (это PIC)
   ioapic_write(0x10, 0x10000);
   ioapic_write(0x11, 0);
 
-ktty_putc('1');
   // Настройка IRQ1 (клавиатура) на Int21
   ioapic_write(0x12, 0x21);
   ioapic_write(0x13, 0);
 
-ktty_putc('1');
   // Настройка IRQ16 (PCI 1) на Int30
   ioapic_write(0x30, 0xA030);
   ioapic_write(0x31, 0);
   printf("IO APIC init complete\n");
-  // FIXME!
 }
 
 uint32_t ioapic_read(uint8_t reg)

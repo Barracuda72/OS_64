@@ -67,26 +67,46 @@ void smp_init(void)
       apic_init(sc->lapic_addr);
       char *addr2 = (char *)((uint64_t)sc + sizeof(SMP_config));
       SMP_proc *p;
+      SMP_bus *b;
+      SMP_ioapic *io;
+      SMP_intrsrc *is;
       for (i = 0; i < sc->count; i++)
       {
         switch(*addr2)
         {
-          case 0:
-            // Процессор
+          case SMP_PROCESSOR:
             p = (SMP_proc *)addr2;
-            printf("Processor, LAPIC ID %d, En : %d, BSP : %d\n", p->lapic_id, p->enabled, p->bsp);
+            printf("Processor, APIC ID %d, En : %d, BSP : %d\n", p->apic_id, p->enabled, p->bsp);
             addr2 += 20;//sizeof(SMP_proc);
+            break;
+
+          case SMP_BUS:
+            b = (SMP_bus*)addr2;
+            memcpy(oem, b->name, 6);
+            oem[6] = 0;
+            printf("Bus, ID %d, name %s\n", b->id, oem);
+            addr2 += 8;
+            break;
+
+          case SMP_IOAPIC:
+            io = (SMP_ioapic *)addr2;
+            printf("IO APIC, ID %d (flags %b) at 0x%X\n", io->apic_id, io->flags, io->address); 
+            if (io->flags&IOAPIC_ENABLED)
+              ioapic_init(io->address);
+            addr2 += 8;
+            break;
+
+          case SMP_INTRSRC:
+            // FIXME! Пока не интересно
+            addr2 += 8;
             break;
 
           default:
             printf("Unknown byte %x at %l\n", *addr2, addr2);
-            i = sc->count;  // TODO: Удалить!
-            addr2 += 8;
+            i = sc->count;
             break;
         }
       }
-      // Инициализируем IO APIC (потом перемещу в правильное место)
-      ioapic_init(0xFEC00000);
       //BREAK();
     } else {
       // Система представляет собой одну из стандартных конфигураций
