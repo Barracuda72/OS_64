@@ -87,5 +87,12 @@ gdb:
 
 vesa: vesa.S
 	@gcc -c -o vesa.o vesa.S
-	@ld --oformat binary -Ttext 0x0 vesa.o -o b
+	@ld --oformat binary -Ttext 0x0 vesa.o -o v
 	@dd if=b of=vesa bs=1 skip=31744
+	@rm v
+
+smp: smp.S
+	@gcc -c -o smp.o smp.S
+	@ld --oformat binary -Ttext 0x0 smp.o -o s
+	@dd if=s of=smp bs=1 skip=31744
+	@rm s
