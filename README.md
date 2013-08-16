@@ -9,6 +9,7 @@ Currently implemented features include:
 * Simple drivers for screen and kbd
 * LAPIC and IO APIC working
 * Interface for system calls
+
 On the way:
 * VESA video mode
 * SMP support (multi-CPU system)
