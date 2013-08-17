@@ -45,14 +45,12 @@ void tss_init()
 
 void task_init()
 {
+  intr_disable();
   curr = kmalloc(sizeof(task));
   curr->pid = next_pid++;
-  curr->rsp = 0;
-  //curr->rbp = 0;
-  curr->rflags = 0;
-  curr->rip = 0;
-  curr->cr3 = 0;
+  zeromem(&(curr->r), sizeof(all_regs));
   curr->next = curr; // Закольцовываем
+  intr_enable();
 }
 
 /*
@@ -84,24 +82,13 @@ uint64_t change_stack()
 }
 
 /*
- * Своровано из учебника James'M
- * Позже перепишу более красиво
- */
-uint64_t read_rip_old();
-asm("\n \
-read_rip_old: \n \
-  pop %rax \n \
-  jmp *%rax \n \
-");
-
-/*
  * Функция подготавливает стек для задачи таким образом,
  * чтобы все выглядело, будто задача была прервана.
  * Ну и за одним возвращает адрес возврата.
  */
-uint64_t read_rip(uint64_t cr3, uint64_t *rsp_off);
+uint64_t read_rip(uint64_t cr3, uint64_t rsp_off, all_regs *r);
 asm("\n \
-read_rip: \n \
+read_rip_old: \n \
   movq %rsp, %rax \n \
   addq (%rsi), %rax \n \
   subq $0x48, %rax # 0x50 займут регистры, минус адрес возврата \n \
@@ -125,26 +112,49 @@ read_rip: \n \
   ret \n \
 ");
 
+asm("\n \
+read_rip: \n \
+  mov %rsp, %rax \n \
+  add %rsi, %rax # %rax = стек дочерней задачи\n \
+  xchg %rbp, %rsi # Подменим и скорректируем rbp \n \
+  add %rsi, %rbp \n \
+  add $8, %rax # Выкинем адрес возврата \n \
+  xchg %rdx, %rsp \n \
+  \n \
+  pushq $0x10 # SS \n \
+  push %rax # RSP \n \
+  pushfq \n \
+  pop %rax \n \
+  or $0x200, %rax # Разрешим дочерней задаче прерывания\n \
+  push %rax # RFLAGS \n \
+  pushq $0x08 # CS \n \
+  mov (%rdx), %rax \n \
+  push %rax # RIP \n \
+  \n \
+  push %rdi # CR3 дочерней задачи \n \
+  mov $0, %rax # RAX дочерней задачи \n \
+  call save_regs \n \
+  xchg %rdx, %rsp \n \
+  xchg %rbp, %rsi \n \
+  mov (%rsp), %rax \n \
+  ret \n \
+");
+
 int task_fork()
 {
-  uint64_t rip, off, cr3, rflags;
+  uint64_t rip, off, cr3;
   intr_disable();
   
   off = change_stack();
   cr3 = copy_pages();
-  asm ("pushfq \n \
-        pop %0":"=r"(rflags));
-  rip = read_rip(cr3, &off);
-  if (rip == 0)
-    return 0; // Дочерняя задача
 
   // Родительская задача - готовим все
   task *new = kmalloc(sizeof(task));
   new->pid = next_pid++;
-  new->rsp = off;
-  new->rip = rip;  
-  new->rflags = rflags|(1<<9); // Разрешаем дочерней задаче прерывания
-  new->cr3 = cr3; // Вроде уже и не нужно
+  //BREAK();
+  rip = read_rip(cr3, off, (((uint64_t)&(new->r)) + sizeof(all_regs)));
+  if (rip == 0)
+    return 0; // Дочерняя задача
 
   new->next = curr->next;
   curr->next = new;
@@ -152,22 +162,16 @@ int task_fork()
   return new->pid;
 }
 
-uint64_t task_switch(task_regs *r)
+uint64_t task_switch(all_regs *r)
 {
-  // В r - стек прерывания
   if (curr != 0)
   {
-    curr->rip = r->rip;
-    curr->rflags = r->rflags;
-    curr->rsp = r->rsp;
-
+    memcpy(&(curr->r), r, sizeof(all_regs));
     curr = curr->next;
-
-    r->rip = curr->rip;
-    r->rflags = curr->rflags;
-    r->rsp = curr->rsp;
+    // Стек, с которого будем восстанавливать регистры
+    return &(curr->r);
   }
-  return r->rsp;
+  return r;
 }
 
 void get_c()

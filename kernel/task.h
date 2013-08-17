@@ -2,6 +2,7 @@
 #define _TASK_H_
 
 #include <stdint.h>
+#include <regs.h>
 
 //  64-битная TSS
 //  Собственно, тут ничего нет, за
@@ -32,28 +33,18 @@ typedef struct _TSS64
 typedef struct _task
 {
   uint64_t pid;
-  uint64_t rip;
-  uint64_t rsp;
-  uint64_t rflags;
+  all_regs r;
   uint64_t cr3;
   struct _task *next;
 } task;
 
-typedef struct _tregs
-{
-  uint64_t rip;
-  uint64_t cs;
-  uint64_t rflags;
-  uint64_t rsp;
-  uint64_t ss;
-} task_regs;
 #pragma pack()
 
 void tss_init();
 
 void task_init(void);
 
-uint64_t task_switch(task_regs *r);
+uint64_t task_switch(all_regs *r);
 
 int task_fork();
 #endif  //__TASK_H_

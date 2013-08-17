@@ -2,7 +2,7 @@
 .code64
 .globl timer_intr
 
-timer_intr:
+old_timer_intr:
   // В стеке прерывания лежат:
   // 0x00: %rip старой задачи
   // 0x08: %cs
@@ -59,3 +59,21 @@ timer_intr:
   //xchg %bx, %bx
   call apic_eoi
   iretq
+
+// Новый обработчик прерывания - теперь фруктовый!
+timer_intr:
+  push %rax
+  mov %cr3, %rax
+  xchg (%rsp), %rax
+  call save_regs
+  mov %rsp, %rdi
+  call task_switch
+  mov %rax, %rsp
+  call rest_regs
+  //xchg %bx, %bx
+  xchg (%rsp), %rax
+  mov %rax, %cr3
+  pop %rax
+  call apic_eoi
+  iretq
+

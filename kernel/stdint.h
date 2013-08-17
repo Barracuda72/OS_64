@@ -4,6 +4,7 @@
 /*
  * Определения типов данных
  */
+typedef signed   int   int32_t;
 
 typedef unsigned char  uint8_t;
 typedef unsigned short uint16_t;

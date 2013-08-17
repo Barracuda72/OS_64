@@ -26,5 +26,9 @@ void *memcpy(void *dest, const void *src, uint32_t n);
 #define va_copy(d,s)  __builtin_va_copy(d,s)
 typedef __builtin_va_list va_list;
 
+// Интересные макросы
+#define SIGN(x) (x > 0 ? '+' : (x < 0 ? '-' : ' '))
+#define ABS(x) (x > 0 ? x : (-x))
+
 #endif //__KLIBC_H__
 
