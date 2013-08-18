@@ -38,11 +38,53 @@ uint8_t *utf2win(const uint8_t *utf, uint8_t *win)
   return out;
 }
 
+uint8_t ch[1][8] = 
+{
+  {
+    0x18, // 00011000
+    0x24, // 00100100
+    0x42, // 01000010
+    0x42, // 01000010
+    0x7E, // 01111110
+    0x42, // 01000010
+    0x42, // 01000010
+    0x42  // 01000010
+  }
+};
+
+uint8_t buf[80][25] = {' '};
+uint8_t x, y;
+
+void put_char(uint8_t c)
+{
+  uint8_t i, j;
+  for (i = 0; i < 8; i++)
+  {
+    for (j = 0; j < 8; j++)
+      if ((1<<j)&ch[c][i])
+        buf[x+j][y+i] = 'x';
+      else
+        buf[x+j][y+i] = ' ';
+  }
+  x += 8;
+  if (x >= 80)
+  {
+    x = 0;
+    y += 8;
+  }
+}
+
 int main(int argc, char *argv)
 {
-  char *u = "Test string: В чащах юга жил бы цитрус? Да, но фальшивый экземпляр! Ёж, ну чё, пойдём?\n";
-  char *t = malloc(strlen(u)+1);
-  utf2win(u, t);
-  puts(t);
+  x = 0;
+  y = 0;
+  put_char(0);
+
+  for (y = 0; y < 25; y++)
+  {
+    for (x = 0; x < 80; x++)
+      putchar(buf[x][y]);
+    putchar('\n');
+  }
   return 0;
 }
