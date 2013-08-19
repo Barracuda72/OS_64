@@ -1,3 +1,4 @@
+#include "font.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -38,22 +39,13 @@ uint8_t *utf2win(const uint8_t *utf, uint8_t *win)
   return out;
 }
 
-uint8_t ch[1][8] = 
-{
-  {
-    0x18, // 00011000
-    0x24, // 00100100
-    0x42, // 01000010
-    0x42, // 01000010
-    0x7E, // 01111110
-    0x42, // 01000010
-    0x42, // 01000010
-    0x42  // 01000010
-  }
-};
+uint8_t font[256][8] = {0};
 
-uint8_t buf[80][25] = {' '};
-uint8_t x, y;
+#define FB_WIDTH (80)
+#define FB_HEIGHT (60)
+
+uint8_t framebuf[FB_WIDTH][FB_HEIGHT] = {' '};
+uint32_t x, y;
 
 void put_char(uint8_t c)
 {
@@ -61,30 +53,64 @@ void put_char(uint8_t c)
   for (i = 0; i < 8; i++)
   {
     for (j = 0; j < 8; j++)
-      if ((1<<j)&ch[c][i])
-        buf[x+j][y+i] = 'x';
+      if ((1<<(7-j))&font[c][i])
+        framebuf[x+j][y+i] = 'x';
       else
-        buf[x+j][y+i] = ' ';
+        framebuf[x+j][y+i] = ' ';
   }
   x += 8;
-  if (x >= 80)
+  if ((x+8) >= FB_WIDTH) // Следующий символ не поместится
   {
     x = 0;
     y += 8;
   }
 }
 
+void put_s(uint8_t *s)
+{
+  while(*s)
+    put_char(*s++);
+}
+
+void load_font()
+{
+  uint32_t i,j;
+  uint8_t bit;
+
+  for (i = 0; i < 128; i++)
+    for (j = 0; j < 128; j++)
+    {
+      bit = header_data[i*128 + j];
+      if (bit)
+      {
+        font[(i>>3)*16 + (j>>3)][i%8] |= (1<<(7 - (j%8)));
+      }
+    }
+}
+
 int main(int argc, char *argv)
 {
   x = 0;
   y = 0;
-  put_char(0);
-
-  for (y = 0; y < 25; y++)
+  load_font();
+  put_s("THE \"QUICK\" BROWN FOX, 45 JUMPS OVER THE LAZY DOG!");
+#if 1
+  for (y = 0; y < FB_HEIGHT; y++)
   {
-    for (x = 0; x < 80; x++)
-      putchar(buf[x][y]);
+    for (x = 0; x < FB_WIDTH; x++)
+      putchar(framebuf[x][y]);
     putchar('\n');
   }
+#else
+  for (y = 0; y < 16; y++)
+  {
+    for(x = 0; x < 16; x++)
+    {
+      putchar(y*16 + x);
+      putchar(' ');
+    }
+    putchar('\n');
+  }
+#endif
   return 0;
 }
