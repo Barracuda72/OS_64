@@ -93,7 +93,10 @@ int main(int argc, char *argv)
   x = 0;
   y = 0;
   load_font();
-  put_s("THE \"QUICK\" BROWN FOX, 45 JUMPS OVER THE LAZY DOG!");
+  uint8_t *t = "Широкая электрификация южных губерний!";
+  uint8_t *c = malloc(strlen(t)+1);
+  utf2win(t, c);
+  put_s(c);
 #if 1
   for (y = 0; y < FB_HEIGHT; y++)
   {
