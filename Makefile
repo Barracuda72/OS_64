@@ -30,6 +30,7 @@ CC:=gcc
 LD:=ld
 RANLIB:=ranlib
 NM:=nm
+MBR:=/usr/lib/syslinux/mbr.bin
 
 $(TARGET): $(OBJECTS)
 	$(LD) -Tkernel.lds -o $@ $(OBJECTS) $(LDFLAGS)
@@ -41,6 +42,31 @@ clean:
 	-rm ${OBJECTS} *~ *.bin *.elf
 
 disk.img:
+	@echo "MBR..."
+	@echo "dd..."
+	@dd if=/dev/zero of=$@ bs=512 count=`echo 63*16*203 | bc` \
+		2> /dev/null
+	@echo "Fdisk..."
+	@echo -e "o\nn\np\n1\n\n\nt\n83\na\n1\nw\n" \
+		| fdisk -u -C203 -S63 -H16 $@ 2> /dev/null > /dev/null
+	@echo "MKFS.ext2..."
+	@sudo kpartx -a disk.img
+	@sudo mkfs.ext2 /dev/mapper/loop0p1 > /dev/null
+	@sudo kpartx -d disk.img
+	@mkdir -p mnt
+	@sudo mount -t ext2 -o loop,offset=`echo 512*2048 | bc` disk.img mnt
+	@sudo mkdir -p mnt/boot
+	@sudo cp misc/extlinux.conf misc/mboot.c32 mnt/boot
+	@sudo extlinux -i mnt/boot
+	@sudo umount mnt
+	@rmdir mnt
+	@dd if=disk.img of=trunk bs=440 skip=1 2> /dev/null
+	@rm disk.img
+	@cat ${MBR} trunk > disk.img
+	@rm trunk
+
+
+disk.img.grub2:
 	@echo "BXImage..."
 	@bximage -hd -mode=flat -size=100 -q $@
 	@echo "FDisk..."

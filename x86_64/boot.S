@@ -34,9 +34,11 @@ multiboot_entry:
 /* Передаем в ядро 2 параметра из multiboot:
  * Адрес информационной структуры - ebx
  * Сигнатура multiboot - eax
+ * Сохраним их в регистрах esp и ebp, которые пока не 
+ * используются - стека нет
  */
-  pushl %ebx
-  pushl %eax
+  movl %ebx, %esp
+  movl %eax, %ebp
 /*
  * Проверяем, поддерживает ли процессор long mode
  */
@@ -168,9 +170,9 @@ loo1:
   mov %ebx, %cr0
 
   lgdt gdtpointer  /* Загружаем 80-битный указатель на GDT */
-// Восстановим адрес multiboot-структуры и Magic
-  popl %eax
-  popl %ebx
+// Передаем ядру адрес multiboot-структуры и Magic
+  movl %esp, %esi
+  movl %ebp, %edi
 // Сбрасываем кэш инструкций и помещаем в CS адрес 64-битного
 // сегмента кода
   ljmp $8, $startLongMode
@@ -203,11 +205,6 @@ startLongMode:
   movq    $(stack + STACK_SIZE), %rsp
 // Корректируем стек
   or $0xFFFFFFFFC0000000, %rsp
-// Передаем параметры от Multiboot-загрузчика
-  xor %rsi, %rsi
-  xor %rdi, %rdi
-  mov %eax, %edi
-  mov %ebx, %esi
 /* Вызываем главную функцию ядра. */
   call    kernel_start
 
