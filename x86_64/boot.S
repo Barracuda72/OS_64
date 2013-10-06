@@ -216,13 +216,23 @@ startLongMode:
   movq    $(stack + STACK_SIZE), %rsp
 // Корректируем стек
   or $0xFFFFFFFFC0000000, %rsp
+
+  // Проверяем, является ли текущий процессор BSP
+  mov $1, %al
+  xchg bsp_on, %al
+  and $0x1, %al
+  // Если нет - уходим в ожидание
+  jnz loop
+
 /* Вызываем главную функцию ядра. */
-  xchg %bx, %bx
   call    kernel_start
 
 loop:
   hlt
   jmp loop  // Hang up
+
+bsp_on:
+.byte 0x00
 
 x86_64_err:
 .asciz "You processor are not x86_64 capable! System halted."
