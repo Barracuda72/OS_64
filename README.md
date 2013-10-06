@@ -8,10 +8,11 @@ Currently implemented features include:
 * Multiple kernel threads, perhaps fork...
 * Simple drivers for screen and kbd
 * LAPIC and IO APIC working
+* SMP init (AP init to 64-bit mode and halts)
 * Interface for system calls
 
 On the way:
 * VESA video mode
-* SMP support (multi-CPU system)
+* True SMP support (multi-CPU system)
 * initrd and ext2 read-only drivers
 * Name for project =)
