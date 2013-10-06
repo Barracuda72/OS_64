@@ -33,6 +33,37 @@ apic_eoi: \n \
   ret \n \
 ");
 
+/*
+ * Вспомогательная процедура, организующая задержку на основе хитрого
+ * манипулирования каналом 2 PIT
+ */
+static void pit_wait(uint32_t microsec)
+{
+  uint8_t tmp;
+  uint64_t divisor = 1193182*microsec/100000;
+  // Установим канал 2 PIT в режим единичного срабатывания
+  // через 1/100 секунды
+  outb(0x61, (inb(0x61)&0xFD)|1);
+  // Команда - "принять делитель в двоичном формате для 
+  // канала 2 и установить режим единичного срабатывания"
+  // (2<<6) - второй канал
+  // (3<<4) - полный делитель
+  // (1<<1) - единичное срабатывание
+  // (0<<0) - делитель - двоичное число (не BCD)
+  outb(0x43, 0xB2); 
+  outb(0x42, divisor&0xFF); // Младший байт
+  inb(0x60); // маленькая задержка
+  outb(0x42, (divisor>>8)&0xFF); // Старший байт
+ 
+  // Сбросим счетчик PIT (начнем отсчет)
+  tmp = inb(0x61)&0xFE;
+  outb(0x61, (uint8_t)tmp);     // выкл
+  outb(0x61, (uint8_t)tmp|1);   // вкл
+ 
+  // Ждем обнуления счетчика PIT
+  while(!(inb(0x61)&0x20));
+}
+
 void apic_init(uint32_t lapic_a)
 {
   uint32_t tmp, cpubusfreq;
@@ -72,7 +103,7 @@ void apic_init(uint32_t lapic_a)
   lapic_addr[APIC_LVT_TMR] = 32;
   // Установим делитель 16
   lapic_addr[APIC_TMRDIV] = 0x03;
- 
+#if 0 
   // Установим канал 2 PIT в режим единичного срабатывания
   // через 1/100 секунды
   outb(0x61, (inb(0x61)&0xFD)|1);
@@ -98,7 +129,10 @@ void apic_init(uint32_t lapic_a)
  
   // Ждем обнуления счетчика PIT
   while(!(inb(0x61)&0x20));
- 
+#else
+  lapic_addr[APIC_TMRINITCNT] = 0xFFFFFFFF;
+  pit_wait(1000);
+#endif
   // Остановим таймер APIC
   lapic_addr[APIC_LVT_TMR] = APIC_DISABLE;
  
@@ -178,5 +212,59 @@ void ioapic_write(uint8_t reg, uint32_t val)
 {
   ioapic_addr[IOAPIC_REGSEL] = reg;
   ioapic_addr[IOAPIC_REGWIN] = val;
+}
+
+/*
+ * Инициализация AP
+ */
+void ap_init(uint8_t apic_id)
+{
+  /*
+   * Формат команды:
+   * 63..56 : назначение
+   * 19..18 : сокращение:
+   *   00 - нет сокращения
+   *   01 - самому себе
+   *   10 - всем, в том числе и себе
+   *   11 - всем, кроме себя
+   * 15 : trigger mode (edge/level)
+   * 14 : level (de-assert/assert)
+   * 12 : состояние доставки: доставлено/в процессе
+   * 11 : тип места назначения: физический/логический
+   * 10..8 : режим доставки
+   *   000 - фиксированный
+   *   001 - минимальный приоритет
+   *   010 - как SMI
+   *   011 - зарезервировано
+   *   100 - как NMI
+   *   101 - INIT IPI
+   *   110 - Startup IPI
+   *   111 - зарезервировано
+   * 7..0 : вектор>>12
+   */
+
+  // INIT IPI
+  lapic_addr[APIC_ICRH] = (apic_id<<24); // Получатель
+  lapic_addr[APIC_ICRL] = 0x00004500;    // level-triggered 
+
+  // Ждем доставки
+  while(lapic_addr[APIC_ICRL]&0x1000);
+
+  // Согласно Intel, ждем 10 миллисекунд
+  pit_wait(10000);
+
+  // Startup IPI
+  lapic_addr[APIC_ICRH] = (apic_id<<24);
+  lapic_addr[APIC_ICRL] = 0x00004600 | (AP_CODE>>12);
+  //BREAK();
+
+  // Согласно Intel, ждем 200 микросекунд и повторяем команду
+  pit_wait(200);
+
+
+  lapic_addr[APIC_ICRH] = (apic_id<<24);
+  lapic_addr[APIC_ICRL] = 0x00004600 | (AP_CODE>>12);
+
+  // Процессор инициализирован
 }
 

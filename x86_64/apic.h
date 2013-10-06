@@ -14,6 +14,12 @@ uint32_t ioapic_read(uint8_t reg);
 void ioapic_write(uint8_t reg, uint32_t val);
 
 /*
+ * Адрес, с которго начнет исполнение AP
+ */
+#define AP_CODE 0x8000
+void ap_init(uint8_t apic_id);
+
+/*
  * Регистры APIC
  * >>2, поскольку используются как индексы в массиве lapic_addr
  */

@@ -148,6 +148,17 @@ loo1:
   dec %cx
   jnz loo1
 
+/* Теперь BSP подготавливает код для AP */
+  mov $ap_bootcode, %esi
+  mov $ap_bootcode_end, %ecx
+  sub %esi, %ecx
+  shr $2, %ecx
+  mov $0x8000, %edi
+  rep movsl
+
+/* На long_enter будет прыгать наш AP */
+.globl long_enter
+long_enter:
 /* Входим в длинный режим... */
   mov $0xA0, %eax  /* Set PAE and PGE */
   mov %eax, %cr4
@@ -206,6 +217,7 @@ startLongMode:
 // Корректируем стек
   or $0xFFFFFFFFC0000000, %rsp
 /* Вызываем главную функцию ядра. */
+  xchg %bx, %bx
   call    kernel_start
 
 loop:
@@ -225,6 +237,6 @@ gdt:
 .quad 0x0000900000000000  /* Data */
 
 gdtpointer:
-.short 0xFFFF /* 16-bit Base Size (limit) */
+.short 23 /* 16-bit Base Size (limit) */
 .quad gdt  /* 64-bit Base address */
 

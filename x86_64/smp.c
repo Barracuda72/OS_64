@@ -77,6 +77,9 @@ void smp_init(void)
           case SMP_PROCESSOR:
             p = (SMP_proc *)addr2;
             printf("Processor, APIC ID %d, En : %d, BSP : %d\n", p->apic_id, p->enabled, p->bsp);
+            // Инициализируем AP
+            if (!(p->bsp) && (p->apic_id != 0)) // FIXME: remove apic_id check
+              ap_init(p->apic_id);
             addr2 += 20;//sizeof(SMP_proc);
             break;
 

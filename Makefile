@@ -23,16 +23,21 @@ OBJECTS:= \
 	x86_64/timer.o \
 	x86_64/apic.o \
 	x86_64/regs.o \
-	kernel/syscall.o
+  x86_64/ap_init.o \
+	kernel/syscall.o 
 
-PREFIX:=x86_64-linux-gnu
-CC:=gcc
-LD:=ld
-RANLIB:=ranlib
-NM:=nm
+MISC := \
+  kernel.lds
+
+PREFIX:=x86_64-pc-linux-gnu-
+VERSION:=-4.8.1
+CC:=$(PREFIX)gcc$(VERSION)
+LD:=$(PREFIX)ld
+RANLIB:=$(PREFIX)ranlib
+NM:=$(PREFIX)nm
 MBR:=/usr/lib/syslinux/mbr.bin
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS) $(MISC)
 	$(LD) -Tkernel.lds -o $@ $(OBJECTS) $(LDFLAGS)
 	$(NM) $@ | cut -d' ' -f1,3 | sed -e 's/^\(ffffffff\|00000000\)//g' \
 	  > ldsym
@@ -115,11 +120,14 @@ gdb:
 vesa: vesa.S
 	@gcc -c -o vesa.o vesa.S
 	@ld --oformat binary -Ttext 0x0 vesa.o -o v
-	@dd if=b of=vesa bs=1 skip=31744
-	@rm v
+	@dd if=v of=vesa bs=1 skip=31744
+	@rm v vesa.o
 
 smp: smp.S
 	@gcc -c -o smp.o smp.S
 	@ld --oformat binary -Ttext 0x0 smp.o -o s
 	@dd if=s of=smp bs=1 skip=31744
-	@rm s
+	@rm s smp.o
+
+%.bin: %.o
+	objcopy -O binary $^ $@
