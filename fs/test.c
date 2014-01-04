@@ -5,41 +5,46 @@
 
 #include <vfs.h>
 #include <initrd.h>
+#include <devfs.h>
+#include <klibc.h>
+#include <mem.h>
+#include <errno.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
-/*
- * Заглушки для функций ядра
- */
-
-void *kmalloc(uint64_t size)
+void fs_test_main(void *p, int len)
 {
-  return malloc(size);
+  vfs_node_t *ird = initrd_init(p, len);
+
+  vfs_node_t *dfs = devfs_init();
+
+  devfs_add(ird);
+
+  // Распечатаем содержимое devfs
+  int i = 0;
+  struct dirent *node = 0;
+  while ( (node = vfs_readdir(dfs, i)) != EINVAL)
+  {
+    printf("Найден файл %s\n", node->name);
+    vfs_node_t *fsnode = vfs_finddir(dfs, node->name);
+
+    if (fsnode->flags&VFS_DIRECTORY)
+      printf("\t(каталог)\n");
+#if 0
+    else
+    {
+      printf("\n\t содержимое: \"");
+      char buf[256];
+      uint32_t sz = vfs_read(fsnode, 0, 256, buf);
+      int j;
+      for (j = 0; j < sz; j++)
+        putchar(buf[j]);
+
+      printf("\"\n");
+    }
+#endif
+    i++;
+  } 
+
+  kfree(dfs);
+  kfree(ird);
 }
 
-void kfree(void *p)
-{
-  free(p);
-}
-
-int main(int argc, char *argv[])
-{
-  FILE *f = fopen("initrd.img", "rb");
-  char *buf = malloc(0x1000);
-  int l = fread(buf, 1, 0x1000, f);
-  fclose(f);
-
-  vfs_node_t *ird = initrd_init(buf, l);
-
-  char *b = malloc(100);
-
-  int ret = vfs_read(ird, 1, 100, b);
-
-  printf("%d : %s\n", ret, b);
-
-  free(b);
-  free(ird);
-  free(buf);
-  return 0;
-}

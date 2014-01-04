@@ -19,7 +19,7 @@ vfs_driver_t initrd_drv = {
 
 vfs_node_t *initrd_init (void *p, uint64_t size)
 {
-  vfs_node_t *v = (vfs_node_t *)kmalloc(sizeof(vfs_node_t));
+  vfs_node_t *v = vfs_alloc_node();
 
   strncpy(v->name, "initrd", 6);
   v->name[6] = 0;

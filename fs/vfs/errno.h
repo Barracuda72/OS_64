@@ -7,5 +7,7 @@
 
 #define EBADF   -23
 #define EINVAL  -24
+#define ENFILE  -25
+#define ENOENT  -26
 
 #endif //__ERRNO_H__

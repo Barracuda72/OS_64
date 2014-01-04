@@ -78,5 +78,11 @@ uint64_t vfs_close(vfs_node_t *node);
 struct dirent *vfs_readdir(vfs_node_t *node, uint64_t index);
 vfs_node_t *vfs_finddir(vfs_node_t *node, char *name);
 
+/*
+ * Вспомогательные функции
+ */
+vfs_node_t *vfs_alloc_node();
+struct dirent *vfs_alloc_dirent();
+
 #endif // __VFS_H__
 

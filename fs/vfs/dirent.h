@@ -20,7 +20,7 @@
 struct dirent 
 {
   char name [MAXNAMLEN+1]; // Имя элемента
-  uint64_t inode;     // Номер Inode
+  uint64_t inode;          // Номер Inode
 }; 
 
 /*
@@ -30,11 +30,11 @@ struct dirent
 #define VFS_UNKNOWN     0x00
 #define VFS_FILE        0x01
 #define VFS_DIRECTORY   0x02
-#define VFS_CHARDEV     0x03
-#define VFS_BLOCKDEV    0x04
-#define VFS_PIPE        0x05
-#define VFS_SYMLINK     0x06
-#define VFS_MOUNTPOINT  0x08
+#define VFS_CHARDEV     0x04
+#define VFS_BLOCKDEV    0x08
+#define VFS_PIPE        0x10
+#define VFS_SYMLINK     0x20
+#define VFS_MOUNTPOINT  0x40
 
 #define VFS_STORAGE     0x100
 
