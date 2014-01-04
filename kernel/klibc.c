@@ -180,3 +180,33 @@ void *memcpy(void *dest, const void *src, uint32_t n)
 
   return dest;
 }
+
+int strlen(const char *s)
+{
+  int i;
+  for (i = 0; s[i] != 0; i++);
+  return i;
+}
+
+int strncmp(const char *s1, const char *s2, uint32_t n)
+{
+  int i = 0;
+  while ((s1[i] == s2[i]) && (s1[i] != 0) && (i < (n-1))) // N-1, да
+    i++;
+
+  return s1[i] - s2[i];
+}
+
+char *strncat(char *dest, const char *src, uint32_t n)
+{
+  uint32_t dest_len = strlen(dest);
+  uint32_t i;
+
+  for (i = 0 ; i < n && src[i] != '\0' ; i++)
+    dest[dest_len + i] = src[i];
+
+  dest[dest_len + i] = '\0';
+
+  return dest;
+}
+

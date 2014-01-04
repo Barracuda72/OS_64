@@ -19,6 +19,12 @@ void *zeromem(void *mem, uint32_t n);
 
 void *memcpy(void *dest, const void *src, uint32_t n);
 
+int strncmp(const char *s1, const char *s2, uint32_t n);
+
+int strlen(const char *s);
+
+char *strncat(char *s1, const char *s2, uint32_t n);
+
 // Для printf
 #define va_start(v,l) __builtin_va_start(v,l)
 #define va_arg(v,l)   __builtin_va_arg(v,l)
