@@ -28,17 +28,21 @@ void fs_test_main(void *p, int len)
 
     if (fsnode->flags&VFS_DIRECTORY)
       printf("\t(каталог)\n");
-#if 0
-    else
+#if 1
+    else if (strncmp(node->name, "initrd", 7))
     {
       printf("\n\t содержимое: \"");
       char buf[256];
-      uint32_t sz = vfs_read(fsnode, 0, 256, buf);
-      int j;
-      for (j = 0; j < sz; j++)
-        putchar(buf[j]);
+      int sz = vfs_read(fsnode, 0, 256, buf);
+      if (sz < 0)
+        printf("Что-то не так, код возврата %d\n", sz);
+      else {
+        int j;
+        for (j = 0; j < sz; j++)
+          putchar(buf[j]);
 
-      printf("\"\n");
+        printf("\"\n");
+      }
     }
 #endif
     i++;

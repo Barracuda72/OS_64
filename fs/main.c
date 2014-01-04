@@ -17,14 +17,26 @@ void kfree(void *p)
   free(p);
 }
 
+#define B_SIZE 0x1000
+
 int main(int argc, char *argv[])
 {
   FILE *f = fopen("initrd.img", "rb");
-  char *buf = malloc(0x1000);
-  int l = fread(buf, 1, 0x1000, f);
+  int bsize = 0;
+  int l;
+  char *buf = NULL;
+
+  do {
+    buf = realloc(buf, bsize + B_SIZE);
+    l = fread(buf+bsize, 1, B_SIZE, f);
+    bsize += l;
+  } while (l == B_SIZE);
+
+  //printf("Total %d bytes\n", bsize);
+
   fclose(f);
 
-  fs_test_main(buf, l);
+  fs_test_main(buf, bsize);
 
   free(buf);
   return 0;

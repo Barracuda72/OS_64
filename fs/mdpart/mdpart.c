@@ -37,7 +37,7 @@ int mdpart_init(vfs_node_t *node)
     // Тип раздела 0 означает, что разделов больше нет
     if (buf.parts[i].type == 0)
       break;
-
+/*
     printf("Раздел #%d, тип 0x%02x%s:\n", i, 
            buf.parts[i].type,
            buf.parts[i].active == 0 ? "" : ", активный");
@@ -45,7 +45,7 @@ int mdpart_init(vfs_node_t *node)
            buf.parts[i].first_sector,
            buf.parts[i].num_sectors
           );
-
+*/
     int l = strlen(node->name);
     if (l < MAXNAMLEN)
     {
@@ -95,6 +95,7 @@ uint64_t mdpart_read(vfs_node_t *node, uint64_t offset, uint64_t size, uint8_t *
 
     int len = offset+size > node->length ? node->length - offset : size;
 
+    //printf("mdpart_read : offset %d, len %d\n", offset+node->reserved, node->ptr->length);
     return vfs_read(node->ptr, offset+node->reserved, len, buffer);
   } else
     return EBADF;
