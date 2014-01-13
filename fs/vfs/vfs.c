@@ -70,6 +70,10 @@ vfs_node_t *vfs_finddir (vfs_node_t *node, char *name)
     return (vfs_node_t *)EBADF;
 }
 
+uint64_t vfs_mount (vfs_node_t *what, vfs_node_t *where)
+{
+}
+
 vfs_node_t *vfs_alloc_node()
 {
   return kmalloc(sizeof(vfs_node_t));

@@ -77,6 +77,7 @@ uint64_t vfs_open(vfs_node_t *node, uint32_t flags);
 uint64_t vfs_close(vfs_node_t *node);
 struct dirent *vfs_readdir(vfs_node_t *node, uint64_t index);
 vfs_node_t *vfs_finddir(vfs_node_t *node, char *name);
+uint64_t vfs_mount(vfs_node_t *what, vfs_node_t *where);
 
 /*
  * Вспомогательные функции

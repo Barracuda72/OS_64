@@ -85,7 +85,7 @@ int devfs_add(vfs_node_t *node)
       // Проверим наличие на устройстве таблицы разделов
       if (mdpart_init(node) == 0)
         return 0;
-
+#if 0
       // Таблицы разделов нет, проверим ФС
       // EXT2
       if (ext2_init(node) == 0)
@@ -93,6 +93,7 @@ int devfs_add(vfs_node_t *node)
       // FAT32
       if (fat32_init(node) == 0)
         return 0;
+#endif
       // Не нашли ничего
       return 0;
     }

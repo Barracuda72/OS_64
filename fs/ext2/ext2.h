@@ -203,16 +203,6 @@ enum
   EXT2_PERM_SETUID = 0x800
 };
 
-/*
-void ext2_init( void );
-void ext2_fini( void );
-int ext2_open( const char *path, int flags );
-ssize_t ext2_read( int fd, void *buf, size_t count );
-ssize_t ext2_write( int fd, const void *buf, size_t count );
-int ext2_close( int fd );
-off_t ext2_lseek( int fd, off_t offset, int whence );
-*/
-
 uint64_t ext2_read(vfs_node_t *node, uint64_t offset, uint64_t size, uint8_t *buffer);
 uint64_t ext2_write(vfs_node_t *node, uint64_t offset, uint64_t size, uint8_t *buffer);
 uint64_t ext2_open(vfs_node_t *node, uint32_t flags);
