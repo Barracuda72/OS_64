@@ -12,7 +12,9 @@ vfs_driver_t ext2_drv = {
   ext2_open,
   ext2_close,
   ext2_readdir,
-  ext2_finddir
+  ext2_finddir,
+  ext2_init,
+  ext2_fini
 };
 
 //FILE *f; // Диск
@@ -26,7 +28,7 @@ uint32_t i_start[16] = {0}; // Начало таблицы inode для груп
 uint32_t open_files[1024] = {0xFFFFFFFF};
 uint32_t file_inodes[1024] = {0xFFFFFFFF};
 
-int ext2_init(vfs_node_t *node)
+uint64_t ext2_init(vfs_node_t *node)
 {
   if (node == NULL)
     return -1;
@@ -50,7 +52,7 @@ int ext2_init(vfs_node_t *node)
   return res;
 }
 
-void ext2_fini( void )
+uint64_t ext2_fini(vfs_node_t *node)
 {
   free(super);
   //fclose(f);

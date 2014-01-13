@@ -14,6 +14,8 @@ vfs_driver_t initrd_drv = {
   initrd_open,
   initrd_close,
   NULL,
+  NULL,
+  NULL,
   NULL
 };
 

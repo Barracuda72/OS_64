@@ -21,7 +21,9 @@ vfs_driver_t devfs_drv = {
   NULL,
   NULL,
   devfs_readdir,
-  devfs_finddir
+  devfs_finddir,
+  NULL,
+  NULL
 };
 
 vfs_node_t *devfs_init()

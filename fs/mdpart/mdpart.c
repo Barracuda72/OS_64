@@ -12,6 +12,8 @@ vfs_driver_t mdpart_drv = {
   mdpart_open,
   mdpart_close,
   NULL,
+  NULL,
+  NULL,
   NULL
 };
 

@@ -210,6 +210,7 @@ uint64_t ext2_close(vfs_node_t *node);
 struct dirent *ext2_readdir(vfs_node_t *node, uint64_t index);
 vfs_node_t *ext2_finddir(vfs_node_t *node, char *name);
 
-int ext2_init(vfs_node_t *node);
+uint64_t ext2_init(vfs_node_t *node);
+uint64_t ext2_fini(vfs_node_t *node);
 
 #endif // __EXT2_H__
