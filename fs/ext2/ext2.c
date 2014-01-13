@@ -26,18 +26,20 @@ uint32_t i_start[16] = {0}; // Начало таблицы inode для груп
 uint32_t open_files[1024] = {0xFFFFFFFF};
 uint32_t file_inodes[1024] = {0xFFFFFFFF};
 
-uint64_t ext2_init(vfs_node_t *node)
+vfs_node_t *ext2_init(vfs_node_t *node)
 {
+  vfs_node_t *root = NULL;
+
   if (node == NULL)
-    return -1;
+    return root;
 
   ext2_superblock *super = kmalloc(sizeof(ext2_superblock));
   vfs_read(node, 0x400, sizeof(ext2_superblock), (uint8_t *)super);
 
-  int res = super->magic == EXT2_MAGIC ? 0 : -2;
+  int res = super->magic == EXT2_MAGIC;
 
-  printf("Это EXT2? %s\n", res == 0 ? "Да" : "Нет");
-  if (res == 0)
+  printf("Это EXT2? %s\n", res ? "Да" : "Нет");
+  if (res)
   {
     printf("Версия ФС %d.%d\n", super->ver_major, super->ver_minor);
     printf("Размер блока %d\n", 1024<<super->block_size);
@@ -45,10 +47,18 @@ uint64_t ext2_init(vfs_node_t *node)
     printf("Количество блоков в группе - %d\n", super->blk_in_grp);
     printf("Количество inode в группе - %d\n", super->ind_in_grp);
     printf("Номер блока, содержащего суперблок - %d\n", super->sblock_num);
-    node->ptr = (void *)super;
+
+    root = vfs_alloc_node();
+    root->drv = &ext2_drv;
+    root->flags = VFS_DIRECTORY;
+    root->inode = EXT2_ROOT_INODE;
+    root->reserved = super;
+    root->ptr = node;
+  } else {
+    kfree(super);
   }
 
-  return res;
+  return root;
 }
 
 uint64_t ext2_fini(vfs_node_t *node)
@@ -56,36 +66,42 @@ uint64_t ext2_fini(vfs_node_t *node)
   if (node == NULL)
     return EINVAL;
 
-  kfree(node->ptr);
+  kfree(node->reserved);
   return 0;
 }
 
-ext2_inode *ext2_read_inode(uint32_t inode)
+ext2_inode *ext2_read_inode(vfs_node_t *node, uint32_t inode)
 {
-/*
+  ext2_superblock *super = (ext2_superblock *)node->reserved;
+
   uint32_t bg = (inode-1)/(super->ind_in_grp);
   uint32_t id = (inode-1)%(super->ind_in_grp);
-  if (i_start[bg] == 0)
-  {
-    ext2_group_desc *desc = malloc(sizeof(ext2_group_desc));
-    fseek(f, 
-          start + (1024<<super->block_size)*(super->sblock_num+1) + 
-             bg*sizeof(ext2_group_desc), 
-          SEEK_SET);
-    fread(desc, sizeof(ext2_group_desc), 1, f);
-    i_start[bg] = desc->inode_st*(1024<<super->block_size);
-    //printf("Таблица inode расположена по адресу 0x%X\n", i_start[bg]);
-    free(desc);
-  }
 
-  ext2_inode *in = malloc(super->inode_size);
-  fseek(f, i_start[bg] + start + (id*super->inode_size), SEEK_SET);
-  fread(in, super->inode_size, 1, f);
-  //printf("Тип и разрешения inode %d - 0x%X\n", inode, in->type_perm);
-  //printf("Это директория? %s\n", in->type_perm&EXT2_INODE_DIR ? "Да" : "Нет");
-  //printf("Размер %d\n", in->size_low);
+  uint32_t i_start = 0;
+  ext2_group_desc *desc = kmalloc(sizeof(ext2_group_desc));
+
+  vfs_read(node->ptr, 
+           (1024<<super->block_size)*(super->sblock_num+1) + 
+             bg*sizeof(ext2_group_desc), 
+           sizeof(ext2_group_desc),
+           desc
+          );
+
+  i_start = desc->inode_st*(1024<<super->block_size);
+
+  printf("Таблица inode расположена по адресу 0x%X\n", i_start);
+  kfree(desc);
+
+  ext2_inode *in = kmalloc(super->inode_size);
+  vfs_read(node->ptr,
+           i_start + (id*super->inode_size),
+           super->inode_size,
+           in
+          );
+  printf("Тип и разрешения inode %d - 0x%X\n", inode, in->type_perm);
+  printf("Это директория? %s\n", in->type_perm&EXT2_INODE_DIR ? "Да" : "Нет");
+  printf("Размер %d\n", in->size_low);
   return in;
-  */
 }
 
 char *ext2_read_inode_data(ext2_inode *in)

@@ -1,10 +1,11 @@
+#include <stdint.h>
 #include <vfs.h>
 #include <fat32.h>
 #include <errno.h>
 
-int fat32_init(vfs_node_t *node)
+vfs_node_t *fat32_init(vfs_node_t *node)
 {
-  return EINVAL;
+  return NULL;
 }
 
 int fat32_fini(vfs_node_t *node)

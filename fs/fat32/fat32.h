@@ -3,7 +3,7 @@
 
 #include <vfs.h>
 
-int fat32_init(vfs_node_t *node);
+vfs_node_t *fat32_init(vfs_node_t *node);
 int fat32_fini(vfs_node_t *node);
 
 #endif //__FAT32_H__

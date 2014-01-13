@@ -28,7 +28,7 @@ typedef uint64_t (*close_type_t)(struct vfs_node *);
 typedef struct   dirent * (*readdir_type_t)(struct vfs_node *, uint64_t);
 typedef struct   vfs_node * (*finddir_type_t)(struct vfs_node *, char *); 
 
-typedef uint64_t (*init_type_t) (struct vfs_node *);
+typedef struct vfs_node *(*init_type_t) (struct vfs_node *);
 typedef uint64_t (*fini_type_t) (struct vfs_node *);
 /*
  * Структура, описывающая функции драйвера файловой системы
