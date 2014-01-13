@@ -18,6 +18,14 @@ void fs_test_main(void *p, int len)
 
   devfs_add(ird);
 
+  vfs_node_t *root = vfs_alloc_node();
+  root->name[0] = '/';
+  root->name[1] = 0;
+
+  root->flags = VFS_DIRECTORY;
+
+  int res;
+
   // Распечатаем содержимое devfs
   int i = 0;
   struct dirent *node = 0;
@@ -28,6 +36,13 @@ void fs_test_main(void *p, int len)
 
     if (fsnode->flags&VFS_DIRECTORY)
       printf("\t(каталог)\n");
+
+    if (!strncmp(node->name, "initrd0", 8))
+    {
+      res = vfs_mount(fsnode, root);
+      //printf ("Mount : %d\n", res);
+      break;
+    }
 #if 0
     else if (strncmp(node->name, "initrd", 7))
     {
@@ -48,6 +63,12 @@ void fs_test_main(void *p, int len)
     i++;
   } 
 
+  if (root->ptr != NULL)
+  {
+    printf("Корень успешно подключен\n");
+  }
+
+  kfree(root);
   kfree(dfs);
   kfree(ird);
 }
