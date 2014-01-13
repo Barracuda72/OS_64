@@ -17,7 +17,7 @@ void kfree(void *p)
   free(p);
 }
 
-#define B_SIZE 0x1000
+#define B_SIZE 0x1000*0x400
 
 int main(int argc, char *argv[])
 {
@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
   do {
     buf = realloc(buf, bsize + B_SIZE);
     l = fread(buf+bsize, 1, B_SIZE, f);
+    //printf("Readed %d bytes\n", l);
     bsize += l;
   } while (l == B_SIZE);
 
