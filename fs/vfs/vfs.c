@@ -94,6 +94,16 @@ uint64_t vfs_init_fs(vfs_node_t *node)
   return EINVAL;
 }
 
+uint64_t vfs_fini_fs(vfs_node_t *node)
+{
+  if ((node == NULL)||
+      (node->drv == NULL)||
+      (node->drv->fini == NULL))
+    return EINVAL;
+
+  return node->drv->fini(node);
+}
+
 uint64_t vfs_mount (vfs_node_t *what, vfs_node_t *where)
 {
   if ((what == NULL) || (where == NULL))
@@ -129,7 +139,11 @@ uint64_t vfs_umount (vfs_node_t *node)
   if (!(node->flags&VFS_MOUNTPOINT))
     return ENOENT;
 
+  uint64_t res = vfs_fini_fs(node->ptr);
+
   node->ptr = NULL;
+
+  return res;
 }
 
 vfs_node_t *vfs_alloc_node()
