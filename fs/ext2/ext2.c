@@ -67,6 +67,7 @@ uint64_t ext2_fini(vfs_node_t *node)
     return EINVAL;
 
   kfree((void *)node->reserved);
+  kfree(node);
   return 0;
 }
 
@@ -310,7 +311,10 @@ struct dirent *ext2_readdir(vfs_node_t *node, uint64_t index)
       )
     i++;
 
-  if (i == index)
+  if ((i == index) && 
+      ((((uint64_t)ed) - ((uint64_t)data)) < SIZE(in)) &&
+      (ed->length != 0)
+     )
   {
     strncpy(d->name, ed->name, ed->length);
     d->name[ed->length] = 0;

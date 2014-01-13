@@ -46,10 +46,11 @@ void fs_test_main(void *p, int len)
   // Распечатаем содержимое devfs
   int i = 0;
   struct dirent *node = 0;
+  vfs_node_t *fsnode;
   while ( (node = vfs_readdir(dfs, i)) != EINVAL)
   {
     printf("Найден файл %s\n", node->name);
-    vfs_node_t *fsnode = vfs_finddir(dfs, node->name);
+    fsnode = vfs_finddir(dfs, node->name);
 
     if (fsnode->flags&VFS_DIRECTORY)
       printf("\t(каталог)\n");
@@ -58,7 +59,6 @@ void fs_test_main(void *p, int len)
     {
       res = vfs_mount(fsnode, root);
       printf ("Mount : %d\n", res);
-      break;
     }
 #if 0
     else if (strncmp(node->name, "initrd", 7))
@@ -78,6 +78,7 @@ void fs_test_main(void *p, int len)
     }
 #endif
     i++;
+    kfree(node);
   } 
 
   if (root->ptr != NULL)
@@ -89,6 +90,7 @@ void fs_test_main(void *p, int len)
 
   vfs_umount(root);
 
+  kfree(fsnode);
   kfree(root);
   kfree(dfs);
   kfree(ird);
