@@ -55,31 +55,33 @@ uint64_t vfs_close (vfs_node_t *node)
 struct dirent *vfs_readdir (vfs_node_t *node, uint64_t index)
 {
   if ((node != NULL) &&
-      (node->flags&VFS_DIRECTORY) &&
-      (node->drv != NULL) && 
-      (node->drv->readdir != NULL))
+      (node->flags&VFS_DIRECTORY))
   {
     if (node->flags&VFS_MOUNTPOINT)
       return vfs_readdir(node->ptr, index);
-    else
+
+    else if ((node->drv != NULL) && 
+             (node->drv->readdir != NULL))
       return node->drv->readdir(node, index);
-  }  else
-    return (struct dirent *)EBADF;
+  }
+
+  return (struct dirent *)EBADF;
 }
 
 vfs_node_t *vfs_finddir (vfs_node_t *node, char *name)
 {
   if ((node != NULL) &&
-      (node->flags&VFS_DIRECTORY) &&
-      (node->drv != NULL) && 
-      (node->drv->finddir != NULL))
+      (node->flags&VFS_DIRECTORY))
   {
     if (node->flags&VFS_MOUNTPOINT)
       return vfs_finddir(node->ptr, name);
-    else
+      
+    else if ((node->drv != NULL) && 
+             (node->drv->finddir != NULL))
       return node->drv->finddir(node, name);
-  }  else 
-    return (vfs_node_t *)EBADF;
+  }
+
+  return (vfs_node_t *)EBADF;
 }
 
 vfs_node_t *vfs_init_fs(vfs_node_t *node)

@@ -126,7 +126,7 @@ typedef struct __attribute__((packed))
 {
   uint32_t inode;      // inode файла
   uint16_t size;       // Размер данной записи
-  uint8_t  lenght;     // Длина имени
+  uint8_t  length;     // Длина имени
   union
   {
     uint8_t lenght_hi;
@@ -212,5 +212,10 @@ vfs_node_t *ext2_finddir(vfs_node_t *node, char *name);
 
 vfs_node_t *ext2_init(vfs_node_t *node);
 uint64_t ext2_fini(vfs_node_t *node);
+
+/*
+ * Полезные макросы
+ */
+#define SIZE(in) (((uint64_t)(in->size_low))|((uint64_t)(in->size_hi)<<32))
 
 #endif // __EXT2_H__

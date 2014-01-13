@@ -8,7 +8,8 @@ OBJ= \
 	test.o \
 	main.o
 
-CFLAGS_BASE=-I./mdpart -I./vfs -I./initrd -I./devfs -I./ext2 -I./fat32 -I../mm -I../kernel
+OPTIMIZE=-g -O0
+CFLAGS_BASE=${OPTIMIZE} -I./mdpart -I./vfs -I./initrd -I./devfs -I./ext2 -I./fat32 -I../mm -I../kernel
 CFLAGS=${CFLAGS_BASE} -nostdinc -ffreestanding
 
 all: ${OBJ}

@@ -52,7 +52,7 @@ vfs_node_t *ext2_init(vfs_node_t *node)
     root->drv = &ext2_drv;
     root->flags = VFS_DIRECTORY;
     root->inode = EXT2_ROOT_INODE;
-    root->reserved = super;
+    root->reserved = (uint64_t)super;
     root->ptr = node;
   } else {
     kfree(super);
@@ -66,12 +66,13 @@ uint64_t ext2_fini(vfs_node_t *node)
   if (node == NULL)
     return EINVAL;
 
-  kfree(node->reserved);
+  kfree((void *)node->reserved);
   return 0;
 }
 
-ext2_inode *ext2_read_inode(vfs_node_t *node, uint32_t inode)
+ext2_inode *ext2_read_inode(vfs_node_t *node)
 {
+  uint64_t inode = node->inode;
   ext2_superblock *super = (ext2_superblock *)node->reserved;
 
   uint32_t bg = (inode-1)/(super->ind_in_grp);
@@ -84,7 +85,7 @@ ext2_inode *ext2_read_inode(vfs_node_t *node, uint32_t inode)
            (1024<<super->block_size)*(super->sblock_num+1) + 
              bg*sizeof(ext2_group_desc), 
            sizeof(ext2_group_desc),
-           desc
+           (uint8_t *)desc
           );
 
   i_start = desc->inode_st*(1024<<super->block_size);
@@ -96,7 +97,7 @@ ext2_inode *ext2_read_inode(vfs_node_t *node, uint32_t inode)
   vfs_read(node->ptr,
            i_start + (id*super->inode_size),
            super->inode_size,
-           in
+           (uint8_t *)in
           );
   printf("Тип и разрешения inode %d - 0x%X\n", inode, in->type_perm);
   printf("Это директория? %s\n", in->type_perm&EXT2_INODE_DIR ? "Да" : "Нет");
@@ -104,27 +105,34 @@ ext2_inode *ext2_read_inode(vfs_node_t *node, uint32_t inode)
   return in;
 }
 
-char *ext2_read_inode_data(ext2_inode *in)
+char *ext2_read_inode_data(vfs_node_t *node, ext2_inode *in)
 {
-/*
   int sz = 0;
-  char *data = 0;
+  ext2_superblock *super = (ext2_superblock *)node->reserved;
+  char *data = kmalloc(12*super->block_size);
+  /*
+   * Считываем все данные из блоков "прямого" доступа
+   * Это даст возможность читать файлы по 12 килобайт
+   * Потом, конечно, надо будет сделать все по уму
+   */
   for (sz = 0; sz < 12; sz++)
   {
     if (in->direct[sz] == 0)
       break;
     //printf("Используется блок %d (0x%X)\n", in->direct[sz], in->direct[sz]*(1024<<super->block_size)+start);
-    data = realloc(data, (sz + 1)*(1024<<super->block_size));
-    fseek(f, start + in->direct[sz]*(1024<<super->block_size), SEEK_SET);
-    fread(data + sz*(1024<<super->block_size), 1024<<super->block_size, 1, f);
+    vfs_read(node->ptr, 
+             in->direct[sz]*(1024<<super->block_size),
+             1024<<super->block_size, 
+             data + sz*(1024<<super->block_size)
+            );
   }
-  //printf("Считано %d блоков\n", sz);
+  printf("Считано %d блоков\n", sz);
   return data;
-  */
 }
 
 uint64_t ext2_open(vfs_node_t *node, uint32_t flags)
 {
+  return 0;
 }
 #if 0
 int _ext2_open(const char *path, int flags)
@@ -192,6 +200,20 @@ int _ext2_open(const char *path, int flags)
 #endif
 uint64_t ext2_read(vfs_node_t *node, uint64_t offset, uint64_t size, uint8_t *buffer)
 {
+  if (node == NULL)
+    return EINVAL;
+
+  ext2_inode *in = ext2_read_inode(node);
+  if (offset > SIZE(in))
+    return EINVAL;
+
+  if ((offset + size) > SIZE(in))
+    size = SIZE(in) - offset;
+
+  uint8_t *data = ext2_read_inode_data(node, in);
+  memcpy(buffer, data + offset, size);
+  kfree(data);
+  return size;
 }
 #if 0
 ssize_t _ext2_read( int fd, void *buf, size_t count )
@@ -262,28 +284,91 @@ uint64_t ext2_write(vfs_node_t *node, uint64_t offset, uint64_t size, uint8_t *b
 
 uint64_t ext2_close(vfs_node_t *node)
 {
+  return 0;
 }
 
 struct dirent *ext2_readdir(vfs_node_t *node, uint64_t index)
 {
+  if (node == NULL)
+    return EINVAL;
+
+  int i;
+
+  ext2_inode *in = ext2_read_inode(node);
+  char *data = ext2_read_inode_data(node, in);
+
+  char *e_d = data;
+  ext2_direntry *ed = (ext2_direntry *)data;
+
+  struct dirent *d = kmalloc(sizeof(struct dirent));
+
+  for (i = 0; 
+       ((((uint64_t)ed) - ((uint64_t)data)) < SIZE(in)) &&
+         (ed->length != 0) &&
+         (i < index);
+       ed = (ext2_direntry *)(e_d += ed->size)
+      )
+    i++;
+
+  if (i == index)
+  {
+    strncpy(d->name, ed->name, ed->length);
+    d->name[ed->length] = 0;
+    d->inode = ed->inode;
+  } else {
+    kfree(d);
+    d = (struct dirent *)EINVAL;
+  }
+
+  kfree(in);
+  kfree(data);
+
+  return d;
 }
 
 vfs_node_t *ext2_finddir(vfs_node_t *node, char *name)
 {
-}
+  if (node == NULL)
+    return EINVAL;
 
-int _ext2_close( int fd )
-{
-  if(fd > 1024)
-    return EBADF;
-    
-  if((open_files[fd] == 0xFFFFFFFF) || 
-     (file_inodes[fd] == 0xFFFFFFFF))
-    return EBADF;
-    
-  open_files[fd] = 0xFFFFFFFF;
-  file_inodes[fd] = 0xFFFFFFFF;
-  return 0;
+  ext2_inode *in = ext2_read_inode(node);
+  char *data = ext2_read_inode_data(node, in);
+
+  char *e_d = data;
+  ext2_direntry *ed = (ext2_direntry *)data;
+
+  vfs_node_t *v = vfs_alloc_node();
+
+  int f;
+
+  for (f = 0; 
+       ((((uint64_t)ed) - ((uint64_t)data)) < SIZE(in)) &&
+         (ed->length != 0);
+       ed = (ext2_direntry *)(e_d += ed->size)
+      )
+  {
+    if (!strncmp(name, ed->name, ed->length))
+    {
+      f = 1;
+      break;
+    }
+  }
+
+  if (f == 1)
+  {
+    strncpy(v->name, ed->name, ed->length);
+    v->inode = ed->inode;
+    // FIXME: здесь нужно считывать сам inode и данные из него 
+    // переносить в запись
+  } else {
+    kfree(v);
+    v = NULL;
+  }
+
+  kfree(in);
+  kfree(data);
+
+  return v;
 }
 
 /*

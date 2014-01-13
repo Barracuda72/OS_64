@@ -10,8 +10,25 @@
 #include <mem.h>
 #include <errno.h>
 
+void fs_print_dir(vfs_node_t *dir)
+{
+  int i = 0;
+  struct dirent *de = NULL;
+  while ((de = vfs_readdir(dir, i)) != EINVAL)
+  {
+    if (de != EBADF)
+    {
+      printf ("Найден файл %s\n", de->name);
+      kfree(de);
+    }
+    i++;
+  }
+  printf("---\n");
+}
+
 void fs_test_main(void *p, int len)
 {
+  printf("Запуск теста...\n");
   vfs_node_t *ird = initrd_init(p, len);
 
   vfs_node_t *dfs = devfs_init();
@@ -40,7 +57,7 @@ void fs_test_main(void *p, int len)
     if (!strncmp(node->name, "initrd0", 8))
     {
       res = vfs_mount(fsnode, root);
-      //printf ("Mount : %d\n", res);
+      printf ("Mount : %d\n", res);
       break;
     }
 #if 0
@@ -66,6 +83,8 @@ void fs_test_main(void *p, int len)
   if (root->ptr != NULL)
   {
     printf("Корень успешно подключен\n");
+    printf("Содержимое:\n");
+    fs_print_dir(root);
   }
 
   vfs_umount(root);
