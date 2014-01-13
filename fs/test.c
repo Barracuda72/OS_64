@@ -28,7 +28,7 @@ void fs_test_main(void *p, int len)
 
     if (fsnode->flags&VFS_DIRECTORY)
       printf("\t(каталог)\n");
-#if 1
+#if 0
     else if (strncmp(node->name, "initrd", 7))
     {
       printf("\n\t содержимое: \"");

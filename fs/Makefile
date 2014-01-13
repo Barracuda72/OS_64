@@ -3,10 +3,12 @@ OBJ= \
 	initrd/initrd.o \
 	devfs/devfs.o \
 	mdpart/mdpart.o \
+	ext2/ext2.o \
+	fat32/fat32.o \
 	test.o \
 	main.o
 
-CFLAGS_BASE=-I./mdpart -I./vfs -I./initrd -I./devfs -I../mm -I../kernel
+CFLAGS_BASE=-I./mdpart -I./vfs -I./initrd -I./devfs -I./ext2 -I./fat32 -I../mm -I../kernel
 CFLAGS=${CFLAGS_BASE} -nostdinc -ffreestanding
 
 all: ${OBJ}

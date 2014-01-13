@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <dirent.h>
 #include <mdpart.h>
+#include <ext2.h>
 
 #define MAXNODES 100
 
@@ -82,10 +83,18 @@ int devfs_add(vfs_node_t *node)
     if (node->flags&VFS_STORAGE)
     {
       // Проверим наличие на устройстве таблицы разделов
-      if (mdpart_init(node) < 0)
-      {
-        // Таблицы разделов нет
-      }
+      if (mdpart_init(node) == 0)
+        return 0;
+
+      // Таблицы разделов нет, проверим ФС
+      // EXT2
+      if (ext2_init(node) == 0)
+        return 0;
+      // FAT32
+      if (fat32_init(node) == 0)
+        return 0;
+      // Не нашли ничего
+      return 0;
     }
   } else
     return ENFILE;
