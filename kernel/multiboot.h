@@ -76,13 +76,13 @@ typedef struct module_info
 } module_info_t;
 
 #pragma pack(1)
-typedef struct mmap_info
+typedef struct  __attribute__((packed))
 {
   uint32_t size;
   uint64_t base_addr;
   uint64_t length;
   uint32_t type;
-} mmap_info_t __attribute__((packed));
+} mmap_info_t; 
 #pragma pack()
 
 #endif /*!__ASSEMBLY__ */

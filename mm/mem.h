@@ -18,13 +18,13 @@
  */
 #pragma pack(1)
 // Заголовок кусочка памяти в куче
-typedef struct _kmem_header
+typedef struct __attribute((packed))
 {
   uint32_t magic;  // Магическое число
   uint32_t size : 31;  // Размер кусочка
   uint32_t free : 1;
   struct _kmem_header *prev;  // Указатель на предыдущий кусочек
-} kmem_header __attribute((packed));
+} kmem_header; 
 #pragma pack()
 
 void mem_init(uint64_t pl_addr, uint64_t pl_size, multiboot_info_t *m);
