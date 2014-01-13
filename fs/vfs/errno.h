@@ -9,5 +9,8 @@
 #define EINVAL  -24
 #define ENFILE  -25
 #define ENOENT  -26
+#define EBUSY   -27
+#define ENOTDIR -28
+#define EXDEV   -29
 
 #endif //__ERRNO_H__

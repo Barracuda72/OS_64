@@ -5,6 +5,10 @@
 #include <stdint.h>
 #include <vfs.h>
 #include <errno.h>
+#include <mem.h>
+
+#include <ext2.h>
+#include <fat32.h>
 
 vfs_node_t *vfs_root = NULL;
 
@@ -54,8 +58,12 @@ struct dirent *vfs_readdir (vfs_node_t *node, uint64_t index)
       (node->flags&VFS_DIRECTORY) &&
       (node->drv != NULL) && 
       (node->drv->readdir != NULL))
-    return node->drv->readdir(node, index);
-  else
+  {
+    if (node->flags&VFS_MOUNTPOINT)
+      return vfs_readdir(node->ptr, index);
+    else
+      return node->drv->readdir(node, index);
+  }  else
     return (struct dirent *)EBADF;
 }
 
@@ -65,13 +73,63 @@ vfs_node_t *vfs_finddir (vfs_node_t *node, char *name)
       (node->flags&VFS_DIRECTORY) &&
       (node->drv != NULL) && 
       (node->drv->finddir != NULL))
-    return node->drv->finddir(node, name);
-  else
+  {
+    if (node->flags&VFS_MOUNTPOINT)
+      return vfs_finddir(node->ptr, name);
+    else
+      return node->drv->finddir(node, name);
+  }  else 
     return (vfs_node_t *)EBADF;
+}
+
+uint64_t vfs_init_fs(vfs_node_t *node)
+{
+  if(ext2_init(node) == 0)
+    return 0;
+
+
+  if(fat32_init(node) == 0)
+    return 0;
+
+  return EINVAL;
 }
 
 uint64_t vfs_mount (vfs_node_t *what, vfs_node_t *where)
 {
+  if ((what == NULL) || (where == NULL))
+    return EINVAL;
+
+  if (!(where->flags&(VFS_DIRECTORY)))
+    return ENOTDIR;
+
+  if (where->flags&(VFS_MOUNTPOINT) != 0)
+    return EBUSY;
+
+  if (vfs_init_fs(what) != 0)
+    return EXDEV;
+  /*
+   * По идее, нужно проверять еще условие "каталог не пуст"
+   * Впрочем, например, Linux позволяет определенным ключом
+   * указать необходимость монтирования в непустой каталог.
+   * Поэтому - пока забьем.
+   */
+  where->flags |= VFS_MOUNTPOINT;
+  where->ptr = what;
+  return 0;
+}
+
+uint64_t vfs_umount (vfs_node_t *node)
+{
+  if (node == NULL)
+    return EINVAL;
+
+  if (!(node->flags&VFS_DIRECTORY))
+    return ENOTDIR;
+
+  if (!(node->flags&VFS_MOUNTPOINT))
+    return ENOENT;
+
+  node->ptr = NULL;
 }
 
 vfs_node_t *vfs_alloc_node()
