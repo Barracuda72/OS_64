@@ -17,8 +17,6 @@ vfs_driver_t ext2_drv = {
   ext2_fini
 };
 
-//FILE *f; // Диск
-ext2_superblock *super; // Суперблок
 uint32_t i_start[16] = {0}; // Начало таблицы inode для группы, индекс = номер группы
 
 /*
@@ -33,7 +31,7 @@ uint64_t ext2_init(vfs_node_t *node)
   if (node == NULL)
     return -1;
 
-  super = kmalloc(sizeof(ext2_superblock));
+  ext2_superblock *super = kmalloc(sizeof(ext2_superblock));
   vfs_read(node, 0x400, sizeof(ext2_superblock), (uint8_t *)super);
 
   int res = super->magic == EXT2_MAGIC ? 0 : -2;
@@ -47,6 +45,7 @@ uint64_t ext2_init(vfs_node_t *node)
     printf("Количество блоков в группе - %d\n", super->blk_in_grp);
     printf("Количество inode в группе - %d\n", super->ind_in_grp);
     printf("Номер блока, содержащего суперблок - %d\n", super->sblock_num);
+    node->ptr = (void *)super;
   }
 
   return res;
@@ -54,8 +53,11 @@ uint64_t ext2_init(vfs_node_t *node)
 
 uint64_t ext2_fini(vfs_node_t *node)
 {
-  free(super);
-  //fclose(f);
+  if (node == NULL)
+    return EINVAL;
+
+  kfree(node->ptr);
+  return 0;
 }
 
 ext2_inode *ext2_read_inode(uint32_t inode)

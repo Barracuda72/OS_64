@@ -68,6 +68,8 @@ void fs_test_main(void *p, int len)
     printf("Корень успешно подключен\n");
   }
 
+  vfs_umount(root);
+
   kfree(root);
   kfree(dfs);
   kfree(ird);
