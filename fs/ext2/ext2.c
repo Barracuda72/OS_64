@@ -90,7 +90,7 @@ ext2_inode *ext2_read_inode(vfs_node_t *node)
 
   i_start = desc->inode_st*(1024<<super->block_size);
 
-  printf("Таблица inode расположена по адресу 0x%X\n", i_start);
+  //printf("Таблица inode расположена по адресу 0x%X\n", i_start);
   kfree(desc);
 
   ext2_inode *in = kmalloc(super->inode_size);
@@ -99,9 +99,9 @@ ext2_inode *ext2_read_inode(vfs_node_t *node)
            super->inode_size,
            (uint8_t *)in
           );
-  printf("Тип и разрешения inode %d - 0x%X\n", inode, in->type_perm);
-  printf("Это директория? %s\n", in->type_perm&EXT2_INODE_DIR ? "Да" : "Нет");
-  printf("Размер %d\n", in->size_low);
+  //printf("Тип и разрешения inode %d - 0x%X\n", inode, in->type_perm);
+  //printf("Это директория? %s\n", in->type_perm&EXT2_INODE_DIR ? "Да" : "Нет");
+  //printf("Размер %d\n", SIZE(in));
   return in;
 }
 
@@ -109,7 +109,7 @@ char *ext2_read_inode_data(vfs_node_t *node, ext2_inode *in)
 {
   int sz = 0;
   ext2_superblock *super = (ext2_superblock *)node->reserved;
-  char *data = kmalloc(12*super->block_size);
+  char *data = kmalloc(12*BLKSZ(super));
   /*
    * Считываем все данные из блоков "прямого" доступа
    * Это даст возможность читать файлы по 12 килобайт
@@ -121,12 +121,12 @@ char *ext2_read_inode_data(vfs_node_t *node, ext2_inode *in)
       break;
     //printf("Используется блок %d (0x%X)\n", in->direct[sz], in->direct[sz]*(1024<<super->block_size)+start);
     vfs_read(node->ptr, 
-             in->direct[sz]*(1024<<super->block_size),
-             1024<<super->block_size, 
-             data + sz*(1024<<super->block_size)
+             in->direct[sz]*BLKSZ(super),
+             BLKSZ(super), 
+             data + sz*BLKSZ(super)
             );
   }
-  printf("Считано %d блоков\n", sz);
+  //printf("Считано %d блоков\n", sz);
   return data;
 }
 

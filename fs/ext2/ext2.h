@@ -217,5 +217,6 @@ uint64_t ext2_fini(vfs_node_t *node);
  * Полезные макросы
  */
 #define SIZE(in) (((uint64_t)(in->size_low))|((uint64_t)(in->size_hi)<<32))
+#define BLKSZ(super) (1024<<super->block_size)
 
 #endif // __EXT2_H__
