@@ -41,7 +41,8 @@ typedef struct
   uint16_t magic;
 } part;
 
-#define MDPART_MAGIC 0xAA55
-#define MDPART_BLKSZ 512
+#define MDPART_MAGIC  0xAA55
+#define MDPART_BLKSZ  512
+#define MDPART_ACTIVE 0x80
 
 #endif //__MDPART_H__

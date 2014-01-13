@@ -18,19 +18,27 @@ vfs_driver_t mdpart_drv = {
 int mdpart_init(vfs_node_t *node)
 {
   part buf;
+  int i;
 
-  int l = vfs_read(node, 0, 512, &buf);
+  int l = vfs_read(node, 0, 512, (uint8_t *)&buf);
 
   if ((l < 512) || (buf.magic != MDPART_MAGIC))
     return -1;
+
+  /*
+   * Тут должна быть какая-то хитрая эвристика для определения
+   * корректности таблицы разделов.
+   * Но ее нет
+   */
+  for (i = 0; i < 4; i++)
+    if (buf.parts[i].active&(~MDPART_ACTIVE) != 0)
+      return -2;
 
   /*
    * Найдена таблица разделов
    * Теперь для каждого раздела нужно создать свое устройство
    * в devfs
    */
-
-  int i;
 
   for (i = 0; i < 4; i++)
   {
