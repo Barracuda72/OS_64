@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <string.h>
+
 typedef unsigned char uint8_t;
 typedef unsigned int  uint32_t;
 
@@ -41,8 +43,13 @@ uint8_t *utf2win(const uint8_t *utf, uint8_t *win)
 
 uint8_t font[256][8] = {0};
 
+#if 0
 #define FB_WIDTH (80)
 #define FB_HEIGHT (60)
+#else
+#define FB_WIDTH (160)
+#define FB_HEIGHT (45)
+#endif
 
 uint8_t framebuf[FB_WIDTH][FB_HEIGHT] = {' '};
 uint32_t x, y;
@@ -93,7 +100,7 @@ int main(int argc, char *argv)
   x = 0;
   y = 0;
   load_font();
-  uint8_t *t = "Широкая электрификация южных губерний!";
+  uint8_t *t = "Широкая электрификация южных губерний! Wild cat jumps over the lazy dog!";
   uint8_t *c = malloc(strlen(t)+1);
   utf2win(t, c);
   put_s(c);
