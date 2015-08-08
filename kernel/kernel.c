@@ -10,6 +10,8 @@
 #include <multiboot.h>
 #include <mutex.h>
 
+#include <ata_pio.h>
+
 #include <debug.h>
 
 /* 
@@ -62,6 +64,18 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
       asm("hlt");
     }
   } else {
+    // Тест ATA
+#if 0
+    char *bootsect = kmalloc(512);
+    ata_pio_read(bootsect, 0, 1);
+    int i;
+    for (i = 0; i < 512; i++)
+      printf("%x", bootsect[i]);
+    kfree(bootsect);
+#endif
+
+    fs_test_main(0, 0);
+
     // Крутим циферку в верхнем правом углу
     for(;;) 
     {

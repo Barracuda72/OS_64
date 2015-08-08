@@ -38,15 +38,15 @@ vfs_node_t *ext2_init(vfs_node_t *node)
 
   int res = super->magic == EXT2_MAGIC;
 
-  printf("Это EXT2? %s\n", res ? "Да" : "Нет");
+  printf("Is this EXT2? %s\n", res ? "Yes" : "No");
   if (res)
   {
-    printf("Версия ФС %d.%d\n", super->ver_major, super->ver_minor);
-    printf("Размер блока %d\n", 1024<<super->block_size);
-    printf("Размер inode %d\n", super->inode_size);
-    printf("Количество блоков в группе - %d\n", super->blk_in_grp);
-    printf("Количество inode в группе - %d\n", super->ind_in_grp);
-    printf("Номер блока, содержащего суперблок - %d\n", super->sblock_num);
+    printf("FS revision %d.%d\n", super->ver_major, super->ver_minor);
+    printf("Block size %d\n", 1024<<super->block_size);
+    printf("Inode size %d\n", super->inode_size);
+    printf("Blocks in group - %d\n", super->blk_in_grp);
+    printf("Inodes in group - %d\n", super->ind_in_grp);
+    printf("Block number of superblock - %d\n", super->sblock_num);
 
     root = vfs_alloc_node();
     root->drv = &ext2_drv;
@@ -362,6 +362,17 @@ vfs_node_t *ext2_finddir(vfs_node_t *node, char *name)
   {
     strncpy(v->name, ed->name, ed->length);
     v->inode = ed->inode;
+    v->drv = node->drv;
+    v->reserved = node->reserved;
+    v->ptr = node->ptr;
+
+    ext2_inode *fi = ext2_read_inode(v);
+
+    v->rights = fi->type_perm;
+    v->uid = fi->uid;
+    v->gid = fi->gid;
+    v->length = fi->size_low; // FIXME!
+    kfree(fi);
     // FIXME: здесь нужно считывать сам inode и данные из него 
     // переносить в запись
   } else {

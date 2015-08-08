@@ -1,6 +1,6 @@
 TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
-CPPFLAGS:=-m64 -I. -I./mm -I./x86_64 -I./kernel
+CPPFLAGS:=-m64 -I. -I./mm -I./x86_64 -I./kernel -I./fs/ata -I./fs/mdpart -I./fs/vfs -I./fs/initrd -I./fs/devfs -I./fs/ext2 -I./fs/fat32
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -Wconversion
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 #ASFLAGS:= --64 -g
@@ -24,13 +24,22 @@ OBJECTS:= \
 	x86_64/apic.o \
 	x86_64/regs.o \
   x86_64/ap_init.o \
-	kernel/syscall.o 
+	kernel/syscall.o \
+	x86_64/ata_pio.o \
+	fs/vfs/vfs.o \
+	fs/initrd/initrd.o \
+	fs/devfs/devfs.o \
+	fs/mdpart/mdpart.o \
+	fs/ext2/ext2.o \
+	fs/fat32/fat32.o \
+	fs/ata/ata.o \
+	fs/test.o
 
 MISC := \
   kernel.lds
 
 PREFIX:=x86_64-pc-linux-gnu-
-VERSION:=-4.8.1
+VERSION:=-4.8.4
 CC:=$(PREFIX)gcc$(VERSION)
 LD:=$(PREFIX)ld
 RANLIB:=$(PREFIX)ranlib

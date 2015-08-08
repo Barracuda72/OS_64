@@ -10,7 +10,7 @@ OBJ= \
 
 OPTIMIZE=-g -O0
 CFLAGS_BASE=${OPTIMIZE} -I./mdpart -I./vfs -I./initrd -I./devfs -I./ext2 -I./fat32 -I../mm -I../kernel
-CFLAGS=${CFLAGS_BASE} -nostdinc -ffreestanding
+CFLAGS=${CFLAGS_BASE} -nostdinc -ffreestanding -D__HOSTED__
 
 all: ${OBJ}
 	gcc -o main ${OBJ}

@@ -10,15 +10,21 @@
 #include <mem.h>
 #include <errno.h>
 
+#ifndef __HOSTED__
+#include <ata.h>
+#include <debug.h>
+#endif
+
 void fs_print_dir(vfs_node_t *dir)
 {
   int i = 0;
   struct dirent *de = NULL;
+  //BREAK();
   while ((de = vfs_readdir(dir, i)) != EINVAL)
   {
     if (de != EBADF)
     {
-      printf ("Найден файл %s\n", de->name);
+      printf ("Found file %s\n", de->name);
       kfree(de);
     }
     i++;
@@ -28,8 +34,17 @@ void fs_print_dir(vfs_node_t *dir)
 
 void fs_test_main(void *p, int len)
 {
-  printf("Запуск теста...\n");
-  vfs_node_t *ird = initrd_init(p, len);
+  printf("FS test start...\n");
+  vfs_node_t *ird;
+  char *rnn;
+
+#ifdef __HOSTED__
+  ird = initrd_init(p, len);
+  rnn = "initrd0";
+#else
+  ird = ata_init();
+  rnn = "ata0";
+#endif
 
   vfs_node_t *dfs = devfs_init();
 
@@ -49,13 +64,13 @@ void fs_test_main(void *p, int len)
   vfs_node_t *fsnode;
   while ( (node = vfs_readdir(dfs, i)) != EINVAL)
   {
-    printf("Найден файл %s\n", node->name);
+    printf("Found file %s\n", node->name);
     fsnode = vfs_finddir(dfs, node->name);
 
     if (fsnode->flags&VFS_DIRECTORY)
-      printf("\t(каталог)\n");
+      printf("\t(directory)\n");
 
-    if (!strncmp(node->name, "initrd0", 8))
+    if (!strncmp(node->name, rnn, 8))
     {
       res = vfs_mount(fsnode, root);
       printf ("Mount : %d\n", res);
@@ -83,9 +98,28 @@ void fs_test_main(void *p, int len)
 
   if (root->ptr != NULL)
   {
-    printf("Корень успешно подключен\n");
-    printf("Содержимое:\n");
+    printf("Root mounted successfully\n");
+    printf("Contents:\n");
     fs_print_dir(root);
+
+    printf("Contents of hello.txt:\n");
+    vfs_node_t *hello = vfs_finddir(root, "hello.txt");
+    if (hello != NULL)
+    {
+      char buf[256];
+      int sz = vfs_read(hello, 0, 256, buf);
+      if (sz < 0)
+        printf("Something wrong, return code %d\n", sz);
+      else {
+        int j;
+        for (j = 0; j < sz; j++)
+          printf("%c", buf[j]);
+
+        printf("\"\n");
+      }
+    } else {
+      printf("File not found!\n");
+    }
   }
 
   vfs_umount(root);
