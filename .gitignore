@@ -10,3 +10,8 @@ ldsym
 *.img
 # Ignore target
 *.elf
+# Ignore misc binaries
+smp
+vesa
+elf/elf
+fs/main
