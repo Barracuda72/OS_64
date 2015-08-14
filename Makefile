@@ -1,7 +1,7 @@
 TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
 CPPFLAGS:=-m64 -I. -I./mm -I./x86_64 -I./kernel -I./fs/ata -I./fs/mdpart -I./fs/vfs -I./fs/initrd -I./fs/devfs -I./fs/ext2 -I./fs/fat32
-CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -Wconversion
+CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 #ASFLAGS:= --64 -g
 LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
