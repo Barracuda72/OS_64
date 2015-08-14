@@ -4,7 +4,7 @@
 #include <intr.h>
 #include <phys.h>
 #include <mem.h>
-#include <klibc.h>
+#include <kprintf.h>
 
 #include <debug.h>
 
@@ -17,12 +17,12 @@ pte_desc create_page()
 {
   pte_desc page;
   page.h = 0;
-  //printf("create_page 1");
+  //kprintf("create_page 1");
   page.p.address = ((uint64_t)alloc_phys_page())>>12;
-  //printf("create_page 2");
+  //kprintf("create_page 2");
   page.p.exists = 1;
   page.p.writable = 1;
-  //printf("create_page = %l\n", page.h);
+  //kprintf("create_page = %l\n", page.h);
   return page;
 }
 
@@ -71,7 +71,7 @@ uint64_t find_free_page()
   }
   // Необходимо создать каталог
   PML4[i] = create_page();
-  //printf("Need to create");
+  //kprintf("Need to create");
   return (i<<22);
 }
 
@@ -79,11 +79,11 @@ void *alloc_page()
 {
   uint64_t i,j,res;
   res = find_free_page();
-  //printf("res = %X\n", res);
+  //kprintf("res = %X\n", res);
   j = res>>22;
   i = (res>>12)&0x3FF;
   pte_desc page = create_page();
-  //printf("page = %X\n", page);
+  //kprintf("page = %X\n", page);
   pte_desc *tmp = (pte_desc *)(uint64_t)(PML4[j].p.address<<12);
   tmp[i] = page;
   return (void *)res;
@@ -92,18 +92,18 @@ void *alloc_page()
 void free_page(void *page)
 {
   uint64_t i,j,phys;
-  //printf("page = %X\n", page);
+  //kprintf("page = %X\n", page);
   i = ((uint64_t)page>>22);
   j = ((uint64_t)page>>12)&0x3FF;
-  //printf("i = %X, j = %X\n",i,j);
+  //kprintf("i = %X, j = %X\n",i,j);
 
   pte_desc addr = PML4[i];
-  //printf("addr = %X\n",addr.h);
+  //kprintf("addr = %X\n",addr.h);
 
   pte_desc *p = (pte_desc *)(uint64_t)(addr.p.address<<12);
   phys = (p[j].p.address<<12);
   p[j].h = (uint64_t)0x00000000;
-  //printf("phys = %X\n", phys);
+  //kprintf("phys = %X\n", phys);
   free_phys_page((void *)phys);
 }
 #endif // if 0
@@ -114,7 +114,7 @@ void free_page(void *page)
 void mount_page_t(void *phys_addr)
 {
   intr_disable();
-  //printf("Mount_t: %l\n", (uint64_t)phys_addr);
+  //kprintf("Mount_t: %l\n", (uint64_t)phys_addr);
   kernel_pt[0] = calc_page(phys_addr);
   uint64_t inv_addr = TMP_MOUNT_ADDR; 
   asm("mov %0, %%rax\n \
@@ -132,20 +132,20 @@ void umount_page_t()
   
 void mount_page_do(void *log_addr, pte_desc ph)
 {
-  //printf("Mounting 0x%X - 0x%l\n", phys_addr, log_addr);
+  //kprintf("Mounting 0x%X - 0x%l\n", phys_addr, log_addr);
   linear addr;
   addr.h = (uint64_t)log_addr;
   pte_desc volatile * volatile p = (pte_desc *)TMP_MOUNT_ADDR;
 
   mount_page_t((void *)PML4);
-  //printf("PML4: %d\n", addr.l.pml4);
+  //kprintf("PML4: %d\n", addr.l.pml4);
   pte_desc _p = p[addr.l.pml4];
-  //printf("P is %l\n", _p.h);
+  //kprintf("P is %l\n", _p.h);
   //BREAK();
   // Если необходимый каталог не существует
   if(_p.h == 0)
   {
-    //printf("!\n");
+    //kprintf("!\n");
     _p = create_page();
     p[addr.l.pml4] = _p;
   }
@@ -156,7 +156,7 @@ void mount_page_do(void *log_addr, pte_desc ph)
   _p = p[addr.l.pdp];
   if(_p.h == 0)
   { 
-    //printf("! !\n");
+    //kprintf("! !\n");
     _p = create_page();
     p[addr.l.pdp] = _p;
   }
@@ -167,7 +167,7 @@ void mount_page_do(void *log_addr, pte_desc ph)
   _p = p[addr.l.pd];
   if(_p.h == 0)
   { 
-    //printf("! ! !\n");
+    //kprintf("! ! !\n");
     _p = create_page();
     p[addr.l.pd] = _p;
   }
@@ -192,15 +192,15 @@ void mount_page_hw(void *phys, void *log)
 
 void umount_page(void *log_addr)
 {
-  //printf("Unmounting 0x%l...", log_addr);
+  //kprintf("Unmounting 0x%l...", log_addr);
   linear addr;
   addr.h = (uint64_t)log_addr;
   pte_desc volatile * volatile p = (pte_desc *)TMP_MOUNT_ADDR;
 
   mount_page_t((void *)PML4);
-  //printf("PML4: %d\n", addr.l.pml4);
+  //kprintf("PML4: %d\n", addr.l.pml4);
   pte_desc _p = p[addr.l.pml4];
-  //printf("P is %l\n", _p.h);
+  //kprintf("P is %l\n", _p.h);
   //BREAK();
   umount_page_t();
   // Если необходимый каталог не существует
@@ -232,7 +232,7 @@ void umount_page(void *log_addr)
   p[addr.l.pt].h = p[addr.l.pt].h&0xFFFFFFFFFFFFFFFE;
 
   umount_page_t();
-  //printf(" done\n");
+  //kprintf(" done\n");
 }
 
 void read_page(void *phys_addr, void *buf)
@@ -266,7 +266,7 @@ void write_page(void *phys_addr, void *buf)
 void *copy_page(void *phys_addr, int k)
 {
 
-//  printf("Remapping %l...\n", phys_addr);
+//  kprintf("Remapping %l...\n", phys_addr);
   volatile pte_desc *buf = kmalloc(4096);
   uint64_t addr;
   read_page(phys_addr, buf);
@@ -348,17 +348,17 @@ void page_init(uint64_t *last_phys_page)
   /* PML4 */
   zeromem(last, 4096);
   last[511] = (calc_page(last + 0x200)).h;
-  //printf("1 = %l\n", last[511]);
+  //kprintf("1 = %l\n", last[511]);
   last += 0x200;  // 0x1000 / sizeof(uint64_t)
   /* PDP */
   zeromem(last, 4096);
   last[511] = (calc_page(last + 0x200)).h;
-  //printf("2 = %l\n", last[511]);
+  //kprintf("2 = %l\n", last[511]);
   last += 0x200;
   /* PD */
   zeromem(last, 4096);
   last[0] = (calc_page(last + 0x200)).h;
-  //printf("3 = %l\n", last[0]);
+  //kprintf("3 = %l\n", last[0]);
   last += 0x200;
   //BREAK();
   /* PT */
@@ -385,6 +385,6 @@ void page_init(uint64_t *last_phys_page)
 
   *last_phys_page = (uint64_t)last;
 
-  printf("Pagination enabled!\n");
+  kprintf("Pagination enabled!\n");
 }
 

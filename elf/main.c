@@ -72,14 +72,14 @@ int main(int argc, char *argv[])
   int len = lseek(f, 0, SEEK_END);
   lseek(f, 0, SEEK_SET);
 
-  buffer = malloc(len);
+  buffer = kmalloc(len);
   read(f, buffer, len);
   close(f);
 
   // Проверим, сможет ли наш загрузчик обработать этот файл
   if (elf64_is_supported((Elf64_Ehdr *)buffer))
   {
-    puts("Seems to be supported ELF file");
+    ktty_puts("Seems to be supported ELF file");
 
     // Файл поддерживается, обработаем
     entry = elf64_load_file((Elf64_Ehdr *)buffer);

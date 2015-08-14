@@ -16,7 +16,7 @@ int elf64_check_magic(Elf64_Ehdr *hdr)
   // Проверка магической константы в начале заголовка
   if(memcmp(hdr->e_ident, ELFMAG, SELFMAG) != 0)
   {
-    puts("ELF header magic incorrect!");
+    ktty_puts("ELF header magic incorrect!");
     return 0;
   }
 
@@ -31,42 +31,42 @@ int elf64_is_supported(Elf64_Ehdr *hdr)
   // Проверим заголовок
   if (!elf64_check_magic(hdr))
   {
-    puts("File isn't an ELF");
+    ktty_puts("File isn't an ELF");
     return 0;
   }
 
   // Проверим соответствие классу
   if (hdr->e_ident[EI_CLASS] != ELFCLASS64)
   {
-    puts("ELF file has unsupported class");
+    ktty_puts("ELF file has unsupported class");
     return 0;
   }
 
   // Проверим порядок битов
   if (hdr->e_ident[EI_DATA] != ELFDATA2LSB)
   {
-    puts("ELF file has unsupported byte order");
+    ktty_puts("ELF file has unsupported byte order");
     return 0;
   }
 
   // Проверим архитектуру, для которой был собран файл
   if (hdr->e_machine != EM_AMD64)
   {
-    puts("ELF file has unsupported architecture");
+    ktty_puts("ELF file has unsupported architecture");
     return 0;
   }
 
   // Проверим версию (обычно 1, но все-таки)
   if ((hdr->e_version != EV_CURRENT) || (hdr->e_ident[EI_VERSION] != EV_CURRENT))
   {
-    puts("ELF file has unsupported version");
+    ktty_puts("ELF file has unsupported version");
     return 0;
   }
 
   // Наш загрузчик поддерживает только исполняемые и перемещаемые файлы
   if ((hdr->e_type != ET_EXEC) && (hdr->e_type != ET_REL))
   {
-    puts("ELF file has unsupported type");
+    ktty_puts("ELF file has unsupported type");
     return 0;
   }
 
@@ -232,7 +232,7 @@ int elf64_do_rela(Elf64_Ehdr *hdr, Elf64_Rela *rel, Elf64_Shdr *reltab)
       break;
 
     default:
-      puts("Unsupported relocation type");
+      ktty_puts("Unsupported relocation type");
       return ELF_REL_ERR;     
   }
 
@@ -287,14 +287,14 @@ int elf64_load_stage2(Elf64_Ehdr *hdr)
           int result = elf64_do_rela(hdr, relatab, section);
           if (result == ELF_REL_ERR)
           {
-            puts("Failed to relocate symbol");
+            ktty_puts("Failed to relocate symbol");
             return ELF_LOAD_ERR;
           }
         }
         break;
 
       default:
-        puts("Unsupported symbol type");
+        ktty_puts("Unsupported symbol type");
         //return ELF_REL_ERR;
     }
   }
@@ -326,7 +326,7 @@ int elf64_load_stage3(Elf64_Ehdr *hdr)
       // Выделим память под сегмент (предполагается, что он уже выровнен на
       // границу страницы)
       int tail = segment->p_vaddr&0xFFF;
-      char *addr = malloc(segment->p_memsz + tail);
+      char *addr = kmalloc(segment->p_memsz + tail);
       // Отобразим сегмент по виртуальному адресу
       addr = mremap(addr, segment->p_memsz + tail, segment->p_memsz+tail, 3, segment->p_vaddr & (~0xFFF));
 
@@ -353,7 +353,7 @@ void *elf64_load_rel(Elf64_Ehdr *hdr)
 
   if (result == ELF_LOAD_ERR)
   {
-    puts("Loading REL file failed at Stage 1");
+    ktty_puts("Loading REL file failed at Stage 1");
     return NULL;
   }
 
@@ -362,7 +362,7 @@ void *elf64_load_rel(Elf64_Ehdr *hdr)
 
   if (result == ELF_LOAD_ERR)
   {
-    puts("Loading REL file failed at Stage 2");
+    ktty_puts("Loading REL file failed at Stage 2");
     return NULL;
   }
 
@@ -382,7 +382,7 @@ void *elf64_load_exec(Elf64_Ehdr *hdr)
 
   if (result == ELF_LOAD_ERR)
   {
-    puts("Loading EXEC file failed at Stage 3");
+    ktty_puts("Loading EXEC file failed at Stage 3");
     return NULL;
   }
 
@@ -391,7 +391,7 @@ void *elf64_load_exec(Elf64_Ehdr *hdr)
 
   if (result == ELF_LOAD_ERR)
   {
-    puts("Loading EXEC file failed at Stage 2");
+    ktty_puts("Loading EXEC file failed at Stage 2");
     return NULL;
   }
 
@@ -406,7 +406,7 @@ void *elf64_load_file(Elf64_Ehdr *hdr)
   // Проверим, сможем ли мы загрузить данный файл
   if (!elf64_is_supported(hdr))
   {
-    puts("File can't be loaded");
+    ktty_puts("File can't be loaded");
     return NULL;
   }
 

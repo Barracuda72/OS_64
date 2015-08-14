@@ -1,4 +1,4 @@
-#include <klibc.h>
+#include <kprintf.h>
 #include <mem.h>
 #include <dirent.h>
 #include <errno.h>
@@ -38,15 +38,15 @@ vfs_node_t *ext2_init(vfs_node_t *node)
 
   int res = super->magic == EXT2_MAGIC;
 
-  printf("Is this EXT2? %s\n", res ? "Yes" : "No");
+  kprintf("Is this EXT2? %s\n", res ? "Yes" : "No");
   if (res)
   {
-    printf("FS revision %d.%d\n", super->ver_major, super->ver_minor);
-    printf("Block size %d\n", 1024<<super->block_size);
-    printf("Inode size %d\n", super->inode_size);
-    printf("Blocks in group - %d\n", super->blk_in_grp);
-    printf("Inodes in group - %d\n", super->ind_in_grp);
-    printf("Block number of superblock - %d\n", super->sblock_num);
+    kprintf("FS revision %d.%d\n", super->ver_major, super->ver_minor);
+    kprintf("Block size %d\n", 1024<<super->block_size);
+    kprintf("Inode size %d\n", super->inode_size);
+    kprintf("Blocks in group - %d\n", super->blk_in_grp);
+    kprintf("Inodes in group - %d\n", super->ind_in_grp);
+    kprintf("Block number of superblock - %d\n", super->sblock_num);
 
     root = vfs_alloc_node();
     root->drv = &ext2_drv;
@@ -91,7 +91,7 @@ ext2_inode *ext2_read_inode(vfs_node_t *node)
 
   i_start = desc->inode_st*(1024<<super->block_size);
 
-  //printf("Таблица inode расположена по адресу 0x%X\n", i_start);
+  //kprintf("Таблица inode расположена по адресу 0x%X\n", i_start);
   kfree(desc);
 
   ext2_inode *in = kmalloc(super->inode_size);
@@ -100,9 +100,9 @@ ext2_inode *ext2_read_inode(vfs_node_t *node)
            super->inode_size,
            (uint8_t *)in
           );
-  //printf("Тип и разрешения inode %d - 0x%X\n", inode, in->type_perm);
-  //printf("Это директория? %s\n", in->type_perm&EXT2_INODE_DIR ? "Да" : "Нет");
-  //printf("Размер %d\n", SIZE(in));
+  //kprintf("Тип и разрешения inode %d - 0x%X\n", inode, in->type_perm);
+  //kprintf("Это директория? %s\n", in->type_perm&EXT2_INODE_DIR ? "Да" : "Нет");
+  //kprintf("Размер %d\n", SIZE(in));
   return in;
 }
 
@@ -120,14 +120,14 @@ char *ext2_read_inode_data(vfs_node_t *node, ext2_inode *in)
   {
     if (in->direct[sz] == 0)
       break;
-    //printf("Используется блок %d (0x%X)\n", in->direct[sz], in->direct[sz]*(1024<<super->block_size)+start);
+    //kprintf("Используется блок %d (0x%X)\n", in->direct[sz], in->direct[sz]*(1024<<super->block_size)+start);
     vfs_read(node->ptr, 
              in->direct[sz]*BLKSZ(super),
              BLKSZ(super), 
              data + sz*BLKSZ(super)
             );
   }
-  //printf("Считано %d блоков\n", sz);
+  //kprintf("Считано %d блоков\n", sz);
   return data;
 }
 
@@ -140,7 +140,7 @@ int _ext2_open(const char *path, int flags)
 {
   if (!start)
     return;
-  printf("Попытка открыть %s\n", path);
+  kprintf("Попытка открыть %s\n", path);
   int i;
   for (i = 0; (i < 1024) && (open_files[i] != 0xFFFFFFFF); i++);
       
@@ -159,7 +159,7 @@ int _ext2_open(const char *path, int flags)
       return ENOTDIR;
     }
     
-    //printf("Path: %s\n", path);
+    //kprintf("Path: %s\n", path);
     while (*path == '/') path++;
     int s = 0;
     while ((path[s] != '/') && (path[s] != 0)) s++;
@@ -175,10 +175,10 @@ int _ext2_open(const char *path, int flags)
       {
         break;
       }
-      //printf("Direntry: %s\n", dirent->name);
+      //kprintf("Direntry: %s\n", dirent->name);
       if (!strncmp(dirent->name, path, s))
       {
-        //printf("BRK;\n");
+        //kprintf("BRK;\n");
         if (path[s] == '/') // Это не последний элемент пути
         {
           inode = dirent->inode;

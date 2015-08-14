@@ -1,54 +1,19 @@
+/*
+ * linsys.c
+ *
+ * Обертка системных вызовов Linux 
+ * для hosted-режима
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 //#include <fcntl.h>
-
-int memcmp(const void *s1, const void *s2, size_t n)
-{
-  size_t i;
-  const unsigned char *a1 = (const unsigned char *)s1;
-  const unsigned char *a2 = (const unsigned char *)s2;
-
-  for (i = 0; i < n; i++)
-    if (a1[i]-a2[i])
-      return a1[i] - a2[i];
-
-  return 0;
-}
-
-void *memcpy(void *dest, const void *src, size_t n)
-{
-  char *d = (char *)dest;
-  char *s = (char *)src;
-  int i;
-
-  for (i = 0; i < n; i++)
-    d[i] = s[i];
-
-  return dest;
-}
-
-void *memset(void *s, int c, size_t n)
-{
-  char *d = (char *)s;
-
-  for (; n > 0; n--)
-    d[n-1] = c;
-
-  return s;
-}
-
-size_t strlen(const char *s)
-{
-  size_t i = 0;
-  while(s[i]) 
-    i++;
-
-  return i;
-}
 
 ssize_t write(int fd, const void *buf, size_t count)
 {
@@ -190,37 +155,5 @@ void *mremap(void *old_address, size_t old_size,
     );
 
     return newaddr;
-}
-
-#define MAVAIL __POOL_SIZE__
-
-static char internal[MAVAIL+0x1000];
-static const int mavail = MAVAIL;
-static int mpos = 0;
-
-void *malloc(size_t size)
-{
-  if (mpos >= mavail)
-    return 0;
-
-  long internal_addr = ((long)internal & (~0xFFF)) + 0x1000;
-
-  size = (size&(~0xFFF)) + 0x1000;
-
-  long ret = internal_addr + mpos;
-  mpos += size;
-
-  return ret;
-}
-
-int puts(const char *s)
-{
-  size_t len = strlen(s);
-  char *nl = "\n";
-
-  write(1, s, len);
-  write(1, nl, 1);
-
-  return 0;
 }
 

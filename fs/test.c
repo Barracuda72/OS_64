@@ -6,7 +6,7 @@
 #include <vfs.h>
 #include <initrd.h>
 #include <devfs.h>
-#include <klibc.h>
+#include <kprintf.h>
 #include <mem.h>
 #include <errno.h>
 
@@ -24,17 +24,17 @@ void fs_print_dir(vfs_node_t *dir)
   {
     if (de != EBADF)
     {
-      printf ("Found file %s\n", de->name);
+      kprintf ("Found file %s\n", de->name);
       kfree(de);
     }
     i++;
   }
-  printf("---\n");
+  kprintf("---\n");
 }
 
 void fs_test_main(void *p, int len)
 {
-  printf("FS test start...\n");
+  kprintf("FS test start...\n");
   vfs_node_t *ird;
   char *rnn;
 
@@ -64,31 +64,31 @@ void fs_test_main(void *p, int len)
   vfs_node_t *fsnode;
   while ( (node = vfs_readdir(dfs, i)) != EINVAL)
   {
-    printf("Found file %s\n", node->name);
+    kprintf("Found file %s\n", node->name);
     fsnode = vfs_finddir(dfs, node->name);
 
     if (fsnode->flags&VFS_DIRECTORY)
-      printf("\t(directory)\n");
+      kprintf("\t(directory)\n");
 
     if (!strncmp(node->name, rnn, 8))
     {
       res = vfs_mount(fsnode, root);
-      printf ("Mount : %d\n", res);
+      kprintf ("Mount : %d\n", res);
     }
 #if 0
     else if (strncmp(node->name, "initrd", 7))
     {
-      printf("\n\t содержимое: \"");
+      kprintf("\n\t содержимое: \"");
       char buf[256];
       int sz = vfs_read(fsnode, 0, 256, buf);
       if (sz < 0)
-        printf("Что-то не так, код возврата %d\n", sz);
+        kprintf("Что-то не так, код возврата %d\n", sz);
       else {
         int j;
         for (j = 0; j < sz; j++)
           putchar(buf[j]);
 
-        printf("\"\n");
+        kprintf("\"\n");
       }
     }
 #endif
@@ -98,27 +98,27 @@ void fs_test_main(void *p, int len)
 
   if (root->ptr != NULL)
   {
-    printf("Root mounted successfully\n");
-    printf("Contents:\n");
+    kprintf("Root mounted successfully\n");
+    kprintf("Contents:\n");
     fs_print_dir(root);
 
-    printf("Contents of hello.txt:\n");
+    kprintf("Contents of hello.txt:\n");
     vfs_node_t *hello = vfs_finddir(root, "hello.txt");
     if (hello != NULL)
     {
       char buf[256];
       int sz = vfs_read(hello, 0, 256, buf);
       if (sz < 0)
-        printf("Something wrong, return code %d\n", sz);
+        kprintf("Something wrong, return code %d\n", sz);
       else {
         int j;
         for (j = 0; j < sz; j++)
-          printf("%c", buf[j]);
+          kprintf("%c", buf[j]);
 
-        printf("\"\n");
+        kprintf("\"\n");
       }
     } else {
-      printf("File not found!\n");
+      kprintf("File not found!\n");
     }
   }
 

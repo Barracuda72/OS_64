@@ -1,5 +1,5 @@
 #include <smp.h>
-#include <klibc.h>
+#include <kprintf.h>
 #include <ktty.h>
 #include <stdint.h>
 #include <page.h>
@@ -28,7 +28,7 @@ void smp_init(void)
   for(i = (0x9FC00>>2); i < (0xA0000>>2); i++)
     if(addr[i] == SMP_MAGIC)
     {
-      //printf("Found at addr %X\n",addr+(i));
+      //kprintf("Found at addr %X\n",addr+(i));
       found = 1;
       break;
     }
@@ -38,7 +38,7 @@ void smp_init(void)
     for(i = (0xF0000>>2); i < (0x100000>>2); i++) // FIXME: должно быть 0xE0000!
       if(addr[i] == SMP_MAGIC)
       {
-        //printf("Found at addr %X\n",addr+(i));
+        //kprintf("Found at addr %X\n",addr+(i));
         found = 1;
         break;
       }
@@ -47,22 +47,22 @@ void smp_init(void)
     ktty_puts("SMP not found\n");
   } else {
     SMP *s = (SMP *)(&addr[i]);
-    //printf("SMP addr %l\n", s);
-    printf("SMP version 1.%d found\n",s->version);
+    //kprintf("SMP addr %l\n", s);
+    kprintf("SMP version 1.%d found\n",s->version);
     if(s->features[0] == 0)
     {
       char oem[9] = {0};
       char product[13] = {0};
       // Описание системы расположено по адресу s->config
       SMP_config *sc = (SMP_config *)( (uint64_t)addr + (uint64_t)(s->config) );
-      //printf("SC is %l\n", sc);
-      printf("Specification revision 1.%d\n", sc->revision);
+      //kprintf("SC is %l\n", sc);
+      kprintf("Specification revision 1.%d\n", sc->revision);
       strncpy(oem, sc->oemid, 8);
       oem[8] = 0;
       strncpy(product, sc->productid, 12);
       product[12] = 0;
-      printf("Manufacturer %s, board %s\n", oem, product);
-      printf("Local APIC at addr %X\n", sc->lapic_addr);
+      kprintf("Manufacturer %s, board %s\n", oem, product);
+      kprintf("Local APIC at addr %X\n", sc->lapic_addr);
       // Инициализируем APIC
       apic_init(sc->lapic_addr);
       char *addr2 = (char *)((uint64_t)sc + sizeof(SMP_config));
@@ -76,7 +76,7 @@ void smp_init(void)
         {
           case SMP_PROCESSOR:
             p = (SMP_proc *)addr2;
-            printf("Processor, APIC ID %d, En : %d, BSP : %d\n", p->apic_id, p->enabled, p->bsp);
+            kprintf("Processor, APIC ID %d, En : %d, BSP : %d\n", p->apic_id, p->enabled, p->bsp);
             // Инициализируем AP
             if (!(p->bsp) && (p->apic_id != 0)) // FIXME: remove apic_id check
               ap_init(p->apic_id);
@@ -87,13 +87,13 @@ void smp_init(void)
             b = (SMP_bus*)addr2;
             memcpy(oem, b->name, 6);
             oem[6] = 0;
-            printf("Bus, ID %d, name %s\n", b->id, oem);
+            kprintf("Bus, ID %d, name %s\n", b->id, oem);
             addr2 += 8;
             break;
 
           case SMP_IOAPIC:
             io = (SMP_ioapic *)addr2;
-            printf("IO APIC, ID %d (flags %b) at 0x%X\n", io->apic_id, io->flags, io->address); 
+            kprintf("IO APIC, ID %d (flags %b) at 0x%X\n", io->apic_id, io->flags, io->address); 
             if (io->flags&IOAPIC_ENABLED)
               ioapic_init(io->address);
             addr2 += 8;
@@ -105,7 +105,7 @@ void smp_init(void)
             break;
 
           default:
-            printf("Unknown byte %x at %l\n", *addr2, addr2);
+            kprintf("Unknown byte %x at %l\n", *addr2, addr2);
             i = sc->count;
             break;
         }
@@ -113,7 +113,7 @@ void smp_init(void)
       //BREAK();
     } else {
       // Система представляет собой одну из стандартных конфигураций
-      printf("Using configuration %d\n", s->features[0]);
+      kprintf("Using configuration %d\n", s->features[0]);
     }
   }
   // Отмонтируем

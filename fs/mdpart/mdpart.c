@@ -48,10 +48,10 @@ int mdpart_init(vfs_node_t *node)
     if (buf.parts[i].type == 0)
       break;
 /*
-    printf("Раздел #%d, тип 0x%02x%s:\n", i, 
+    kprintf("Раздел #%d, тип 0x%02x%s:\n", i, 
            buf.parts[i].type,
            buf.parts[i].active == 0 ? "" : ", активный");
-    printf("\tНачало: %d, размер %d\n", 
+    kprintf("\tНачало: %d, размер %d\n", 
            buf.parts[i].first_sector,
            buf.parts[i].num_sectors
           );
@@ -105,7 +105,7 @@ uint64_t mdpart_read(vfs_node_t *node, uint64_t offset, uint64_t size, uint8_t *
 
     int len = offset+size > node->length ? node->length - offset : size;
 
-    //printf("mdpart_read : offset %d, len %d\n", offset+node->reserved, node->ptr->length);
+    //kprintf("mdpart_read : offset %d, len %d\n", offset+node->reserved, node->ptr->length);
     return vfs_read(node->ptr, offset+node->reserved, len, buffer);
   } else
     return EBADF;

@@ -2,7 +2,7 @@
 #define __PAGEFAULT_H__
 
 #include <intr.h>
-#include <klibc.h>
+#include <kprintf.h>
 #include <phys.h>
 #include <page.h>
 #include <stdint.h>
@@ -35,15 +35,15 @@ void _page_fault(uint64_t addr, all_regs *r)
   if ((addr >= kernel_heap) && 
       (!(r->reg1&PF_PRESENT) && !(r->reg1&PF_USER)))
   {
-    //printf("Kernel heap fault, recovering...\n");
+    //kprintf("Kernel heap fault, recovering...\n");
     mount_page(alloc_phys_page(), addr&0xFFFFFFFFFFFFF000L);
     //BREAK();
     return;
   }
   
-  printf("Page Fault: address = %l, flags = %b\n", 
+  kprintf("Page Fault: address = %l, flags = %b\n", 
          addr, r->reg1);
-  printf(
+  kprintf(
          "RAX %l | RBX %l | RCX %l\n"
          "RDX %l | RSI %l | RDI %l\n"
          "RBP %l | RSP %l | RIP %l\n"
@@ -55,11 +55,11 @@ void _page_fault(uint64_t addr, all_regs *r)
          r->i.rflags, r->c.r8,  r->c.r9
   );
 
-  printf("Stack unwind:\n");
+  kprintf("Stack unwind:\n");
   uint64_t *stacktop = r->i.rsp;
   int32_t i;
   for(i = -5; i < 5; i++)
-    printf("%c0x%x: 0x%l\n", SIGN(i), ABS(i)<<3, stacktop[i]);
+    kprintf("%c0x%x: 0x%l\n", SIGN(i), ABS(i)<<3, stacktop[i]);
 
   BREAK();
   for(;;) asm("hlt");

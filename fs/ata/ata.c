@@ -1,7 +1,7 @@
 #include <vfs.h>
 #include <ata.h>
 #include <mem.h>
-#include <klibc.h>
+#include <kprintf.h>
 #include <errno.h>
 
 /*

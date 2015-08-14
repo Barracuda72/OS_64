@@ -1,6 +1,6 @@
 #include <task.h>
 #include <gdt.h>
-#include <klibc.h>
+#include <kprintf.h>
 #include <mem.h>
 #include <multiboot.h>
 #include <stdint.h>
@@ -176,5 +176,5 @@ uint64_t task_switch(all_regs *r)
 
 void get_c()
 {
-  printf("Curr: %l\n", curr);
+  kprintf("Curr: %l\n", curr);
 }

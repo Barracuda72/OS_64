@@ -138,7 +138,7 @@ void apic_init(uint32_t lapic_a)
  
   // Посчитаем...
   cpubusfreq = ((0xFFFFFFFF - lapic_addr[APIC_TMRCURRCNT]) + 1)*16*100;
-  printf("CPU bus freq: %d\n", cpubusfreq);
+  kprintf("CPU bus freq: %d\n", cpubusfreq);
   tmp = cpubusfreq / quantum / 16;
  
   // Теперь в tmp - нужное нам значение
@@ -199,7 +199,7 @@ void ioapic_init(uint32_t ioapic_phys)
   // Настройка IRQ16 (PCI 1) на Int30
   ioapic_write(0x30, 0xA030);
   ioapic_write(0x31, 0);
-  printf("IO APIC init complete\n");
+  kprintf("IO APIC init complete\n");
 }
 
 uint32_t ioapic_read(uint8_t reg)

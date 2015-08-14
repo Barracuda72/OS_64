@@ -42,9 +42,9 @@ void *alloc_phys_page()
                    (phys_map[i] == 0xFFFFFFFFFFFFFFFFL); i++);
   if(i == phys_size) return 0;      //Вся память занята
 
-  //printf("alloc_pp 1");
+  //kprintf("alloc_pp 1");
   tmp = phys_map[i];
-  //printf("tmp = %l\n", tmp);
+  //kprintf("tmp = %l\n", tmp);
   // Обходим баг в GCC 4.7
 #if 0
         for (j = 0; (j < 64)&&((tmp|(1<<j)) == tmp); j++);
@@ -74,10 +74,10 @@ void *alloc_phys_page()
         ph_map[i*2 + k] = (itmp|( 1<<j));
   j = j + k*32;
 #endif
-  //printf("Alloc p 0x%l\n", (64*i + j)<<12);
+  //kprintf("Alloc p 0x%l\n", (64*i + j)<<12);
   //uint64_t *zero = (uint64_t *)(((64*i + j)<<12) + pool_addr);
   //for(k = 0; k<0x400; k++) zero[k] = 0x0000000000000000L;
-  //printf("alloc_pp 3");
+  //kprintf("alloc_pp 3");
   return (void *)((64*i + j)<<12);
 }
 
@@ -86,7 +86,7 @@ void free_phys_page(void *page)
   if(page == 0) return;
   uint64_t pageaddr = (uint64_t)page;
   pageaddr = pageaddr >> 12;
-  //printf("1\n");
+  //kprintf("1\n");
   phys_map[pageaddr>>6] = 
   phys_map[pageaddr>>6]&(~(1<<(pageaddr%64)));
 }
@@ -136,7 +136,7 @@ void phys_init(uint64_t *last, uint64_t size,
        if (mmap->base_addr == 0x100000)
          mmap->base_addr = (((*last)>>18) + 1) << 18;
 /*
-       printf ("base_addr = 0x%l,"
+       kprintf ("base_addr = 0x%l,"
                " length = 0x%l\n",
                (uint64_t) mmap->base_addr,
                (uint64_t) mmap->length);
@@ -148,6 +148,6 @@ void phys_init(uint64_t *last, uint64_t size,
     }
   umount_page(mb);
   umount_page(0xFFFFFFFFC0000000|(uint64_t)(mb->mmap_addr));
-  printf("Init phys mem map complete - %dMB\n", size);
+  kprintf("Init phys mem map complete - %dMB\n", size);
 }
 

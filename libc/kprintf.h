@@ -3,27 +3,9 @@
 
 #include <stdint.h>
 
-void printf(const char *fmt, ...);
-
-void getsn(void);
-
-char getc();
-
-void ungetc(char c);
-
-char *strncpy(char *dest, char *src, int len);
-
-void *memset(void *mem, int c, uint32_t n);
+void kprintf(const char *fmt, ...);
 
 void *zeromem(void *mem, uint32_t n);
-
-void *memcpy(void *dest, const void *src, uint32_t n);
-
-int strncmp(const char *s1, const char *s2, uint32_t n);
-
-int strlen(const char *s);
-
-char *strncat(char *s1, const char *s2, uint32_t n);
 
 // Для printf
 #define va_start(v,l) __builtin_va_start(v,l)

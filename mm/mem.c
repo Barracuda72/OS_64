@@ -13,7 +13,7 @@ void mem_init(uint64_t pl_addr, uint64_t pl_size,
   // last_page - последняя страница как физической,
   // так и виртуальной памяти
   uint64_t last_page = (pl_addr&0x0FFFF000) + 0x1000;
-  //printf("Last phys page is %l\n", last_page);
+  //kprintf("Last phys page is %l\n", last_page);
   page_init(&last_page);
   phys_init(&last_page, pl_size, mb);
 
@@ -24,7 +24,7 @@ void mem_init(uint64_t pl_addr, uint64_t pl_size,
   kernel_heap->size = kernel_hlim; // ~1 GB
   kernel_heap->free = 1;
   kernel_heap->prev = 0;
-  printf("Memory init complete\n");
+  kprintf("Memory init complete\n");
 }
 
 void *kmalloc(uint64_t size)
@@ -37,7 +37,7 @@ void *kmalloc(uint64_t size)
   while ((head < ((uint64_t)kernel_heap + kernel_hlim)) && 
     ((head->size < size) || !(head->free)))
   {
-    //printf("MM: chunk %l, s %d - %d\n", 
+    //kprintf("MM: chunk %l, s %d - %d\n", 
     //  head, head->size, head->free);
     head = (uint64_t)head + head->size + sizeof(kmem_header);
   }
@@ -46,7 +46,7 @@ void *kmalloc(uint64_t size)
   if (head >= ((uint64_t)kernel_heap + kernel_hlim))
     return 0;
   //BREAK();
-  //printf("H: %l\n", head);
+  //kprintf("H: %l\n", head);
   // Если фрагмент можно и нужно разбить на два
   if (head->size > (size + sizeof(kmem_header)))
   {
@@ -116,7 +116,7 @@ void kfree(void *p)
     // Обновляем указатель на предыдущий элемент
     next -> prev = ptr;
 
-  //printf("Freed %X bytes\n", ptr->size);
+  //kprintf("Freed %X bytes\n", ptr->size);
   if (ptr->size >= 0x1000)
   {
     // Есть резон попробовать освободить физическую память

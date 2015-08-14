@@ -32,7 +32,7 @@ syscall_handler: \n \
 
 void test_out(char *s, uint64_t t)
 {
-  printf(s, t);
+  kprintf(s, t);
 }
 
 // И - сам вызов

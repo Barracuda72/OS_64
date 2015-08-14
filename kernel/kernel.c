@@ -1,5 +1,5 @@
 #include <ktty.h>
-#include <klibc.h>
+#include <kprintf.h>
 #include <cpuid.h>
 #include <gdt.h>
 #include <task.h>
@@ -25,18 +25,18 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 
   if (mb_magic != MULTIBOOT_LOADER_MAGIC)
   {
-    printf("Sorry, this kernel relies heavily on information,\n");
-    printf("provided by Multiboot-compiliant bootloader!\n");
-    printf("System halted.");
+    kprintf("Sorry, this kernel relies heavily on information,\n");
+    kprintf("provided by Multiboot-compiliant bootloader!\n");
+    kprintf("System halted.");
     return -1;
   }
 
   // Общая информация о памяти
-  //printf ("mem_lower = %dKB, mem_upper = %dKB\n",
+  //kprintf ("mem_lower = %dKB, mem_upper = %dKB\n",
   //       (uint32_t) mb->mem_lower, (uint32_t) (mb->mem_upper));
   intr_init();
 
-  printf("OS_64 build date: %s %s\n", __DATE__, __TIME__);
+  kprintf("OS_64 build date: %s %s\n", __DATE__, __TIME__);
 
   extern uint64_t kernel_end;
   uint64_t pool = &kernel_end;
@@ -45,7 +45,7 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
   smp_init();
   task_init();
 
-  printf("Kernel alive, up and running!\n");
+  kprintf("Kernel alive, up and running!\n");
 
   //char *test_text = "Syscall %d test\n";
   char *text_video = 0xFFFFFFFFC00B8000;
@@ -70,7 +70,7 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
     ata_pio_read(bootsect, 0, 1);
     int i;
     for (i = 0; i < 512; i++)
-      printf("%x", bootsect[i]);
+      kprintf("%x", bootsect[i]);
     kfree(bootsect);
 #endif
 

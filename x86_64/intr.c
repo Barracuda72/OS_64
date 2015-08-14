@@ -148,7 +148,7 @@ void intr_enable()
 {
   if (intr_sema == 0)
   {
-    printf("Bug: intr_enable!\n");
+    kprintf("Bug: intr_enable!\n");
     BREAK();
     asm("hlt");
   }

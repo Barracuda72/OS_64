@@ -3,19 +3,6 @@
 #include <stdint.h>
 
 int fs_test_main(void *p, int len);
-/*
- * Заглушки для функций ядра
- */
-
-void *kmalloc(uint64_t size)
-{
-  return malloc(size);
-}
-
-void kfree(void *p)
-{
-  free(p);
-}
 
 #define B_SIZE 0x1000*0x400
 
