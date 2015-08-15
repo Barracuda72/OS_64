@@ -102,21 +102,25 @@ void fs_test_main(void *p, int len)
     kprintf("Contents:\n");
     fs_print_dir(root);
 
-    kprintf("Contents of hello.txt:\n");
-    vfs_node_t *hello = vfs_finddir(root, "hello.txt");
+    char *test_file = "Apic.htm"; //"hello.txt";
+
+    kprintf("Contents of %s:\n", test_file);
+    vfs_node_t *hello = vfs_finddir(root, test_file);
     if (hello != NULL)
     {
-      char buf[256];
-      int sz = vfs_read(hello, 0, 256, buf);
+      char *buf = kmalloc(10000);
+      int sz = vfs_read(hello, 11000, 2096, buf);
       if (sz < 0)
         kprintf("Something wrong, return code %d\n", sz);
       else {
-        int j;
+        kprintf("(Readed %d bytes)\n", sz);
+    /*    int j;
         for (j = 0; j < sz; j++)
           kprintf("%c", buf[j]);
-
+*/
         kprintf("\"\n");
       }
+      kfree(buf);
     } else {
       kprintf("File not found!\n");
     }

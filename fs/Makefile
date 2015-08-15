@@ -11,6 +11,7 @@ OBJ= \
 	main.o
 
 OPTIMIZE=-g -O0
+# OPTIMIZE=-O3 -mtune=corei7-avx
 CFLAGS_BASE=${OPTIMIZE} -I../libc -I./mdpart -I./vfs -I./initrd -I./devfs -I./ext2 -I./fat32 -I../mm -I../kernel
 CFLAGS=${CFLAGS_BASE} -nostdinc -ffreestanding -D__HOSTED__ -D__POOL_SIZE__=0x200000
 

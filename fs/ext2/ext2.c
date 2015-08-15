@@ -131,6 +131,134 @@ char *ext2_read_inode_data(vfs_node_t *node, ext2_inode *in)
   return data;
 }
 
+char *ext2_read_block_data(vfs_node_t *node, uint32_t block, off_t offset, size_t size, char *data)
+{
+  ext2_superblock *super = (ext2_superblock *)node->reserved;
+  vfs_read(node->ptr,
+           block*BLKSZ(super) + offset,
+           size,
+           data
+          );
+
+  return data;
+}
+
+char *ext2_read_block_chain(vfs_node_t *node, uint32_t *chain, off_t offset, size_t size, char *data)
+{
+  ext2_superblock *super = (ext2_superblock *)node->reserved;
+
+  int i, n;
+  char *ptr = data;
+
+  i = offset/BLKSZ(super);
+  offset = offset % BLKSZ(super);
+
+  for (; size > 0; i++)
+  {
+    if (chain[i] == 0)
+      break;
+
+    n = size > BLKSZ(super) ? BLKSZ(super) : size;
+
+    ext2_read_block_data(node,
+                         chain[i],
+                         offset,
+                         n,
+                         ptr
+                        );
+    offset = 0; // Немного некрасиво, но пусть будет
+
+    ptr += n;
+    size -= n;
+  }
+
+  return data;
+}
+
+char *ext2_read_inode_data_ex(vfs_node_t *node, ext2_inode *in, off_t offset, size_t size)
+{
+  int sz = 0;
+  int i = 0;
+  ext2_superblock *super = (ext2_superblock *)node->reserved;
+  char *data = kmalloc(size);
+  char *ptr = data;
+
+  int ptrs_in_block = BLKSZ(super)/sizeof(uint32_t);
+  int bytes_in_dbp = 12*BLKSZ(super);
+  int bytes_in_sibp = BLKSZ(super)*ptrs_in_block;
+  int bytes_in_dibp = bytes_in_sibp*ptrs_in_block;
+  int bytes_in_tibp = bytes_in_dibp*ptrs_in_block;
+
+  // Чтение из Direct Block Pointer
+  if (offset < bytes_in_dbp)
+  {
+    sz = (offset + size) > bytes_in_dbp ? (bytes_in_dbp - offset) : size;
+    ext2_read_block_chain(node, in->direct, offset, sz, ptr);
+    size -= sz;
+    ptr += sz;
+    offset = 0;
+  } else {
+    offset -= bytes_in_dbp;
+  }
+
+  // Чтение из Single Indirect Block Pointer
+  if ((size > 0) && (offset < bytes_in_sibp))
+  {
+    uint32_t *sibp = kmalloc(BLKSZ(super));
+    ext2_read_block_data(node, in->s_indirect, 0, BLKSZ(super), sibp);
+
+    sz = (offset + size) > bytes_in_sibp ? (bytes_in_sibp - offset) : size;
+    ext2_read_block_chain(node, sibp, offset, sz, ptr);
+    size -= sz;
+    ptr += sz;
+    offset = 0;
+
+    kfree(sibp);
+  } else {
+    offset -= bytes_in_sibp;
+  }
+
+  // Чтение из Double Indirect Block Pointer
+  if ((size > 0) && (offset < bytes_in_dibp))
+  {
+    uint32_t *sibp = kmalloc(BLKSZ(super));
+    uint32_t *dibp = kmalloc(BLKSZ(super));
+    ext2_read_block_data(node, in->d_indirect, 0, BLKSZ(super), dibp);
+
+    // Ищем SIBP, с которого начнется чтение
+    for (i = 0; i < ptrs_in_block && offset > bytes_in_sibp; i++)
+      offset -= bytes_in_sibp;
+
+    sz = (offset + size) > (bytes_in_dibp - i*bytes_in_sibp) ? (bytes_in_dibp - i*bytes_in_sibp - offset) : size;
+
+    while (sz > 0)
+    {
+      int sz2 = (offset + sz) > bytes_in_sibp ? (bytes_in_sibp - offset) : sz;
+      ext2_read_block_data(node, dibp[i], 0, BLKSZ(super), sibp);
+      ext2_read_block_chain(node, sibp, offset, sz2, ptr);
+      sz -= sz2;
+      size -= sz2;
+      ptr += sz2;
+      offset = 0;
+      i++;
+    }
+
+    kfree(dibp);
+    kfree(sibp);
+  } else {
+    offset -= bytes_in_dibp;
+  }
+
+  // Чтение из Triple Indirect Block Pointer
+  if ((size > 0) && (offset < bytes_in_tibp))
+  {
+  // TODO!
+  }
+
+  //kprintf("Считано %d блоков\n", sz);
+  return data;
+}
+
 uint64_t ext2_open(vfs_node_t *node, uint32_t flags)
 {
   return 0;
@@ -211,8 +339,13 @@ uint64_t ext2_read(vfs_node_t *node, uint64_t offset, uint64_t size, uint8_t *bu
   if ((offset + size) > SIZE(in))
     size = SIZE(in) - offset;
 
-  uint8_t *data = ext2_read_inode_data(node, in);
+  /*
+  uint8_t *data = ext2_read_inode_data_ex(node, in, 0, 12*1024);
   memcpy(buffer, data + offset, size);
+  kfree(data);
+  */
+  uint8_t *data = ext2_read_inode_data_ex(node, in, offset, size);
+  memcpy(buffer, data, size);
   kfree(data);
   return size;
 }
