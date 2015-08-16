@@ -11,11 +11,22 @@
 #define MULTIBOOT_FLAG_VINFO  0x00000004  // Загрузчик должен передать информацию о видеорежимах
 
 // Итоговые флаги
-#define MULTIBOOT_HEADER_FLAGS         (MULTIBOOT_FLAG_ALIGN | MULTIBOOT_FLAG_MINFO)
+#define MULTIBOOT_HEADER_FLAGS         (MULTIBOOT_FLAG_ALIGN | MULTIBOOT_FLAG_MINFO | MULTIBOOT_FLAG_VINFO)
 
 // Контрольная сумма
 #define MULTIBOOT_HEADER_CHKSM  -(MULTIBOOT_HEADER_FLAGS + MULTIBOOT_HEADER_MAGIC)
 
+// Параметры видеорежима
+// 800x600@16
+#define MULTIBOOT_VMODE_WIDTH  800
+#define MULTIBOOT_VMODE_HEIGHT 600
+#define MULTIBOOT_VMODE_DEPTH  16
+// Тип указать нельзя, Syslinux его проверяет
+#define MULTIBOOT_VMODE_TYPE   0
+
+// Флаг, указывающий на включенный видеорежим
+// и наличие информации о нем от загрузчика
+#define MULTIBOOT_INFO_VINFO 0x800
 
 /* Размер страницы */
 #define PAGE_SIZE      0x1000
@@ -51,20 +62,44 @@ typedef struct {
   uint64_t   sh_entsize;
 } Elf32_Shdr;
 
+#pragma pack(1)
 /* Информационная структура multiboot. */
-typedef struct multiboot_info
+typedef struct __attribute__ ((packed))
 {
   uint32_t flags8;
+  
   uint32_t mem_lower;
   uint32_t mem_upper;
+  
   uint32_t boot_device;
+  
   uint32_t cmdline;
+
   uint32_t mods_count;
   uint32_t mods_addr;
+  
   elf_section_header_table_t elf_sec;
+
   uint32_t mmap_length;
   uint32_t mmap_addr;
+
+  uint32_t drives_length;
+  uint32_t drives_addr;
+
+  uint32_t config_table;
+
+  uint32_t boot_loader_name;
+
+  uint32_t apm_table;
+
+  uint32_t vbe_control_info;
+  uint32_t vbe_mode_info;
+  uint16_t vbe_mode;
+  uint16_t vbe_interface_seg;
+  uint16_t vbe_interface_off;
+  uint16_t vbe_interface_len;
 } multiboot_info_t;
+#pragma pack()
   
 /* Структура, описывающая модуль */
 typedef struct module_info

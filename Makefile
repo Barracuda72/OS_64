@@ -38,7 +38,8 @@ OBJECTS:= \
 	fs/ext2/ext2.o \
 	fs/fat32/fat32.o \
 	fs/ata/ata.o \
-	fs/test.o
+	fs/test.o \
+	x86_64/vesa/vesa.o
 
 MISC := \
   kernel.lds
@@ -49,7 +50,7 @@ CC:=$(PREFIX)gcc$(VERSION)
 LD:=$(PREFIX)ld
 RANLIB:=$(PREFIX)ranlib
 NM:=$(PREFIX)nm
-MBR:=/usr/lib/syslinux/mbr.bin
+MBR:=/usr/share/syslinux/mbr.bin
 
 $(TARGET): $(OBJECTS) $(MISC)
 	$(LD) -Tkernel.lds -o $@ $(OBJECTS) $(LDFLAGS)
@@ -67,15 +68,16 @@ disk.img:
 		2> /dev/null
 	@echo "Fdisk..."
 	@echo -e "o\nn\np\n1\n\n\nt\n83\na\n1\nw\n" \
-		| fdisk -u -C203 -S63 -H16 $@ 2> /dev/null > /dev/null
+		| /sbin/fdisk -u -C203 -S63 -H16 $@ 2> /dev/null > /dev/null
 	@echo "MKFS.ext2..."
 	@sudo kpartx -a disk.img
+	@sleep 1
 	@sudo mkfs.ext2 /dev/mapper/loop0p1 > /dev/null
 	@sudo kpartx -d disk.img
 	@mkdir -p mnt
 	@sudo mount -t ext2 -o loop,offset=`echo 512*2048 | bc` disk.img mnt
 	@sudo mkdir -p mnt/boot
-	@sudo cp misc/extlinux.conf misc/mboot.c32 mnt/boot
+	@sudo cp misc/extlinux.conf misc/mboot.c32 misc/libcom32.c32 mnt/boot
 	@sudo extlinux -i mnt/boot
 	@sudo umount mnt
 	@rmdir mnt
@@ -89,7 +91,7 @@ disk.img.grub2:
 	@echo "BXImage..."
 	@bximage -hd -mode=flat -size=100 -q $@
 	@echo "FDisk..."
-	@echo -e "o\nn\np\n1\n\n\nt\n83\na\n1\nw\n" | fdisk -u -C203 -S63 -H16 $@ 2> /dev/null > /dev/null
+	@echo -e "o\nn\np\n1\n\n\nt\n83\na\n1\nw\n" | /sbin/fdisk -u -C203 -S63 -H16 $@ 2> /dev/null > /dev/null
 	@mkdir -p mnt
 	@sudo losetup /dev/loop0 $@
 	@echo "0 `ls -l $@ | cut -d' ' -f5 | awk '{print $$1/512}'` linear `ls -l /dev/loop0 | cut -d' ' -f5,6 |  sed 's/, /:/g'` 0" | sudo dmsetup create sdz

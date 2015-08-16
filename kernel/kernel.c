@@ -42,6 +42,12 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
   uint64_t pool = &kernel_end;
   mem_init(pool, (mb->mem_upper>>10)+2, mb);  // TODO: Исправить!
 
+  // Поправим адрес структуры multiboot
+  mb = (uint64_t)mb | 0xFFFFFFFFC0000000;
+
+  if (mb->flags8 & MULTIBOOT_INFO_VINFO)
+    vesa_init(mb->vbe_mode_info | 0xFFFFFFFFC0000000);
+
   smp_init();
   task_init();
 

@@ -22,11 +22,26 @@ multiboot_header:
   .long   MULTIBOOT_HEADER_FLAGS
 
   /* Контрольная сумма */
-   .long   MULTIBOOT_HEADER_CHKSM
+  .long   MULTIBOOT_HEADER_CHKSM
 
-  /* Так как мы используем ELF, то остальные поля 
-   * определять нет необходимости.
+  /*
+   * Так как мы используем ELF, то остальные поля 
+   * определять нет необходимости. Однако, для видеорежима нам необходимо
+   * указать параметры, поэтому информацию a.out пропустим
    */
+  .long 0
+  .long 0
+  .long 0
+  .long 0
+  .long 0
+
+  /*
+   * Параметры видеорежима
+   */
+  .long MULTIBOOT_VMODE_TYPE
+  .long MULTIBOOT_VMODE_WIDTH
+  .long MULTIBOOT_VMODE_HEIGHT
+  .long MULTIBOOT_VMODE_DEPTH
 
 multiboot_entry:
   cld
