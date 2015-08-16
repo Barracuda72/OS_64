@@ -12,6 +12,6 @@ ldsym
 *.elf
 # Ignore misc binaries
 smp
-vesa
+# vesa
 elf/elf
 fs/main
