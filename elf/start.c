@@ -25,7 +25,9 @@ void call_entry (long addr)
     mov %%rsp, %%rdi\n\
     xor %%rsi, %%rsi\n\
     mov $1024, %%rdx\n\
-    call memset  # Очистим стек\n\
+    # TODO: \n \
+    # Стек еще выделить нужно! \n \
+    # call memset  # Очистим стек\n\
     xor %%rax, %%rax\n\
     xor %%rbx, %%rbx\n\
     xor %%rcx, %%rcx\n\

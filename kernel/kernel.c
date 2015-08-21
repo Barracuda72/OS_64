@@ -79,7 +79,6 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
       kprintf("%x", bootsect[i]);
     kfree(bootsect);
 #endif
-
     fs_test_main(0, 0);
 
     // Крутим циферку в верхнем правом углу
