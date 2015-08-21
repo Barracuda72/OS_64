@@ -47,9 +47,10 @@ void page_init(uint64_t *last);
 
 void mount_page(void *physical, void *logical);
 void mount_page_hw(void *physical, void *logical);
-void umount_page(void *logical);
+void *umount_page(void *logical);
 void *alloc_page();
 void free_page(void *p);
 void *copy_pages();
+void remap_pages(void *oldaddr, void *newaddr, uint64_t size);
 
 #endif //__PAGE_H__

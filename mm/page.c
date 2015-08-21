@@ -190,7 +190,7 @@ void mount_page_hw(void *phys, void *log)
   mount_page_do(log, calc_page_hw(phys));
 }
 
-void umount_page(void *log_addr)
+void *umount_page(void *log_addr)
 {
   //kprintf("Unmounting 0x%l...", log_addr);
   linear addr;
@@ -229,10 +229,14 @@ void umount_page(void *log_addr)
 
   // PT
   mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
+
+  void *ret = p[addr.l.pt].h;
   p[addr.l.pt].h = p[addr.l.pt].h&0xFFFFFFFFFFFFFFFE;
 
   umount_page_t();
   //kprintf(" done\n");
+
+  return ret;
 }
 
 void read_page(void *phys_addr, void *buf)
@@ -322,6 +326,21 @@ void *copy_pages()
   uint64_t cr3;
   asm("mov %%cr3, %0\n":"=r"(cr3));
   return copy_page(cr3, 4);
+}
+
+/*
+ * Функция переподключает физические страницы с одного логического адреса на другой
+ */
+void remap_pages(void *oldaddr, void *newaddr, uint64_t size)
+{
+  uint64_t i;
+  void *tmp = 0;
+
+  for (i = 0; i < size; i += 0x1000)
+  {
+    tmp = umount_page(oldaddr + i);
+    mount_page(tmp, newaddr+i);
+  }
 }
 
 void page_init(uint64_t *last_phys_page)
