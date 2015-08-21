@@ -24,7 +24,11 @@ syscall_handler: \n \
   shl $3, %rax \n \
   add %rbx, %rax \n \
   mov (%rax), %rbx \n \
+  call save_regs \n\
   call *%rbx \n \
+  # Подменяем возвращаемое значение на вершине стека \n \
+  xchg (%rsp), %rax \n \
+  call rest_regs \n \
 .ret: \n \
   pop %rbx \n \
   iretq \n \

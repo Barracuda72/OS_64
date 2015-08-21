@@ -36,6 +36,7 @@ char *IDT_reg;
 #define SYS_CODE_SELECTOR 0x8
 #define SYS_IST 1 // Стек для прерываний
 #define PAGE_IST 2 // И отдельный для страничной ошибки
+#define CALL_IST 3 // И еще отдельный для системных вызовов
 
 /*
  * Функция intr_install() устанавливает в качестве обработчика vector функцию func. 
@@ -170,7 +171,8 @@ void intr_init()
   s_intr_install(0x21, &kbd_intr, INTR_PRESENT|INTR_INTR_GATE);
   //s_intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE);
   intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE, PAGE_IST, SYS_CODE_SELECTOR);
-  s_intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE);
+  //s_intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE);
+  intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE, CALL_IST, SYS_CODE_SELECTOR);
   intr_setup();
   mask_irq(0); // отключим PIT - мы будем использовать APIC timer
   intr_enable();

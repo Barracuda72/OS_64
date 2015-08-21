@@ -18,6 +18,8 @@ TSS64 IntrTss;
 uint64_t intr_s[1024];
 // Стек для страничной ошибки
 uint64_t fault_s[1024];
+// Стек для системных вызовов
+uint64_t call_s[1024];
 uint16_t s = 0;  // Селектор задачи ядра
 volatile task *curr = 0; // Текущая выполняемая задача
 uint64_t next_pid = 1;
@@ -30,7 +32,7 @@ void tss_init()
   
   IntrTss.ist1 = (uint64_t)&intr_s[1022];
   IntrTss.ist2 = (uint64_t)&fault_s[1022];
-  IntrTss.ist3 = (uint64_t)&intr_s[1022];
+  IntrTss.ist3 = (uint64_t)&call_s[1022];
   IntrTss.ist4 = (uint64_t)&intr_s[1022];
   IntrTss.ist5 = (uint64_t)&intr_s[1022];
   IntrTss.ist6 = (uint64_t)&intr_s[1022];
