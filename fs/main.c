@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 int fs_test_main(void *p, int len);
-
+/*
 #define B_SIZE 0x1000*0x400
 
 int main(int argc, char *argv[])
@@ -27,6 +27,27 @@ int main(int argc, char *argv[])
   fs_test_main(buf, bsize);
 
   free(buf);
+  return 0;
+}
+*/
+int main(int argc, char *argv[])
+{
+  // Буфер под файл
+  char *buffer = NULL;
+
+  // Считаем файл в память
+  int f = open("initrd.img", /*O_RDONLY*/0);
+  int len = lseek(f, 0, SEEK_END);
+  lseek(f, 0, SEEK_SET);
+
+  buffer = sbrk(len); //kmalloc(len);
+  read(f, buffer, len);
+  close(f);
+
+  fs_test_main(buffer, len);
+
+  //printf("main : %x\n", main);
+
   return 0;
 }
 

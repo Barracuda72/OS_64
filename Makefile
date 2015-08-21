@@ -3,8 +3,8 @@ TARGET:=boot.elf
 INCLUDES:=-I. -I./mm -I./x86_64 -I./kernel \
 	-I./fs/ata -I./fs/mdpart -I./fs/vfs -I./fs/initrd \
 	-I./fs/devfs -I./fs/ext2 -I./fs/fat32 \
-	-I./libc
-CPPFLAGS:=-m64 ${INCLUDES}
+	-I./libc -I./elf
+CPPFLAGS:=-m64 -nostdinc ${INCLUDES}
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 #ASFLAGS:= --64 -g
@@ -39,6 +39,8 @@ OBJECTS:= \
 	fs/fat32/fat32.o \
 	fs/ata/ata.o \
 	fs/test.o \
+	elf/elf.o \
+	elf/start.o \
 	x86_64/vesa/vesa.o
 
 MISC := \

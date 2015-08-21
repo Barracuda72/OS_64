@@ -5,7 +5,7 @@
  * для hosted-режима
  *
  */
-
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +13,10 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+*/
+
+#include <stdint.h>
+
 //#include <fcntl.h>
 
 ssize_t write(int fd, const void *buf, size_t count)
@@ -155,5 +159,27 @@ void *mremap(void *old_address, size_t old_size,
     );
 
     return newaddr;
+}
+
+void *sbrk(int len)
+{
+  ssize_t newaddr = 0;
+  asm volatile("\
+    mov $45, %%rax\n\
+    xor %%rbx, %%rbx\n\
+    int $0x80\n\
+    push %%rax\n\
+    mov %1, %%ebx\n\
+    add %%rax, %%rbx\n\
+    mov $45, %%rax\n\
+    int $0x80\n\
+    pop %%rax\n\
+    mov %%rax, %0\n\
+    ":"=r"(newaddr)
+     :"r"(len)
+     :"rax","rbx"
+  );
+
+  return newaddr;
 }
 

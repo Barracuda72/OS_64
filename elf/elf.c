@@ -1,8 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
-#include "elf.h"
+#include <elf.h>
+
+#include <debug.h>
 
 /*
  * Проверяет заголовок ELF-файла на корректность
@@ -129,7 +132,7 @@ char *elf64_find_string(Elf64_Ehdr *hdr, int offset)
  * Поиск значения символа
  */
 // TODO!
-long elf64_get_symval(Elf64_Ehdr *hdr, int table, uint idx){}
+long elf64_get_symval(Elf64_Ehdr *hdr, int table, uint32_t idx){}
 
 /*
  * Вспомогательная функция для вычисления базового адреса исполняемого файла
@@ -326,10 +329,19 @@ int elf64_load_stage3(Elf64_Ehdr *hdr)
       // Выделим память под сегмент (предполагается, что он уже выровнен на
       // границу страницы)
       int tail = segment->p_vaddr&0xFFF;
-      char *addr = kmalloc(segment->p_memsz + tail);
-      // Отобразим сегмент по виртуальному адресу
-      addr = mremap(addr, segment->p_memsz + tail, segment->p_memsz+tail, 3, segment->p_vaddr & (~0xFFF));
 
+      char *addr;
+#ifdef __HOSTED__
+      addr = kmalloc(segment->p_memsz + 0x1000 /*tail*/) & (~0xFFF);
+      // Отобразим сегмент по виртуальному адресу
+      //addr = mremap(addr, segment->p_memsz + tail, segment->p_memsz+tail, 3, segment->p_vaddr & (~0xFFF));
+
+      //BREAK();
+      remap_pages(addr, segment->p_vaddr & (~0xFFF), segment->p_memsz + tail);
+#else
+      //BREAK();
+      alloc_pages(segment->p_vaddr & (~0xFFF), segment->p_memsz + tail);
+#endif
       // Теперь нас интересует только виртуальный адрес
       addr = segment->p_vaddr;
       // Забъем нулями весь сегмент

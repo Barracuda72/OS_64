@@ -49,3 +49,8 @@ void ktty_putc(char c)
 	write(1, data, 1);
 }
 
+void remap_pages(void *oldaddr, void *newaddr, uint64_t size)
+{
+  mremap(oldaddr, size, size, 3, newaddr);
+}
+

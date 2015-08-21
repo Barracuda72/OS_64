@@ -343,6 +343,19 @@ void remap_pages(void *oldaddr, void *newaddr, uint64_t size)
   }
 }
 
+/*
+ * Функция выделяет блок из нескольких последовательных страниц, начиная с
+ * некоторого адреса
+ */
+void alloc_pages(void *addr, uint64_t size)
+{
+  uint64_t i;
+  for (i = 0; i < size; i += 0x1000)
+  {
+    mount_page(create_page().h, addr + i);
+  }
+}
+
 void page_init(uint64_t *last_phys_page)
 {
   /*

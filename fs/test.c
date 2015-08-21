@@ -8,6 +8,7 @@
 #include <devfs.h>
 #include <kprintf.h>
 #include <mem.h>
+#include <elf.h>
 #include <errno.h>
 
 #ifndef __HOSTED__
@@ -31,6 +32,8 @@ void fs_print_dir(vfs_node_t *dir)
   }
   kprintf("---\n");
 }
+
+int start_process(void *buffer);
 
 void fs_test_main(void *p, int len)
 {
@@ -102,18 +105,19 @@ void fs_test_main(void *p, int len)
     kprintf("Contents:\n");
     fs_print_dir(root);
 
-    char *test_file = "Apic.htm"; //"hello.txt";
+    char *test_file = "test.elf"; //"hello.txt";
 
     kprintf("Contents of %s:\n", test_file);
     vfs_node_t *hello = vfs_finddir(root, test_file);
     if (hello != NULL)
     {
       char *buf = kmalloc(10000);
-      int sz = vfs_read(hello, 11000, 2096, buf);
+      int sz = vfs_read(hello, 0, 10000, buf);
       if (sz < 0)
         kprintf("Something wrong, return code %d\n", sz);
       else {
         kprintf("(Readed %d bytes)\n", sz);
+        start_process(buf);
     /*    int j;
         for (j = 0; j < sz; j++)
           kprintf("%c", buf[j]);

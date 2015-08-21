@@ -52,5 +52,6 @@ void *alloc_page();
 void free_page(void *p);
 void *copy_pages();
 void remap_pages(void *oldaddr, void *newaddr, uint64_t size);
+void alloc_pages(void *addr, uint64_t size);
 
 #endif //__PAGE_H__
