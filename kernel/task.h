@@ -36,9 +36,20 @@ typedef struct _task
   all_regs r;
   uint64_t cr3;
   struct _task *next;
+  uint8_t state;
 } task;
 
 #pragma pack()
+
+/*
+ * Состояния, в которых может находиться задача
+ */
+enum
+{
+  TASK_ACTIVE = 0,
+  TASK_RUNNING,
+  TASK_STARTING,
+};
 
 void tss_init();
 
@@ -47,4 +58,7 @@ void task_init(void);
 uint64_t task_switch(all_regs *r);
 
 int task_fork();
+
+extern volatile task *curr;
+
 #endif  //__TASK_H_

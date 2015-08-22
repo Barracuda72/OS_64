@@ -1,4 +1,6 @@
+#include <gdt.h>
 #include <elf.h>
+#include <task.h>
 
 #include <debug.h>
 
@@ -42,7 +44,16 @@ void call_entry (long addr)
     xor %%r13, %%r13\n\
     xor %%r14, %%r14\n\
     xor %%r15, %%r15\n\
-    jmp *%%r9\n\
+    # jmp *%%r9\n\
+    mov $0x23, %%ax\n\
+    mov %%ax, %%ds\n\
+    mov %%ax, %%es\n\
+    mov %%ax, %%fs\n\
+    mov %%ax, %%gs\n\
+    mov %%ax, %%ss\n\
+    pushq $0x1B\n\
+    push %0\n\
+    lretq\n\
     hlt\n\
   ":
    :"r"(addr), "r"(fake_argc), "r"(fake_envp));
@@ -60,10 +71,23 @@ int start_process(void *buffer)
 
     // Файл поддерживается, обработаем
     entry = elf64_load_file((Elf64_Ehdr *)buffer);
-
-    if (entry != NULL)
-      call_entry(entry);
-      //entry();
   }
+
+  if (entry != NULL)
+  {
+    intr_disable();
+    curr->state = TASK_STARTING;
+    memset(&(curr->r.c), 0, sizeof(comm_regs));
+    curr->r.i.rip = entry;
+    curr->r.i.cs = CALC_SELECTOR(3, SEG_GDT | SEG_RPL3);
+    alloc_pages_user(0x100000000, 0x2000);
+    curr->r.i.rsp = 0x100001FF0;
+    curr->r.i.ss = CALC_SELECTOR(4, SEG_GDT | SEG_RPL3);
+    intr_enable();
+    // Не возвращаемся
+    for(;;);
+  }
+
+  return 0;
 }
 

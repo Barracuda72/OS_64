@@ -26,6 +26,20 @@ pte_desc create_page()
   return page;
 }
 
+pte_desc create_page_user()
+{
+  pte_desc page;
+  page.h = 0;
+  //kprintf("create_page 1");
+  page.p.address = ((uint64_t)alloc_phys_page())>>12;
+  page.p.r3_access = 1;
+  //kprintf("create_page 2");
+  page.p.exists = 1;
+  page.p.writable = 1;
+  //kprintf("create_page = %l\n", page.h);
+  return page;
+}
+
 pte_desc calc_page(void *phys_addr)
 {
   pte_desc page;
@@ -147,6 +161,7 @@ void mount_page_do(void *log_addr, pte_desc ph)
   {
     //kprintf("!\n");
     _p = create_page();
+    _p.p.r3_access = ph.p.r3_access;
     p[addr.l.pml4] = _p;
   }
   umount_page_t();
@@ -158,6 +173,7 @@ void mount_page_do(void *log_addr, pte_desc ph)
   { 
     //kprintf("! !\n");
     _p = create_page();
+    _p.p.r3_access = ph.p.r3_access;
     p[addr.l.pdp] = _p;
   }
   umount_page_t();
@@ -169,6 +185,7 @@ void mount_page_do(void *log_addr, pte_desc ph)
   { 
     //kprintf("! ! !\n");
     _p = create_page();
+    _p.p.r3_access = ph.p.r3_access;
     p[addr.l.pd] = _p;
   }
   umount_page_t();
@@ -352,7 +369,16 @@ void alloc_pages(void *addr, uint64_t size)
   uint64_t i;
   for (i = 0; i < size; i += 0x1000)
   {
-    mount_page(create_page().h, addr + i);
+    mount_page_do(addr + i, create_page());
+  }
+}
+
+void alloc_pages_user(void *addr, uint64_t size)
+{
+  uint64_t i;
+  for (i = 0; i < size; i += 0x1000)
+  {
+    mount_page_do(addr + i, create_page_user());
   }
 }
 

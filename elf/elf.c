@@ -340,7 +340,7 @@ int elf64_load_stage3(Elf64_Ehdr *hdr)
       remap_pages(addr, segment->p_vaddr & (~0xFFF), segment->p_memsz + tail);
 #else
       //BREAK();
-      alloc_pages(segment->p_vaddr & (~0xFFF), segment->p_memsz + tail);
+      alloc_pages_user(segment->p_vaddr & (~0xFFF), segment->p_memsz + tail);
 #endif
       // Теперь нас интересует только виртуальный адрес
       addr = segment->p_vaddr;

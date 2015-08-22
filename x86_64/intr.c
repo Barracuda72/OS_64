@@ -172,7 +172,7 @@ void intr_init()
   //s_intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE);
   intr_install(0x0E, &page_fault, INTR_PRESENT|INTR_INTR_GATE, PAGE_IST, SYS_CODE_SELECTOR);
   //s_intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE);
-  intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE, CALL_IST, SYS_CODE_SELECTOR);
+  intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE|INTR_DPL3, CALL_IST, SYS_CODE_SELECTOR);
   intr_setup();
   mask_irq(0); // отключим PIT - мы будем использовать APIC timer
   intr_enable();

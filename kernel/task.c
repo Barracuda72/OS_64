@@ -168,7 +168,14 @@ uint64_t task_switch(all_regs *r)
 {
   if (curr != 0)
   {
-    memcpy(&(curr->r), r, sizeof(all_regs));
+    // Если задача запускается, для нее подготовлены регистры
+    if (curr->state == TASK_STARTING)
+    {
+      curr->state = TASK_RUNNING;
+      curr->r.reg1 = r->reg1;
+    } else {
+      memcpy(&(curr->r), r, sizeof(all_regs));
+    }
     curr = curr->next;
     // Стек, с которого будем восстанавливать регистры
     return &(curr->r);
