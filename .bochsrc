@@ -31,6 +31,9 @@ cpuid: vendor_string=GenuineIntel
 # Включаем поддержку SMP
 cpu: count=2
 
+debug_symbols: file=ldsym
+
 # Включаем вывод отладочных сообщений
 # debug: action=report
 # log: bochs.log
+
