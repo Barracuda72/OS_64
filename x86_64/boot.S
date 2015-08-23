@@ -236,8 +236,8 @@ startLongMode:
   mov $1, %al
   xchg bsp_on, %al
   and $0x1, %al
-  // Если нет - уходим в ожидание
-  jnz loop
+  // Если нет - уходим инициализировать AP
+  jnz ap_setup
 
 /* Вызываем главную функцию ядра. */
   call    kernel_start
@@ -245,6 +245,10 @@ startLongMode:
 loop:
   hlt
   jmp loop  // Hang up
+
+ap_setup:
+  call    kernel_ap_start
+  jmp loop
 
 bsp_on:
 .byte 0x00

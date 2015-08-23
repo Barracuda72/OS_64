@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 void GDT_init();
+void GDT_init_ap();
 uint64_t GDT_smartput(uint64_t seg, uint64_t base, uint64_t limit, uint64_t flags);
 uint64_t GDT_smartaput(uint64_t base, uint64_t limit, uint64_t flags);
 

@@ -92,6 +92,11 @@ void ext_intr_install(uint8_t vector, void (*func)())
   s_intr_install(vector, func, INTR_PRESENT|INTR_INTR_GATE);
 }
 
+void IDT_load()
+{
+  asm("lidt 0(,%0,)"::"a"((uint64_t)IDT_reg));
+}
+
 void intr_setup()
 {
   IDT_reg = (char *)((uint64_t)IDT_addr + 256*16);
@@ -116,7 +121,7 @@ void intr_setup()
   outb(PIC1_DATA, ICW4_8086);
   outb(PIC2_DATA, ICW4_8086);
 
-  asm("lidt 0(,%0,)"::"a"((uint64_t)IDT_reg));
+  IDT_load();
 }
 
 /* 
@@ -178,3 +183,7 @@ void intr_init()
   intr_enable();
 }
 
+void intr_init_ap()
+{
+  IDT_load();
+}

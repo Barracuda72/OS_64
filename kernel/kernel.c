@@ -9,10 +9,13 @@
 #include <page.h>
 #include <multiboot.h>
 #include <mutex.h>
+#include <apic.h>
 
 #include <ata_pio.h>
 
 #include <debug.h>
+
+long kernel_run(void);
 
 /* 
  * Главная функция 
@@ -47,11 +50,29 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 
   if (mb->flags8 & MULTIBOOT_INFO_VINFO)
     vesa_init(mb->vbe_mode_info | 0xFFFFFFFFC0000000);
+ 
+  // Чтобы AP не испортил нам стек
+  // change_stack();
+  uint64_t stack_new = 0xFFFFFFFFA0000000;
+  alloc_pages(stack_new, STACK_SIZE);
 
+  asm volatile("\
+    mov %0, %%rsp\n\
+    xor %%rbp, %%rbp\n\
+    call kernel_run\n\
+  "::"a"(stack_new+STACK_SIZE));
+
+  return 0;
+}
+
+long kernel_run(void)
+{
   smp_init();
   task_init();
 
   kprintf("Kernel alive, up and running!\n");
+
+  //kprintf("APIC ID %d\n", apic_get_id());
 
   //char *test_text = "Syscall %d test\n";
   char *text_video = 0xFFFFFFFFC00B8000;
@@ -92,3 +113,17 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
   return 0;
 }
 
+/*
+ * Отсюда начнет выполнение наш AP
+ */
+long kernel_ap_start(uint64_t mb_magic, multiboot_info_t *mb)
+{
+  // У AP меньше работы, чем у BSP. Ему не нужно инициализировать состояние
+  // машины полностью - достаточно "вытянуть" только самого себя
+  uint8_t apic_id = apic_get_id();
+  GDT_init_ap();
+  tss_init_cpu(apic_id);
+
+  intr_init_ap();
+  for(;;);
+}

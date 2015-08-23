@@ -9,6 +9,8 @@ void ext_intr_install(uint8_t vector, void (*func)());
 
 void intr_init();
 
+void intr_init_ap();
+
 void intr_setup();
 
 void intr_enable();

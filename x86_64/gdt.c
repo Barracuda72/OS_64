@@ -1,6 +1,8 @@
 #include <gdt.h>
 #include <stdint.h>
 
+#include <debug.h>
+
 uint64_t GDT_addr[16] = {0};
 uint64_t g_gdtr[2];
 
@@ -59,6 +61,23 @@ uint64_t GDT_autoput(uint64_t data)
   return seg;
 }
 
+void GDT_load(void)
+{
+  g_gdtr[0]=(((uint64_t)GDT_addr)<<16)|0xFFFF;
+  g_gdtr[1]=(((uint64_t)GDT_addr)>>48)&0xFFFF;
+  asm("lgdt g_gdtr");
+  
+  // Заменим значения в сегментных регистрах (там после GRUB остался мусор)
+  asm(" \n \
+    mov $0x10, %%ax\n \
+    mov %%ax, %%ds \n \
+    mov %%ax, %%ss \n \
+    mov %%ax, %%es \n \
+    mov %%ax, %%gs \n \
+    mov %%ax, %%fs \n \
+  ":::"rax");
+}
+
 void GDT_init(void)
 {  
   // Нулевой дескриптор GDT не используется
@@ -71,18 +90,16 @@ void GDT_init(void)
   GDT_smartput(3, 0x00000000, 0xFFFFFFFF, SEG_64BIT_CODE | SEG_NOTSYS | SEG_PRESENT | SEG_CODE_EO | SEG_DPL3);
   // Сегмент данных пользователя
   GDT_smartput(4, 0x00000000, 0xFFFFFFFF, SEG_NOTSYS | SEG_PRESENT | SEG_DATA_RW | SEG_DPL3);
-  g_gdtr[0]=(((uint64_t)GDT_addr)<<16)|0xFFFF;
-  g_gdtr[1]=(((uint64_t)GDT_addr)>>48)&0xFFFF;
-  asm("lgdt g_gdtr");
-  // Заменим значения в сегментных регистрах (там после GRUB остался мусор)
-  asm(" \n \
-    mov $0x10, %%ax\n \
-    mov %%ax, %%ds \n \
-    mov %%ax, %%ss \n \
-    mov %%ax, %%es \n \
-    mov %%ax, %%gs \n \
-    mov %%ax, %%fs \n \
-  ":::"rax");
+
+  GDT_load();
+}
+
+/*
+ * Для AP уже все готово
+ */
+void GDT_init_ap(void)
+{
+  GDT_load();
 }
 
 /* 

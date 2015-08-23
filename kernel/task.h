@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <regs.h>
 
+#include <smp.h>
+
 //  64-битная TSS
 //  Собственно, тут ничего нет, за
 //  исключением адресов стеков
@@ -53,12 +55,16 @@ enum
 
 void tss_init();
 
+void tss_init_cpu(uint8_t id);
+
 void task_init(void);
 
 uint64_t task_switch(all_regs *r);
 
 int task_fork();
 
-extern volatile task *curr;
+uint64_t change_stack();
+
+extern volatile task *curr[MAX_CPU_NR];
 
 #endif  //__TASK_H_

@@ -4,6 +4,9 @@
 #include <mem.h>
 #include <multiboot.h>
 #include <stdint.h>
+#include <intr.h>
+#include <smp.h>
+#include <apic.h>
 
 #include <debug.h>
 
@@ -12,56 +15,65 @@
  * устанавливаем стек для прерываний)
  */
 
-TSS64 IntrTss;
+TSS64 IntrTss[MAX_CPU_NR];
 
 // Стек для прерываний
-uint64_t intr_s[1024];
+uint64_t intr_s[MAX_CPU_NR][1024];
 // Стек для страничной ошибки
-uint64_t fault_s[1024];
+uint64_t fault_s[MAX_CPU_NR][1024];
 // Стек для системных вызовов
-uint64_t call_s[1024];
-uint16_t s = 0;  // Селектор задачи ядра
-volatile task *curr = 0; // Текущая выполняемая задача
+uint64_t call_s[MAX_CPU_NR][1024];
+volatile task *curr[MAX_CPU_NR]; // Текущая выполняемая задача
 uint64_t next_pid = 1;
+
+void tss_init_cpu(uint8_t id)
+{
+  uint16_t s = 0;  // Селектор задачи ядра
+  IntrTss[id].rsp0 = (uint64_t)&intr_s[id][1022];
+  IntrTss[id].rsp1 = (uint64_t)&intr_s[id][1022];
+  IntrTss[id].rsp2 = (uint64_t)&intr_s[id][1022];
+  
+  IntrTss[id].ist1 = (uint64_t)&intr_s[id][1022];
+  IntrTss[id].ist2 = (uint64_t)&fault_s[id][1022];
+  IntrTss[id].ist3 = (uint64_t)&call_s[id][1022];
+  IntrTss[id].ist4 = (uint64_t)&intr_s[id][1022];
+  IntrTss[id].ist5 = (uint64_t)&intr_s[id][1022];
+  IntrTss[id].ist6 = (uint64_t)&intr_s[id][1022];
+  IntrTss[id].ist7 = (uint64_t)&intr_s[id][1022];
+  
+  s = GDT_smartaput(&IntrTss[id], sizeof(TSS64), SEG_PRESENT | SEG_TSS64 | SEG_DPL3);
+  s = CALC_SELECTOR(s, SEG_GDT | SEG_RPL3);
+  
+  curr[id] = 0;
+
+  //BREAK();
+  asm("ltr %0"::"m"(s));
+}
 
 void tss_init()
 {
-  IntrTss.rsp0 = (uint64_t)&intr_s[1022];
-  IntrTss.rsp1 = (uint64_t)&intr_s[1022];
-  IntrTss.rsp2 = (uint64_t)&intr_s[1022];
-  
-  IntrTss.ist1 = (uint64_t)&intr_s[1022];
-  IntrTss.ist2 = (uint64_t)&fault_s[1022];
-  IntrTss.ist3 = (uint64_t)&call_s[1022];
-  IntrTss.ist4 = (uint64_t)&intr_s[1022];
-  IntrTss.ist5 = (uint64_t)&intr_s[1022];
-  IntrTss.ist6 = (uint64_t)&intr_s[1022];
-  IntrTss.ist7 = (uint64_t)&intr_s[1022];
-  
-  s = GDT_smartaput(&IntrTss, sizeof(TSS64), SEG_PRESENT | SEG_TSS64 | SEG_DPL3);
-  s = CALC_SELECTOR(s, SEG_GDT | SEG_RPL3);
-  
-  //BREAK();
-  asm("ltr s");
+  tss_init_cpu(0);
 }
 
 void task_init()
 {
   intr_disable();
-  curr = kmalloc(sizeof(task));
-  curr->pid = next_pid++;
-  zeromem(&(curr->r), sizeof(all_regs));
-  curr->next = curr; // Закольцовываем
+  curr[0] = kmalloc(sizeof(task));
+  curr[0]->pid = next_pid++;
+  zeromem(&(curr[0]->r), sizeof(all_regs));
+  curr[0]->next = curr[0]; // Закольцовываем
   intr_enable();
 }
 
 /*
- * Создает новый стек и переключается на него
+ * Создает новый стек 
  */
-uint64_t change_stack()
+uint64_t copy_stack()
 {
-  extern uint64_t stack;
-  uint64_t stack_old = &stack;
+  // HACK: это не то, что нужно!
+  // Исправить срочно!
+  //extern uint64_t stack;
+  uint64_t stack_old = 0xFFFFFFFFA0000000; //&stack;
   uint64_t stack_end = (uint64_t) stack_old + STACK_SIZE;
   uint64_t *new_stack = kmalloc(STACK_SIZE);
   memcpy(new_stack, stack_old, STACK_SIZE);
@@ -69,17 +81,23 @@ uint64_t change_stack()
   uint64_t i;
   for (i = 0; i < STACK_SIZE; i++)
   {
-    if ((new_stack[i] >= stack_end) && 
-        (new_stack[i] <= (uint64_t)stack_old))
+    if ((new_stack[i] <= stack_end) && 
+        (new_stack[i] >= (uint64_t)stack_old))
     {
       new_stack[i] += offset;
     }
   } 
 
+  return offset;
+}
+
+uint64_t change_stack()
+{
+  uint64_t offset = copy_stack();
   // Перемещаем стек
-  /*asm volatile("add %0, %%rsp\n \
-                add %0, %%rbp\n" :: "r" (offset)); */
-  //BREAK();
+  asm volatile("add %0, %%rsp\n \
+                add %0, %%rbp\n" :: "r" (offset));
+
   return offset;
 }
 
@@ -147,7 +165,7 @@ int task_fork()
   uint64_t rip, off, cr3;
   intr_disable();
   
-  off = change_stack();
+  off = copy_stack();
   cr3 = copy_pages();
 
   // Родительская задача - готовим все
@@ -158,32 +176,36 @@ int task_fork()
   if (rip == 0)
     return 0; // Дочерняя задача
 
-  new->next = curr->next;
-  curr->next = new;
+  new->next = curr[0]->next;
+  curr[0]->next = new;
+  //BREAK();
   intr_enable();
   return new->pid;
 }
 
 uint64_t task_switch(all_regs *r)
 {
-  if (curr != 0)
+  uint8_t id = apic_get_id();
+
+  if (curr[id] != 0)
   {
     // Если задача запускается, для нее подготовлены регистры
-    if (curr->state == TASK_STARTING)
+    if (curr[id]->state == TASK_STARTING)
     {
-      curr->state = TASK_RUNNING;
-      curr->r.reg1 = r->reg1;
+      curr[id]->state = TASK_RUNNING;
+      curr[id]->r.reg1 = r->reg1;
     } else {
-      memcpy(&(curr->r), r, sizeof(all_regs));
+      memcpy(&(curr[id]->r), r, sizeof(all_regs));
     }
-    curr = curr->next;
+    curr[id] = curr[id]->next;
     // Стек, с которого будем восстанавливать регистры
-    return &(curr->r);
+    return &(curr[id]->r);
   }
   return r;
 }
-
+/*
 void get_c()
 {
   kprintf("Curr: %l\n", curr);
 }
+*/

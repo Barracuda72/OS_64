@@ -1,6 +1,8 @@
 #include <gdt.h>
 #include <elf.h>
 #include <task.h>
+#include <smp.h>
+#include <apic.h>
 
 #include <debug.h>
 
@@ -75,14 +77,15 @@ int start_process(void *buffer)
 
   if (entry != NULL)
   {
+    uint8_t id = apic_get_id();
     intr_disable();
-    curr->state = TASK_STARTING;
-    memset(&(curr->r.c), 0, sizeof(comm_regs));
-    curr->r.i.rip = entry;
-    curr->r.i.cs = CALC_SELECTOR(3, SEG_GDT | SEG_RPL3);
+    curr[id]->state = TASK_STARTING;
+    memset(&(curr[id]->r.c), 0, sizeof(comm_regs));
+    curr[id]->r.i.rip = entry;
+    curr[id]->r.i.cs = CALC_SELECTOR(3, SEG_GDT | SEG_RPL3);
     alloc_pages_user(0x100000000, 0x2000);
-    curr->r.i.rsp = 0x100001FF0;
-    curr->r.i.ss = CALC_SELECTOR(4, SEG_GDT | SEG_RPL3);
+    curr[id]->r.i.rsp = 0x100001FF0;
+    curr[id]->r.i.ss = CALC_SELECTOR(4, SEG_GDT | SEG_RPL3);
     intr_enable();
     // Не возвращаемся
     for(;;);

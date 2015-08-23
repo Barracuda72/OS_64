@@ -7,6 +7,8 @@
 
 #include <debug.h>
 
+uint8_t bsp_started = 0;
+
 void smp_init(void)
 {
 /*
