@@ -3,34 +3,27 @@ TARGET:=boot.elf
 INCLUDES:=-I. -I./mm -I./x86_64 -I./kernel \
 	-I./fs/ata -I./fs/mdpart -I./fs/vfs -I./fs/initrd \
 	-I./fs/devfs -I./fs/ext2 -I./fs/fat32 \
-	-I./libc -I./elf
+	-I./libc -I./elf -I./sys
 CPPFLAGS:=-m64 -nostdinc ${INCLUDES}
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 #ASFLAGS:= --64 -g
 LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
-OBJECTS:= \
+OBJ_PLATFORM:= \
 	x86_64/boot.o \
-	kernel/ktty.o \
-	kernel/kernel.o \
-	libc/kprintf.o \
-	libc/string.o \
 	x86_64/cpuid.o \
 	x86_64/ioport.o \
 	x86_64/intr.o \
 	x86_64/gdt.o \
-	kernel/task.o \
 	x86_64/smp.o \
-	mm/page.o \
-	mm/phys.o \
-	mm/mem.o \
 	x86_64/mutex.o \
 	x86_64/timer.o \
 	x86_64/apic.o \
 	x86_64/regs.o \
   x86_64/ap_init.o \
-	kernel/syscall.o \
 	x86_64/ata_pio.o \
+	x86_64/vesa/vesa.o
+OBJ_FS:= \
 	fs/vfs/vfs.o \
 	fs/initrd/initrd.o \
 	fs/devfs/devfs.o \
@@ -38,10 +31,29 @@ OBJECTS:= \
 	fs/ext2/ext2.o \
 	fs/fat32/fat32.o \
 	fs/ata/ata.o \
-	fs/test.o \
+	fs/test.o
+OBJ_MM:= \
+	mm/page.o \
+	mm/phys.o \
+	mm/mem.o
+OBJ_LIBC:= \
+	libc/kprintf.o \
+	libc/string.o
+OBJ_KERNEL:= \
+	kernel/ktty.o \
+	kernel/kernel.o \
+	kernel/task.o
+OBJ_MISC:= \
+	sys/syscall.o \
 	elf/elf.o \
-	elf/start.o \
-	x86_64/vesa/vesa.o
+	elf/start.o
+OBJECTS:= \
+  $(OBJ_PLATFORM) \
+	$(OBJ_FS) \
+	$(OBJ_MM) \
+	$(OBJ_LIBC) \
+	$(OBJ_KERNEL) \
+	$(OBJ_MISC)
 
 MISC := \
   kernel.lds
