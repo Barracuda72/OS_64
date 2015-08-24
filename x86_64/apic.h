@@ -108,12 +108,14 @@ static inline uint8_t apic_get_id()
   uint8_t res = 0xFF;
 
   asm volatile("\
-    mov %1, %q0\n\
-    mov (%q0), %d0\n\
-    rol $8, %d0\n\
-    and $0xF, %b0\n\
-    ":"=a"(res)
+    mov %1, %%rax\n\
+    mov (%%rax), %%eax\n\
+    rol $8, %%eax\n\
+    and $0xF, %%al\n\
+    mov %%al, %b0\n\
+    ":"=r"(res)
      :"i"(APIC_LAPIC_ADDR+(APIC_APICID<<2))
+     :"rax"
   );
   return res;
 }

@@ -185,5 +185,14 @@ void intr_init()
 
 void intr_init_ap()
 {
+  IDT_reg = (char *)((uint64_t)IDT_addr + 256*16);
+  uint16_t *table_limit;
+  uint64_t *table_address;
+  table_limit = (uint16_t *)IDT_reg;
+  table_address = (uint64_t *)(((uint64_t)IDT_reg) + 2); 
+
+  *table_limit = 256*16 - 1;
+  *table_address = (uint64_t)IDT_addr;
+
   IDT_load();
 }

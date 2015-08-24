@@ -84,9 +84,11 @@ long kernel_run(void)
     // Крутим циферку в верхнем левом углу
     for(;;) 
     {
+      volatile uint8_t apic_id = apic_get_id();
       //ktty_putc('C');
       // Тест системных вызовов
       //syscall_test_out(test_text, 51);
+      text_video[0] = apic_id + 0x30;
       text_video[1] = c++;
       asm("hlt");
     }
@@ -106,6 +108,8 @@ long kernel_run(void)
     for(;;) 
     {
       //ktty_putc('P');
+      volatile uint8_t apic_id = apic_get_id();
+      text_video[158] = apic_id + 0x30;
       text_video[159] = c++;
       asm("hlt");
     }
@@ -131,10 +135,14 @@ long kernel_ap_start(uint64_t mb_magic, multiboot_info_t *mb)
   apic_init_ap();
 
   task_init_cpu(apic_id);
+  BREAK();
+  asm("sti");
   kprintf("AP ID %d init complete\n", apic_id);
   for(;;)
   {
+    int i;
     apic_id = apic_get_id();
     ktty_putc(apic_id+0x30);
+    asm("hlt");
   }
 }
