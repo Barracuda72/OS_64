@@ -31,7 +31,7 @@ void call_entry (long addr)
     mov $1024, %%rdx\n\
     # TODO: \n \
     # Стек еще выделить нужно! \n \
-    # call memset  # Очистим стек\n\
+    call memset  # Очистим стек\n\
     xor %%rax, %%rax\n\
     xor %%rbx, %%rbx\n\
     xor %%rcx, %%rcx\n\
@@ -46,17 +46,17 @@ void call_entry (long addr)
     xor %%r13, %%r13\n\
     xor %%r14, %%r14\n\
     xor %%r15, %%r15\n\
-    # jmp *%%r9\n\
-    mov $0x23, %%ax\n\
-    mov %%ax, %%ds\n\
-    mov %%ax, %%es\n\
-    mov %%ax, %%fs\n\
-    mov %%ax, %%gs\n\
-    mov %%ax, %%ss\n\
-    pushq $0x1B\n\
-    push %0\n\
-    lretq\n\
-    hlt\n\
+    jmp *%%r9\n\
+    #mov $0x23, %%ax\n\
+    #mov %%ax, %%ds\n\
+    #mov %%ax, %%es\n\
+    #mov %%ax, %%fs\n\
+    #mov %%ax, %%gs\n\
+    #mov %%ax, %%ss\n\
+    #pushq $0x1B\n\
+    #push %0\n\
+    #lretq\n\
+    #hlt\n\
   ":
    :"r"(addr), "r"(fake_argc), "r"(fake_envp));
 }
@@ -77,6 +77,9 @@ int start_process(void *buffer)
 
   if (entry != NULL)
   {
+#ifdef __HOSTED__
+    call_entry(entry);
+#else
     uint8_t id = apic_get_id();
     intr_disable();
     curr[id]->state = TASK_STARTING;
@@ -87,6 +90,8 @@ int start_process(void *buffer)
     curr[id]->r.i.rsp = 0x100001FF0;
     curr[id]->r.i.ss = CALC_SELECTOR(4, SEG_GDT | SEG_RPL3);
     intr_enable();
+#endif // __HOSTED__
+
     // Не возвращаемся
     for(;;);
   }

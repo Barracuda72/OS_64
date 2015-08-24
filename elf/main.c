@@ -1,9 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
 //#define __USE_GNU
 //#include <sys/mman.h>
-#include <errno.h>
+//#include <errno.h>
+
+#include <stdint.h>
 
 /*
  *  * Гранулярность буфера
@@ -12,8 +14,9 @@
 
 #define O_RDONLY 00
 
-
-int start_process(void *buffer);
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
 
 int main(int argc, char *argv[])
 {

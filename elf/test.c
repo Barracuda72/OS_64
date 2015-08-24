@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include "../kernel/debug.h"
-#include "../kernel/syscall.h"
+#include "../libc/os64sys.h"
 
 char hello[] = "Hello, world!\n";
 
@@ -15,6 +15,3 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-#ifndef __HOSTED__
-DEFN_SYSCALL2(test_out, 0, const char *, unsigned long);
-#endif

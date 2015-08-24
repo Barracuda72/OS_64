@@ -38,6 +38,3 @@ void test_out(char *s, uint64_t t)
 {
   kprintf(s, t);
 }
-
-// И - сам вызов
-DEFN_SYSCALL2(test_out, 0, const char *, unsigned long)
