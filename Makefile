@@ -42,9 +42,29 @@ OBJ_LIBC:= \
 OBJ_KERNEL:= \
 	kernel/ktty.o \
 	kernel/kernel.o \
+	kernel/tls.o \
 	kernel/task.o
-OBJ_MISC:= \
+OBJ_SYS:= \
 	sys/syscall.o \
+  sys/sys_close.o \
+  sys/sys_unlink.o \
+  sys/sys_kill.o \
+  sys/sys_isatty.o \
+  sys/sys_fstat.o \
+  sys/sys_write.o \
+  sys/sys_open.o \
+  sys/sys_lseek.o \
+  sys/sys_read.o \
+  sys/sys_times.o \
+  sys/sys_getpid.o \
+  sys/sys_exit.o \
+  sys/sys_fork.o \
+  sys/sys_stat.o \
+  sys/sys_execve.o \
+  sys/sys_sbrk.o \
+  sys/sys_link.o \
+  sys/sys_wait.o 
+OBJ_MISC:= \
 	elf/elf.o \
 	elf/start.o
 OBJECTS:= \
@@ -53,6 +73,7 @@ OBJECTS:= \
 	$(OBJ_MM) \
 	$(OBJ_LIBC) \
 	$(OBJ_KERNEL) \
+	$(OBJ_SYS) \
 	$(OBJ_MISC)
 
 MISC := \

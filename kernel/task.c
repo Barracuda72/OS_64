@@ -63,6 +63,8 @@ void task_init()
   zeromem(&(curr[0]->r), sizeof(all_regs));
   curr[0]->next = curr[0]; // Закольцовываем
   curr[0]->state = TASK_RUNNING;
+  alloc_pages_user(TLS_ADDR, sizeof(thread_ls));
+  curr[0]->tls = TLS_ADDR;
   intr_enable();
 }
 
@@ -73,6 +75,8 @@ void task_init_cpu(uint8_t id)
   curr[id]->pid = next_pid++;
   zeromem(&(curr[id]->r), sizeof(all_regs));
   curr[id]->state = TASK_RUNNING;
+  alloc_pages_user(TLS_ADDR, sizeof(thread_ls));
+  curr[id]->tls = TLS_ADDR;
   task *tmp = curr[0]->next;
   curr[0]->next = curr[id]; // Закольцовываем
   curr[id]->next = tmp;

@@ -3,12 +3,30 @@
 
 void test_out(char *, uint64_t);
 
-void *syscall_fs[1] = 
+void *syscall_fs[] = 
 { 
- &test_out, 
+ &test_out,
+ &sys_exit,
+ &sys_close,
+ &sys_execve,
+ &sys_fork,
+ &sys_fstat,
+ &sys_getpid,
+ &sys_isatty,
+ &sys_kill,
+ &sys_link,
+ &sys_lseek,
+ &sys_open,
+ &sys_read,
+ &sys_sbrk,
+ &sys_stat,
+ &sys_times,
+ &sys_unlink,
+ &sys_wait,
+ &sys_write,
 };
 
-uint64_t syscall_ns = 1;
+uint64_t syscall_ns = 19;
 
 asm(".globl syscall_handler \n \
 syscall_handler: \n \

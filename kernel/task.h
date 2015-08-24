@@ -5,6 +5,7 @@
 #include <regs.h>
 
 #include <smp.h>
+#include <tls.h>
 
 //  64-битная TSS
 //  Собственно, тут ничего нет, за
@@ -38,7 +39,11 @@ typedef struct _task
   all_regs r;
   uint64_t cr3;
   struct _task *next;
+  // Состояние задачи
   uint8_t state;
+  // Код возврата задачи
+  int32_t status;
+  thread_ls *tls;
 } task;
 
 #pragma pack()
