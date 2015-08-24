@@ -8,11 +8,13 @@
 #include <debug.h>
 
 uint32_t *lapic_addr = 0;
+uint32_t lapic_hw_addr = 0;
 uint32_t *ioapic_addr = 0;
 void apic_spur_isr();
 void apic_tmr_isr();
 // Количество срабатываний таймера в секунду
 uint32_t quantum = 10;//1000;
+uint32_t apic_divisor = 16;
 
 asm("\n \
 apic_spur_isr: \n \
@@ -66,7 +68,8 @@ static void pit_wait(uint32_t microsec)
 
 void apic_init(uint32_t lapic_a)
 {
-  uint32_t tmp, cpubusfreq;
+  uint32_t cpubusfreq;
+//  uint32_t apic_divisor;
   // Отключим PIC
   outb(0x21, 0xFF);
   outb(0xA1, 0xFF);
@@ -74,6 +77,7 @@ void apic_init(uint32_t lapic_a)
   // 0xFFFFFFFFC00F0000. По этому адресу в пространство
   // ядра отображено ПЗУ BIOS. Зачем оно нам?
   lapic_addr = APIC_LAPIC_ADDR;
+  lapic_hw_addr = lapic_a;
   mount_page_hw(lapic_a, lapic_addr);
   // Установим прерывания
   //ext_intr_install(0x20, apic_tmr_isr);
@@ -139,14 +143,38 @@ void apic_init(uint32_t lapic_a)
   // Посчитаем...
   cpubusfreq = ((0xFFFFFFFF - lapic_addr[APIC_TMRCURRCNT]) + 1)*16*100;
   kprintf("CPU bus freq: %d\n", cpubusfreq);
-  tmp = cpubusfreq / quantum / 16;
+  apic_divisor = cpubusfreq / quantum / 16;
  
   // Теперь в tmp - нужное нам значение
-  lapic_addr[APIC_TMRINITCNT] = (tmp < 16 ? 16 : tmp);
+  lapic_addr[APIC_TMRINITCNT] = (apic_divisor < 16 ? 16 : apic_divisor);
   // Окончательно включаем таймер в периодическом режиме
   lapic_addr[APIC_LVT_TMR] = 32|TMR_PERIODIC;
   // Повторная установка делителя необходима для некоторого
   // кривого железа, по мануалам она не нужна
+  lapic_addr[APIC_TMRDIV] = 0x03;
+}
+
+void apic_init_ap()
+{
+  //mount_page_hw(lapic_hw_addr, lapic_addr);
+
+  lapic_addr[APIC_DFR] = 0xFFFFFFFF;
+  lapic_addr[APIC_LDR] = (lapic_addr[APIC_LDR]&0x00FFFFFF)|1;
+  lapic_addr[APIC_LVT_TMR] = APIC_DISABLE;
+  lapic_addr[APIC_LVT_PERF] = APIC_NMI;
+  lapic_addr[APIC_LVT_LINT0] &= 0xFFFE58FF;  // Delivery = fixed
+  lapic_addr[APIC_LVT_LINT1] &= 0xFFFE58FF;
+  lapic_addr[APIC_LVT_LINT1] |= 0x400; // Delivery = NMI
+  lapic_addr[APIC_TASKPRIOR] = 0;
+
+  // Подключим линии INTR и NMI к LAPIC
+  outb(0x22, 0x70);
+  outb(0x23, 1);
+
+  lapic_addr[APIC_SPURIOUS] = 39|APIC_SW_ENABLE;
+
+  lapic_addr[APIC_TMRINITCNT] = (apic_divisor < 16 ? 16 : apic_divisor);
+  lapic_addr[APIC_LVT_TMR] = 32|TMR_PERIODIC;
   lapic_addr[APIC_TMRDIV] = 0x03;
 }
 

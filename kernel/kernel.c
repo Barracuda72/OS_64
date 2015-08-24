@@ -15,6 +15,7 @@
 
 #include <debug.h>
 
+uint64_t kernel_stack_new = 0xFFFFFFFFC0080000;
 long kernel_run(void);
 
 /* 
@@ -53,14 +54,13 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
  
   // Чтобы AP не испортил нам стек
   // change_stack();
-  uint64_t stack_new = 0xFFFFFFFFA0000000;
-  alloc_pages(stack_new, STACK_SIZE);
+  alloc_pages(kernel_stack_new, STACK_SIZE);
 
   asm volatile("\
     mov %0, %%rsp\n\
     xor %%rbp, %%rbp\n\
     call kernel_run\n\
-  "::"a"(stack_new+STACK_SIZE));
+  "::"a"(kernel_stack_new+STACK_SIZE));
 
   return 0;
 }
@@ -100,7 +100,7 @@ long kernel_run(void)
       kprintf("%x", bootsect[i]);
     kfree(bootsect);
 #endif
-    fs_test_main(0, 0);
+    //fs_test_main(0, 0);
 
     // Крутим циферку в верхнем правом углу
     for(;;) 
@@ -120,10 +120,21 @@ long kernel_ap_start(uint64_t mb_magic, multiboot_info_t *mb)
 {
   // У AP меньше работы, чем у BSP. Ему не нужно инициализировать состояние
   // машины полностью - достаточно "вытянуть" только самого себя
-  uint8_t apic_id = apic_get_id();
+  volatile uint8_t apic_id = apic_get_id();
   GDT_init_ap();
   tss_init_cpu(apic_id);
 
   intr_init_ap();
-  for(;;);
+
+  page_init_ap();
+
+  apic_init_ap();
+
+  task_init_cpu(apic_id);
+  kprintf("AP ID %d init complete\n", apic_id);
+  for(;;)
+  {
+    apic_id = apic_get_id();
+    ktty_putc(apic_id+0x30);
+  }
 }

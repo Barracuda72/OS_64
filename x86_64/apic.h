@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 void apic_init(uint32_t lapic_addr);
+void apic_init_ap();
 uint32_t apic_get_base();
 void apic_set_base(uint32_t base);
 uint8_t apic_present();

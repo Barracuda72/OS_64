@@ -62,6 +62,20 @@ void task_init()
   curr[0]->pid = next_pid++;
   zeromem(&(curr[0]->r), sizeof(all_regs));
   curr[0]->next = curr[0]; // Закольцовываем
+  curr[0]->state = TASK_RUNNING;
+  intr_enable();
+}
+
+void task_init_cpu(uint8_t id)
+{
+  intr_disable();
+  curr[id] = kmalloc(sizeof(task));
+  curr[id]->pid = next_pid++;
+  zeromem(&(curr[id]->r), sizeof(all_regs));
+  curr[id]->state = TASK_RUNNING;
+  task *tmp = curr[0]->next;
+  curr[0]->next = curr[id]; // Закольцовываем
+  curr[id]->next = tmp;
   intr_enable();
 }
 
@@ -73,7 +87,8 @@ uint64_t copy_stack()
   // HACK: это не то, что нужно!
   // Исправить срочно!
   //extern uint64_t stack;
-  uint64_t stack_old = 0xFFFFFFFFA0000000; //&stack;
+  extern uint64_t kernel_stack_new;
+  uint64_t stack_old = kernel_stack_new; //&stack;
   uint64_t stack_end = (uint64_t) stack_old + STACK_SIZE;
   uint64_t *new_stack = kmalloc(STACK_SIZE);
   memcpy(new_stack, stack_old, STACK_SIZE);
@@ -196,8 +211,12 @@ uint64_t task_switch(all_regs *r)
       curr[id]->r.reg1 = r->reg1;
     } else {
       memcpy(&(curr[id]->r), r, sizeof(all_regs));
+      curr[id]->state = TASK_ACTIVE;
+      do
+      {
+        curr[id] = curr[id]->next;
+      } while(curr[id]->state != TASK_ACTIVE);
     }
-    curr[id] = curr[id]->next;
     // Стек, с которого будем восстанавливать регистры
     return &(curr[id]->r);
   }

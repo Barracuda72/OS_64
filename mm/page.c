@@ -382,6 +382,14 @@ void alloc_pages_user(void *addr, uint64_t size)
   }
 }
 
+void cr3_load(uint64_t cr3)
+{
+  asm("  movq $0x000ffffffffff000, %%rax \n \
+         andq %%rax, %0 \n \
+         mov %0, %%cr3"
+  ::"r"(cr3):"rax");
+}
+
 void page_init(uint64_t *last_phys_page)
 {
   /*
@@ -434,10 +442,13 @@ void page_init(uint64_t *last_phys_page)
 
   intr_disable();  //Отключим прерывания
   //BREAK();
+  /*
   asm("  movq $0x000ffffffffff000, %%rax \n \
          andq %%rax, %0 \n \
          mov %0, %%cr3"
   ::"r"((uint64_t)PML4):"rax");  //Загрузим PML4
+  */
+  cr3_load(PML4);
   //BREAK();
   intr_enable();
 
@@ -446,3 +457,36 @@ void page_init(uint64_t *last_phys_page)
   kprintf("Pagination enabled!\n");
 }
 
+void page_init_ap()
+{
+  // Сначала просто загрузим PML4
+  intr_disable();  //Отключим прерывания
+  cr3_load(PML4);
+  // Теперь создадим свою на ее основе
+
+  volatile uint64_t *addr = TMP_MOUNT_ADDR;
+
+  uint64_t *pml4 = alloc_phys_page();
+  uint64_t *pdp = alloc_phys_page();
+  uint64_t *pd = alloc_phys_page();
+
+  mount_page_t(pml4);
+  zeromem(addr, 4096);
+  addr[511] = calc_page(pdp).h;
+  umount_page_t();
+
+  mount_page_t(pdp);
+  zeromem(addr, 4096);
+  addr[511] = calc_page(pd).h;
+  umount_page_t();
+
+  mount_page_t(pd);
+  zeromem(addr, 4096);
+  addr[0] = calc_page(((uint64_t)kernel_pt)&0x0FFFFFFF).h;
+  umount_page_t();
+
+  // Загрузим окончательный вариант PML4
+  cr3_load(pml4);
+
+  intr_enable(); 
+}

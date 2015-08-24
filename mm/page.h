@@ -44,6 +44,7 @@ typedef union
 } pte_desc;
 
 void page_init(uint64_t *last);
+void page_init_ap();
 
 void mount_page(void *physical, void *logical);
 void mount_page_hw(void *physical, void *logical);

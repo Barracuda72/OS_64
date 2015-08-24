@@ -59,6 +59,8 @@ void tss_init_cpu(uint8_t id);
 
 void task_init(void);
 
+void task_init_cpu(uint8_t id);
+
 uint64_t task_switch(all_regs *r);
 
 int task_fork();
