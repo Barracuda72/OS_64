@@ -99,6 +99,9 @@ void smp_init(void);
 // Флаг того, что BSP уже запущен
 extern uint8_t bsp_started;
 
+// Количество процессоров в системе
+extern uint8_t cpu_nr;
+
 // Максимальное количество процессоров
 #define MAX_CPU_NR 16
 #endif

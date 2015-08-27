@@ -26,32 +26,42 @@ uint64_t call_s[MAX_CPU_NR][1024];
 volatile task *curr[MAX_CPU_NR]; // Текущая выполняемая задача
 uint64_t next_pid = 1;
 
+void tss_init_common(void)
+{
+  uint8_t id;
+
+  for (id = 0; id < MAX_CPU_NR; id++)
+  {
+    IntrTss[id].rsp0 = (uint64_t)&intr_s[id][1022];
+    IntrTss[id].rsp1 = (uint64_t)&intr_s[id][1022];
+    IntrTss[id].rsp2 = (uint64_t)&intr_s[id][1022];
+  
+    IntrTss[id].ist1 = (uint64_t)&intr_s[id][1022];
+    IntrTss[id].ist2 = (uint64_t)&fault_s[id][1022];
+    IntrTss[id].ist3 = (uint64_t)&call_s[id][1022];
+    IntrTss[id].ist4 = (uint64_t)&intr_s[id][1022];
+    IntrTss[id].ist5 = (uint64_t)&intr_s[id][1022];
+    IntrTss[id].ist6 = (uint64_t)&intr_s[id][1022];
+    IntrTss[id].ist7 = (uint64_t)&intr_s[id][1022];
+  
+    curr[id] = 0;
+  }
+}
+
 void tss_init_cpu(uint8_t id)
 {
   uint16_t s = 0;  // Селектор задачи ядра
-  IntrTss[id].rsp0 = (uint64_t)&intr_s[id][1022];
-  IntrTss[id].rsp1 = (uint64_t)&intr_s[id][1022];
-  IntrTss[id].rsp2 = (uint64_t)&intr_s[id][1022];
-  
-  IntrTss[id].ist1 = (uint64_t)&intr_s[id][1022];
-  IntrTss[id].ist2 = (uint64_t)&fault_s[id][1022];
-  IntrTss[id].ist3 = (uint64_t)&call_s[id][1022];
-  IntrTss[id].ist4 = (uint64_t)&intr_s[id][1022];
-  IntrTss[id].ist5 = (uint64_t)&intr_s[id][1022];
-  IntrTss[id].ist6 = (uint64_t)&intr_s[id][1022];
-  IntrTss[id].ist7 = (uint64_t)&intr_s[id][1022];
-  
+
   s = GDT_smartaput(&IntrTss[id], sizeof(TSS64), SEG_PRESENT | SEG_TSS64 | SEG_DPL3);
   s = CALC_SELECTOR(s, SEG_GDT | SEG_RPL3);
   
-  curr[id] = 0;
-
   //BREAK();
   asm("ltr %0"::"m"(s));
 }
 
 void tss_init()
 {
+  tss_init_common();
   tss_init_cpu(0);
 }
 

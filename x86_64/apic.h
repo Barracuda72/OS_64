@@ -110,6 +110,7 @@ static inline uint8_t apic_get_id()
   asm volatile("\
     mov %1, %%rax\n\
     mov (%%rax), %%eax\n\
+    # xchg %%bx, %%bx\n\
     rol $8, %%eax\n\
     and $0xF, %%al\n\
     mov %%al, %b0\n\

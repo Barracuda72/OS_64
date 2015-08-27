@@ -9,8 +9,12 @@
 
 uint8_t bsp_started = 0;
 
+uint8_t cpu_nr = 0;
+
 void smp_init(void)
 {
+  cpu_nr = 1;
+
 /*
  * Попытка прочитать SMP
  */

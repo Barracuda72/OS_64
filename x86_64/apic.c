@@ -4,6 +4,7 @@
 #include <ioport.h>
 #include <intr.h>
 #include <page.h>
+#include <smp.h>
 
 #include <debug.h>
 
@@ -156,7 +157,7 @@ void apic_init(uint32_t lapic_a)
 
 void apic_init_ap()
 {
-  //mount_page_hw(lapic_hw_addr, lapic_addr);
+  mount_page_hw(lapic_hw_addr, lapic_addr);
 
   lapic_addr[APIC_DFR] = 0xFFFFFFFF;
   lapic_addr[APIC_LDR] = (lapic_addr[APIC_LDR]&0x00FFFFFF)|1;
@@ -271,6 +272,9 @@ void ap_init(uint8_t apic_id)
    * 7..0 : вектор>>12
    */
 
+  // Запоминаем текущее количество процессоров
+  // uint8_t cpu_nr_curr = cpu_nr;
+
   // INIT IPI
   lapic_addr[APIC_ICRH] = (apic_id<<24); // Получатель
   lapic_addr[APIC_ICRL] = 0x00004500;    // level-triggered 
@@ -293,6 +297,8 @@ void ap_init(uint8_t apic_id)
   lapic_addr[APIC_ICRH] = (apic_id<<24);
   lapic_addr[APIC_ICRL] = 0x00004600 | (AP_CODE>>12);
 
-  // Процессор инициализирован
+  // Процессор инициализирован, ждем, пока полностью не проснется
+/*  while (cpu_nr == cpu_nr_curr)
+    ;*/
 }
 

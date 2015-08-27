@@ -30,6 +30,13 @@ code32:
   mov %ax, %es
   mov %ax, %ds
   mov %ax, %ss
+
+  // Загрузим в edi APIC ID процессора
+  mov $0xFEE00000, %ebp
+  mov 0x20(%ebp), %ebp
+  rol $8, %ebp
+  and $0xF, %ebp
+
 /* Прыгаем на инициализацию long mode */
   ljmp $0x08, $long_enter
 

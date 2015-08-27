@@ -120,12 +120,12 @@ long kernel_run(void)
 /*
  * Отсюда начнет выполнение наш AP
  */
-long kernel_ap_start(uint64_t mb_magic, multiboot_info_t *mb)
+long kernel_ap_start(uint8_t apic_id)
 {
   // У AP меньше работы, чем у BSP. Ему не нужно инициализировать состояние
   // машины полностью - достаточно "вытянуть" только самого себя
-  volatile uint8_t apic_id = apic_get_id();
   GDT_init_ap();
+  // Перемещено в apic.c
   tss_init_cpu(apic_id);
 
   intr_init_ap();
@@ -135,14 +135,18 @@ long kernel_ap_start(uint64_t mb_magic, multiboot_info_t *mb)
   apic_init_ap();
 
   task_init_cpu(apic_id);
-  BREAK();
+  // BREAK();
   asm("sti");
   kprintf("AP ID %d init complete\n", apic_id);
+
+  cpu_nr++;
+
   for(;;)
   {
     int i;
     apic_id = apic_get_id();
-    ktty_putc(apic_id+0x30);
+    ktty_putc(apic_id|0x30);
+    //BREAK();
     asm("hlt");
   }
 }

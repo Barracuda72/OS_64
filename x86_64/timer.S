@@ -62,6 +62,7 @@ old_timer_intr:
 
 // Новый обработчик прерывания - теперь фруктовый!
 timer_intr:
+  # xchg %bx, %bx
   push %rax
   mov %cr3, %rax
   xchg (%rsp), %rax
