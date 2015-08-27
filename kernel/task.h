@@ -5,6 +5,7 @@
 #include <regs.h>
 
 #include <smp.h>
+#include <apic.h>
 #include <tls.h>
 
 //  64-битная TSS
@@ -72,6 +73,9 @@ int task_fork();
 
 uint64_t change_stack();
 
+// Массив указателей на текущие задачи для каждого процессора
 extern volatile task *curr[MAX_CPU_NR];
+// Указатель на текущую задачу для текущего процессора
+#define curr_cpu_task (curr[apic_get_id()])
 
 #endif  //__TASK_H_
