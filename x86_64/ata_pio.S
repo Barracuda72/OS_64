@@ -19,6 +19,10 @@ ata_pio_read:
   push %rsi
   push %rdi
 
+  xor %rax, %rax
+  xor %rbx, %rbx
+  xor %rcx, %rcx
+
   mov %rsi, %rax
   mov %rdx, %rcx
 

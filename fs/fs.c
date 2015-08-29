@@ -11,6 +11,8 @@
 #include <elf.h>
 #include <errno.h>
 
+#include <tty.h>
+
 #ifndef __HOSTED__
 #include <ata.h>
 #include <debug.h>
@@ -21,6 +23,9 @@ vfs_node_t *root;
 
 // Узел DevFS
 vfs_node_t *dfs;
+
+// Узел терминального устройства
+vfs_node_t *tty_node;
 
 void fs_print_dir(vfs_node_t *p);
 
@@ -53,8 +58,6 @@ void fs_init(void)
 
   root->flags = VFS_DIRECTORY;
 
-  fs_print_dir(dfs);
-
   vfs_node_t *t = vfs_finddir(dfs, rnn);
   vfs_mount(t, root);
 
@@ -62,5 +65,10 @@ void fs_init(void)
   {
     kprintf("Root mounted successfully\n");
   }
+
+  tty_node = tty_init(NULL);
+  devfs_add(tty_node);
+
+  fs_print_dir(dfs);
 }
 

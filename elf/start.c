@@ -89,6 +89,16 @@ int start_process(void *buffer)
     alloc_pages_user(0x100000000, 0x2000);
     curr[id]->r.i.rsp = 0x100001FF0;
     curr[id]->r.i.ss = CALC_SELECTOR(4, SEG_GDT | SEG_RPL3);
+
+    // Настроим STDIN, STDOUT, STDERR
+    extern vfs_node_t *tty_node;
+    fs_open_desc *stdio = kmalloc(sizeof(fs_open_desc));
+    stdio->offset = 0;
+    stdio->flags = 0;
+    stdio->node = tty_node;
+    int i;
+    for (i = 0; i < 3; i++)
+      curr[id]->files[i] = stdio;
     intr_enable();
 #endif // __HOSTED__
 

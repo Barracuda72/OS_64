@@ -32,7 +32,6 @@ asm(".globl syscall_handler \n \
 syscall_handler: \n \
   # RAX = номер системного вызова \n \
   # Параметры, как обычно - rdi, rsi, rdx, rcx, r8, r9 \n \
-  # xchg %bx, %bx \n \
   push %rbx \n \
   mov $syscall_ns, %rbx \n \
   mov (%rbx), %rbx \n \

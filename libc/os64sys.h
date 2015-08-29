@@ -7,6 +7,8 @@
 #ifndef __OS64SYS_H__
 #define __OS64SYS_H__
 
+#include <stdint.h>
+
 // Украдено у JamesM и переработано
 
 #define DECL_SYSCALL0(fn) int syscall_##fn();
@@ -58,5 +60,8 @@ int syscall_##fn(P1 p1, P2 p2, P3 p3, P4 p4) \
 
 // Тестовый системый вызов
 DECL_SYSCALL2(test_out, const char *, unsigned long)
+
+// write
+DECL_SYSCALL3(write, int, const char *, size_t)
 
 #endif // __OS64SYS_H__

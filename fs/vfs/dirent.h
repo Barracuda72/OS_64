@@ -35,6 +35,7 @@ struct dirent
 #define VFS_PIPE        0x10
 #define VFS_SYMLINK     0x20
 #define VFS_MOUNTPOINT  0x40
+#define VFS_TTY         0x80
 
 #define VFS_STORAGE     0x100
 

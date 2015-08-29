@@ -106,7 +106,7 @@ long kernel_run(void)
       kprintf("%x", bootsect[i]);
     kfree(bootsect);
 #endif
-    // fs_test_main();
+    fs_test_main();
 
     // Крутим циферку в верхнем правом углу
     for(;;) 

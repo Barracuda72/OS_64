@@ -8,6 +8,8 @@
 #include <apic.h>
 #include <tls.h>
 
+#include <fs.h>
+
 //  64-битная TSS
 //  Собственно, тут ничего нет, за
 //  исключением адресов стеков
@@ -45,6 +47,7 @@ typedef struct _task
   // Код возврата задачи
   int32_t status;
   thread_ls *tls;
+  fs_open_desc *files[MAX_OPEN_FILES];
 } task;
 
 #pragma pack()

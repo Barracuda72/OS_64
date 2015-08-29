@@ -2,7 +2,7 @@ TARGET:=boot.elf
 # !!! mcmodel=kernel КРИТИЧЕСКИ ВАЖНО !!!
 INCLUDES:=-I. -I./mm -I./x86_64 -I./kernel \
 	-I./fs/ata -I./fs/mdpart -I./fs/vfs -I./fs/initrd \
-	-I./fs/devfs -I./fs/ext2 -I./fs/fat32 \
+	-I./fs/devfs -I./fs/ext2 -I./fs/fat32 -I./fs/tty \
 	-I./libc -I./elf -I./sys -I./fs
 CPPFLAGS:=-m64 -nostdinc ${INCLUDES}
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion
@@ -32,6 +32,7 @@ OBJ_FS:= \
 	fs/ext2/ext2.o \
 	fs/fat32/fat32.o \
 	fs/ata/ata.o \
+	fs/tty/tty.o \
 	fs/test.o
 OBJ_MM:= \
 	mm/page.o \
@@ -112,7 +113,7 @@ disk.img:
 	@sudo kpartx -d disk.img
 	@mkdir -p mnt
 	@sudo mount -t ext2 -o loop,offset=`echo 512*2048 | bc` disk.img mnt
-	@sudo mkdir -p mnt/boot
+	@sudo mkdir -p mnt/boot mnt/dev
 	@sudo cp misc/extlinux.conf misc/mboot.c32 misc/libcom32.c32 mnt/boot
 	@sudo extlinux -i mnt/boot
 	@sudo umount mnt
@@ -156,6 +157,7 @@ cp: $(TARGET)
 	@mkdir -p mnt
 	@sudo mount -o loop,offset=1048576 disk.img mnt
 	@sudo cp boot.elf mnt
+	@sudo cp elf/test.elf mnt
 	@sync
 	@sudo umount mnt
 	@rmdir mnt

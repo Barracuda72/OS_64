@@ -15,4 +15,4 @@ test:	test.c
 	gcc test.c ../libc/crt0.S ../libc/linsys.c -o test.elf -D__HOSTED__ -I../libc -static -nostdlib -nodefaultlibs -ffreestanding -D__POOL_SIZE__=0x1000
 
 test64:	test.c
-	gcc -ffreestanding -nostdlib -nodefaultlibs test.c ../libc/crt0.S ../libc/string.c ../libc/os64sys.c -o test.elf -I../libc -static -nostdlib -nodefaultlibs -ffreestanding -D__POOL_SIZE__=0x1000
+	gcc -ffreestanding -nostdinc -nostdlib -nodefaultlibs test.c -I../libc -I../sys ../libc/crt0.S ../libc/string.c ../libc/os64sys.S -o test.elf -I../libc -static -nostdlib -nodefaultlibs -ffreestanding -D__POOL_SIZE__=0x1000

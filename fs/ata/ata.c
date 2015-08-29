@@ -51,7 +51,7 @@ uint64_t ata_read (vfs_node_t *node, uint64_t offset, uint64_t size, uint8_t *bu
       return EINVAL;
 
     int len = offset+size > node->length ? node->length - offset : size;
-    // printf("ATA PIO read %d bytes, offset %X\n", len, offset);
+    // kprintf("ATA PIO read %d bytes, offset %X\n", len, offset);
 
     int sectors = len>>9;
     if (len & 0x1FF)

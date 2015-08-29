@@ -7,6 +7,7 @@
 #include <intr.h>
 #include <smp.h>
 #include <apic.h>
+#include <fs.h>
 
 #include <debug.h>
 
@@ -75,6 +76,10 @@ void task_init()
   curr[0]->state = TASK_RUNNING;
   alloc_pages_user(TLS_ADDR, sizeof(thread_ls));
   curr[0]->tls = TLS_ADDR;
+
+  int i;
+  for (i = 0; i < MAX_OPEN_FILES; i++)
+    curr[0]->files[i] = 0;
   intr_enable();
 }
 
@@ -90,6 +95,10 @@ void task_init_cpu(uint8_t id)
   task *tmp = curr[0]->next;
   curr[0]->next = curr[id]; // Закольцовываем
   curr[id]->next = tmp;
+
+  int i;
+  for (i = 0; i < MAX_OPEN_FILES; i++)
+    curr[id]->files[i] = 0;
   intr_enable();
 }
 
