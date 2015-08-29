@@ -3,7 +3,7 @@ TARGET:=boot.elf
 INCLUDES:=-I. -I./mm -I./x86_64 -I./kernel \
 	-I./fs/ata -I./fs/mdpart -I./fs/vfs -I./fs/initrd \
 	-I./fs/devfs -I./fs/ext2 -I./fs/fat32 \
-	-I./libc -I./elf -I./sys
+	-I./libc -I./elf -I./sys -I./fs
 CPPFLAGS:=-m64 -nostdinc ${INCLUDES}
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
@@ -24,6 +24,7 @@ OBJ_PLATFORM:= \
 	x86_64/ata_pio.o \
 	x86_64/vesa/vesa.o
 OBJ_FS:= \
+  fs/fs.o \
 	fs/vfs/vfs.o \
 	fs/initrd/initrd.o \
 	fs/devfs/devfs.o \
