@@ -2,6 +2,8 @@
 #include <timer.h>
 #include <kbd.h>
 #include <pagefault.h>
+#include <smp.h>
+#include <apic.h>
 #include <stdint.h>
 #include <syscall.h>
 
@@ -148,23 +150,25 @@ void mask_irq(uint8_t irq)
   outb(0x21 + 8*(irq>>3), mask); 
 }
 
-uint8_t intr_sema = 0;
+uint8_t intr_sema[MAX_CPU_NR];
 
 void intr_enable()
 {
-  if (intr_sema == 0)
+  uint8_t id = apic_get_id();
+  if (intr_sema[id] == 0)
   {
     kprintf("Bug: intr_enable!\n");
     BREAK();
     asm("hlt");
   }
-  if (--intr_sema == 0)
+  if (--intr_sema[id] == 0)
     asm("sti");
 }
 
 void intr_disable()
 {
-  intr_sema++;
+  uint8_t id = apic_get_id();
+  intr_sema[id]++;
   asm("cli");
 }
 
@@ -179,7 +183,11 @@ void intr_init()
   //s_intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE);
   intr_install(0x80, &syscall_handler, INTR_PRESENT|INTR_INTR_GATE|INTR_DPL3, CALL_IST, SYS_CODE_SELECTOR);
   intr_setup();
-  mask_irq(0); // отключим PIT - мы будем использовать APIC timer
+  int i;
+  for (i = 0; i < 15; i++)
+    mask_irq(i); // Запретим все прерывания - мы будем использовать APIC timer
+  unmask_irq(1); // Явно разрешим прерывание клавиатуры
+
   intr_enable();
 }
 
