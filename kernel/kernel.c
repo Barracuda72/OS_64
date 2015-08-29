@@ -70,6 +70,7 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 long kernel_run(void)
 {
   fs_init();
+  //BREAK();
   smp_init();
   task_init();
 
@@ -105,7 +106,7 @@ long kernel_run(void)
       kprintf("%x", bootsect[i]);
     kfree(bootsect);
 #endif
-    fs_test_main();
+    // fs_test_main();
 
     // Крутим циферку в верхнем правом углу
     for(;;) 
@@ -125,6 +126,7 @@ long kernel_run(void)
  */
 long kernel_ap_start(uint8_t apic_id)
 {
+  for (;;);
   // У AP меньше работы, чем у BSP. Ему не нужно инициализировать состояние
   // машины полностью - достаточно "вытянуть" только самого себя
   GDT_init_ap();
