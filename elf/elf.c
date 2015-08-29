@@ -334,7 +334,7 @@ int elf64_load_stage3(Elf64_Ehdr *hdr)
 #ifdef __HOSTED__
       addr = kmalloc(segment->p_memsz + 0x1000 /*tail*/) & (~0xFFF);
       // Отобразим сегмент по виртуальному адресу
-      //addr = mremap(addr, segment->p_memsz + tail, segment->p_memsz+tail, 3, segment->p_vaddr & (~0xFFF));
+      // addr = mremap(addr, segment->p_memsz + tail, segment->p_memsz+tail, 3, segment->p_vaddr & (~0xFFF));
 
       //BREAK();
       remap_pages(addr, segment->p_vaddr & (~0xFFF), segment->p_memsz + tail);
