@@ -13,6 +13,8 @@
 
 #include <ata_pio.h>
 
+#include <fs.h>
+
 #include <debug.h>
 
 uint64_t kernel_stack_new = 0xFFFFFFFFC0080000;
@@ -67,6 +69,7 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 
 long kernel_run(void)
 {
+  fs_init();
   smp_init();
   task_init();
 
@@ -102,7 +105,7 @@ long kernel_run(void)
       kprintf("%x", bootsect[i]);
     kfree(bootsect);
 #endif
-    //fs_test_main(0, 0);
+    fs_test_main();
 
     // Крутим циферку в верхнем правом углу
     for(;;) 
