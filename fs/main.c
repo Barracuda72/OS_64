@@ -1,8 +1,16 @@
+/*
 #include <stdio.h>
 #include <stdlib.h>
+*/
 #include <stdint.h>
 
-int fs_test_main(void *p, int len);
+#include <fs.h>
+
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
+
+int fs_test_main();
 /*
 #define B_SIZE 0x1000*0x400
 
@@ -44,7 +52,8 @@ int main(int argc, char *argv[])
   read(f, buffer, len);
   close(f);
 
-  fs_test_main(buffer, len);
+  fs_init(buffer, len);
+  fs_test_main();
 
   //printf("main : %x\n", main);
 

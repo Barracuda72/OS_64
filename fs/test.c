@@ -4,6 +4,7 @@
  */
 
 #include <vfs.h>
+#include <fs.h>
 #include <initrd.h>
 #include <devfs.h>
 #include <kprintf.h>
@@ -35,69 +36,12 @@ void fs_print_dir(vfs_node_t *dir)
 
 int start_process(void *buffer);
 
-void fs_test_main(void *p, int len)
+void fs_test_main()
 {
-  kprintf("FS test start...\n");
-  vfs_node_t *ird;
-  char *rnn;
-
-#ifdef __HOSTED__
-  ird = initrd_init(p, len);
-  rnn = "initrd0";
-#else
-  ird = ata_init();
-  rnn = "ata0";
-#endif
-
-  vfs_node_t *dfs = devfs_init();
-
-  devfs_add(ird);
-
-  vfs_node_t *root = vfs_alloc_node();
-  root->name[0] = '/';
-  root->name[1] = 0;
-
-  root->flags = VFS_DIRECTORY;
-
-  int res;
-
   // Распечатаем содержимое devfs
   int i = 0;
   struct dirent *node = 0;
   vfs_node_t *fsnode;
-  while ( (node = vfs_readdir(dfs, i)) != EINVAL)
-  {
-    kprintf("Found file %s\n", node->name);
-    fsnode = vfs_finddir(dfs, node->name);
-
-    if (fsnode->flags&VFS_DIRECTORY)
-      kprintf("\t(directory)\n");
-
-    if (!strncmp(node->name, rnn, 8))
-    {
-      res = vfs_mount(fsnode, root);
-      kprintf ("Mount : %d\n", res);
-    }
-#if 0
-    else if (strncmp(node->name, "initrd", 7))
-    {
-      kprintf("\n\t содержимое: \"");
-      char buf[256];
-      int sz = vfs_read(fsnode, 0, 256, buf);
-      if (sz < 0)
-        kprintf("Что-то не так, код возврата %d\n", sz);
-      else {
-        int j;
-        for (j = 0; j < sz; j++)
-          putchar(buf[j]);
-
-        kprintf("\"\n");
-      }
-    }
-#endif
-    i++;
-    kfree(node);
-  } 
 
   if (root->ptr != NULL)
   {
@@ -130,11 +74,14 @@ void fs_test_main(void *p, int len)
     }
   }
 
+#ifdef __HOSTED__
   vfs_umount(root);
-
+#endif
+/*
   kfree(fsnode);
   kfree(root);
   kfree(dfs);
   kfree(ird);
+*/
 }
 
