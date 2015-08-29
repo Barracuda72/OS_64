@@ -15,3 +15,7 @@ smp
 # vesa
 elf/elf
 fs/main
+# Ignore old files
+*.old
+# Ignore log files
+*.log
