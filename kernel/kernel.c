@@ -69,6 +69,7 @@ long kernel_start(uint64_t mb_magic, multiboot_info_t *mb)
 
 long kernel_run(void)
 {
+  serial_init();
   fs_init();
   //BREAK();
   smp_init();
@@ -126,7 +127,7 @@ long kernel_run(void)
  */
 long kernel_ap_start(uint8_t apic_id)
 {
-  for (;;);
+  //for (;;);
   // У AP меньше работы, чем у BSP. Ему не нужно инициализировать состояние
   // машины полностью - достаточно "вытянуть" только самого себя
   GDT_init_ap();

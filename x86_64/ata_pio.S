@@ -56,18 +56,21 @@ ata_pio_read:
   mov $0x20, %al     // Чтение с повтором при ошибке
   out %al, %dx
 
+  xor %rbx, %rbx
+  mov %cl, %bl   // Количество секторов
+
 wait:
+  mov $0x01F7, %edx  // Порт, принимающий команды
   in %dx, %al
   test $8, %al // Операция выполняется
   jz wait      // Ждем
 
-  mov $256, %rax // 256 слов = 1 сектор
-  xor %rbx, %rbx
-  mov %cl, %bl   // Количество секторов
-  mul %bx
-  mov %rax, %rcx // Установим счетчик для INSW
   mov $0x01F0, %rdx // Порт данных
-  rep insw  // Считываем в (%rdi)
+  mov $128, %rcx // 128 двойных слов = 1 сектор
+  cld
+  rep insl  // Считываем в (%rdi)
+  dec %rbx
+  jnz wait
 
   pop %rdi
   pop %rsi

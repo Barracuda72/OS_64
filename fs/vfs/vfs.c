@@ -115,7 +115,7 @@ uint64_t vfs_mount (vfs_node_t *what, vfs_node_t *where)
   if (!(where->flags&(VFS_DIRECTORY)))
     return ENOTDIR;
 
-  if (where->flags&(VFS_MOUNTPOINT) != 0)
+  if ((where->flags&(VFS_MOUNTPOINT)) != 0)
     return EBUSY;
 
   /*
@@ -159,11 +159,17 @@ uint64_t vfs_umount (vfs_node_t *node)
 
 vfs_node_t *vfs_alloc_node()
 {
-  return kmalloc(sizeof(vfs_node_t));
+  vfs_node_t *res = kmalloc(sizeof(vfs_node_t));
+  if (res != NULL)
+    memset(res, 0, sizeof(vfs_node_t));
+  return res;
 }
 
 struct dirent *vfs_alloc_dirent()
 {
-  return kmalloc(sizeof(struct dirent));
+  struct dirent *res = kmalloc(sizeof(struct dirent));
+  if (res != NULL)
+    memset(res, 0, sizeof(struct dirent));
+  return res;
 }
 
