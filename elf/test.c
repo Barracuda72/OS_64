@@ -7,7 +7,9 @@ char hello[] = "Hello, world!\n";
 int main(int argc, char *argv[])
 {
   BREAK();
-  write(1, hello, sizeof(hello));
+  int pid = getpid();
+  kprintf("My PID is %d!\n", pid);
+  // write(1, hello, sizeof(hello));
   return 0;
 }
 
