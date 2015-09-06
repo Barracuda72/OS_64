@@ -14,7 +14,7 @@ uint32_t *ioapic_addr = 0;
 void apic_spur_isr();
 void apic_tmr_isr();
 // Количество срабатываний таймера в секунду
-uint32_t quantum = 10;//1000;
+uint32_t quantum = APIC_CLOCKS_PER_SEC; // 10;
 uint32_t apic_divisor = 16;
 
 asm("\n \

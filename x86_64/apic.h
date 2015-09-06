@@ -21,6 +21,11 @@ void ioapic_write(uint8_t reg, uint32_t val);
 void ap_init(uint8_t apic_id);
 
 /*
+ * Количество срабатываний таймера в секунду
+ */
+#define APIC_CLOCKS_PER_SEC 10
+
+/*
  * Регистры APIC
  * >>2, поскольку используются как индексы в массиве lapic_addr
  */
