@@ -45,7 +45,7 @@ struct lconv
 /*
  * Макросы
  */
-#define NULL ((void *)0)
+#include <decl/NULL.h> // Для NULL
 
 /*
  * Параметры для setlocale

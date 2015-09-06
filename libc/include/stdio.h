@@ -8,8 +8,6 @@
 #ifndef _STDIO_H
 #define _STDIO_H 1
 
-//#error Not implemented
-
-#define stderr 2
+#error Not implemented
 
 #endif // _STDIO_H
