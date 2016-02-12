@@ -169,7 +169,6 @@ typedef   signed long intmax_t;
  */
 #define WCHAR_MIN (0)
 #define WCHAR_MAX (65535)
-#define WCHAR_MIN 0
 
 /*
  * Пределы типа wint_t
