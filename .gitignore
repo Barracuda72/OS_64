@@ -19,3 +19,7 @@ fs/main
 *.old
 # Ignore log files
 *.log
+# Ignore static library
+*.a
+# Ignore dynamic library
+*.so
