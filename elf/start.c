@@ -4,6 +4,8 @@
 #include <smp.h>
 #include <apic.h>
 
+#include <stddef.h>
+
 #include <debug.h>
 
 static const char fake_argc[] = 

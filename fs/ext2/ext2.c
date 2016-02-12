@@ -6,6 +6,12 @@
 #include <vfs.h>
 #include <ext2.h>
 
+#include <stddef.h>
+#include <stdint.h>
+
+// Не определен стандартом
+typedef unsigned long off_t;
+
 vfs_driver_t ext2_drv = {
   ext2_read,
   ext2_write,

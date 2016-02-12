@@ -4,6 +4,9 @@
 
 #include <mdpart.h>
 #include <devfs.h>
+
+#include <stddef.h>
+
 #include <errno.h>
 
 vfs_driver_t mdpart_drv = {

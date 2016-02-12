@@ -10,6 +10,8 @@
 #include <syscall.h>
 #include <errno.h>
 
+#include <stddef.h>
+
 int sys_write(int file, const char *ptr, int len) 
 {
   if (file > MAX_OPEN_FILES || file < 0)

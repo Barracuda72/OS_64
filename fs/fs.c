@@ -13,6 +13,8 @@
 
 #include <tty.h>
 
+#include <stddef.h>
+
 #ifndef __HOSTED__
 #include <ata.h>
 #include <debug.h>

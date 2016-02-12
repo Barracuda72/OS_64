@@ -4,6 +4,8 @@
 #include <kprintf.h>
 #include <errno.h>
 
+#include <stddef.h>
+
 /*
  * Драйвер ATA VFS
  */

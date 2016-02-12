@@ -3,7 +3,7 @@ TARGET:=boot.elf
 INCLUDES:=-I. -I./mm -I./x86_64 -I./kernel \
 	-I./fs/ata -I./fs/mdpart -I./fs/vfs -I./fs/initrd \
 	-I./fs/devfs -I./fs/ext2 -I./fs/fat32 -I./fs/tty \
-	-I./libc -I./elf -I./sys -I./fs
+	-I./libc -I./elf -I./sys -I./fs -I./libc/include
 CPPFLAGS:=-m64 -nostdinc ${INCLUDES}
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
@@ -82,7 +82,7 @@ MISC := \
   kernel.lds
 
 PREFIX:=x86_64-pc-linux-gnu-
-VERSION:=-4.8.4
+VERSION:=-4.9.3
 CC:=$(PREFIX)gcc$(VERSION)
 LD:=$(PREFIX)ld
 RANLIB:=$(PREFIX)ranlib

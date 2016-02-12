@@ -10,6 +10,8 @@
 #include <mdpart.h>
 #include <ext2.h>
 
+#include <stddef.h>
+
 #define MAXNODES 100
 
 static vfs_node_t *nodes[MAXNODES];

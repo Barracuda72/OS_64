@@ -12,6 +12,8 @@
 #include <elf.h>
 #include <errno.h>
 
+#include <stddef.h>
+
 #ifndef __HOSTED__
 #include <ata.h>
 #include <debug.h>

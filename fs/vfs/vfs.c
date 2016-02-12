@@ -3,6 +3,7 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 #include <vfs.h>
 #include <errno.h>
 #include <mem.h>

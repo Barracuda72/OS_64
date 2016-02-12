@@ -3,6 +3,7 @@
 #include <mem.h>
 #include <kprintf.h>
 #include <errno.h>
+#include <stddef.h>
 
 /*
  * INITal Ram Disk

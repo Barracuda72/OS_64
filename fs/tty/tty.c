@@ -6,6 +6,8 @@
 #include <vfs.h>
 #include <tty.h>
 
+#include <stddef.h>
+
 vfs_driver_t tty_drv = {
   tty_read,
   tty_write,

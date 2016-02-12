@@ -8,6 +8,7 @@
 #define __OS64SYS_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 // Украдено у JamesM и переработано
 

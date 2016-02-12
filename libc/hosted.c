@@ -6,6 +6,7 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define MAVAIL __POOL_SIZE__
 
