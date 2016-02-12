@@ -80,7 +80,7 @@ void intr_install(uint8_t vector, void (*func)(), uint8_t type, uint8_t ist, uin
 /*
  * Устанавливает системное прерывание
  */
-inline void s_intr_install(uint8_t vector, void (*func)(), uint8_t type)
+extern inline void s_intr_install(uint8_t vector, void (*func)(), uint8_t type)
 {
   intr_install(vector, func, type, SYS_IST, SYS_CODE_SELECTOR);
 }

@@ -5,7 +5,7 @@ INCLUDES:=-I. -I./mm -I./x86_64 -I./kernel \
 	-I./fs/devfs -I./fs/ext2 -I./fs/fat32 -I./fs/tty \
 	-I./libc -I./elf -I./sys -I./fs -I./libc/include
 CPPFLAGS:=-m64 -nostdinc ${INCLUDES}
-CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion
+CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion -std=gnu11 -D__IGNORE_UNIMPLEMENTED_STRING
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 #ASFLAGS:= --64 -g
 LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
@@ -40,7 +40,13 @@ OBJ_MM:= \
 	mm/mem.o
 OBJ_LIBC:= \
 	libc/kprintf.o \
-	libc/string.o
+	libc/string/memcpy.o \
+	libc/string/memcmp.o \
+	libc/string/strncpy.o \
+	libc/string/memset.o \
+	libc/string/strncat.o \
+	libc/string/strncmp.o \
+	libc/string/strlen.o
 OBJ_KERNEL:= \
 	kernel/ktty.o \
 	kernel/kernel.o \
