@@ -1,6 +1,7 @@
 .section .text
 
 .global _start
+.type _start, @function
 _start:
   # Установим конец связного списка кадров стека
   movq $0, %rbp
@@ -23,7 +24,8 @@ _start:
   popq %rsi
  
   # Вызовем main
-  call main
+  #call main
+  call *(main@GOT)
  
   # Завершим процесс
   mov %rax, %rdi

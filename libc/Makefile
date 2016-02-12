@@ -52,11 +52,15 @@ TIME= \
 UCHAR= \
   uchar/mbrtoc16.o
 
+PLATFORM= \
+	linsys.o \
+	crt0.o
+
 INC=-I. -I./include
 IGN=-D__IGNORE_UNIMPLEMENTED_STDIO
 
-CPPFLAGS:=-m64 -nostdinc ${INC} ${IGN}
-CFLAGS:=${CPPFLAGS} -g -fPIC -ffreestanding -nostdlib -nodefaultlibs -Wall -Wextra -std=c11
+CPPFLAGS:=-m64 -nostdinc -fPIC ${INC} ${IGN}
+CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -Wextra -std=c11
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
 
@@ -68,7 +72,7 @@ RANLIB:=$(PREFIX)ranlib
 NM:=$(PREFIX)nm
 AR:=$(PREFIX)ar
 
-OBJS=$(CTYPE) $(INTTYPES) $(LOCALE) $(SETJMP) $(STDARG) $(TIME) $(UCHAR)
+OBJS=$(CTYPE) $(INTTYPES) $(LOCALE) $(SETJMP) $(STDARG) $(TIME) $(UCHAR) $(PLATFORM)
 
 all: static dynamic
 

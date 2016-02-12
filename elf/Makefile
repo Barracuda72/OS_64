@@ -16,3 +16,10 @@ test:	test.c
 
 test64:	test.c
 	gcc -ffreestanding -nostdinc -nostdlib -nodefaultlibs test.c -I../libc -I../sys ../libc/crt0.S ../libc/string.c ../libc/os64sys.S ../libc/hosted.c ../libc/kprintf.c -o test.elf -I ../libc/include -I../libc -I../kernel -static -nostdlib -nodefaultlibs -ffreestanding -D__POOL_SIZE__=0x1000
+
+test_dyn: test.c ../libc/libc.so
+	gcc -ffreestanding -nostdinc -nostdlib -nodefaultlibs -I../libc -I../sys -I ../libc/include -I../libc -I../kernel -c test2.c -o test.o
+	ld --dynamic-linker=./vld.so test.o ../libc/crt0.o -o test_dyn -z nodefaultlib -lc
+
+vld: vld.c
+	gcc -static vld.c -o vld.so
