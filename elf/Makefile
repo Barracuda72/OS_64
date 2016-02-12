@@ -12,7 +12,7 @@ clean:
 	-rm $(OBJS_MAIN) $(OBJS_TEST) elf test.elf
 
 test:	test.c
-	gcc test.c ../libc/crt0.S ../libc/linsys.c -o test.elf -D__HOSTED__ -I../libc -static -nostdlib -nodefaultlibs -ffreestanding -D__POOL_SIZE__=0x1000
+	gcc test.c ../libc/string.c ../libc/hosted.c ../libc/crt0.S ../libc/linsys.S ../libc/kprintf.c -o test.elf -D__HOSTED__ -I../libc -I../kernel -static -nostdlib -nodefaultlibs -ffreestanding -D__POOL_SIZE__=0x1000
 
 test64:	test.c
 	gcc -ffreestanding -nostdinc -nostdlib -nodefaultlibs test.c -I../libc -I../sys ../libc/crt0.S ../libc/string.c ../libc/os64sys.S ../libc/hosted.c ../libc/kprintf.c -o test.elf -I../libc -I../kernel -static -nostdlib -nodefaultlibs -ffreestanding -D__POOL_SIZE__=0x1000
