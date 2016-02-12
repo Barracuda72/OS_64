@@ -24,8 +24,8 @@ _start:
   popq %rsi
  
   # Вызовем main
-  #call main
-  call *(main@GOT)
+  call main
+  #call *(main@GOT)
  
   # Завершим процесс
   mov %rax, %rdi

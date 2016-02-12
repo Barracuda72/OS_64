@@ -32,4 +32,6 @@ int *__errno_location(void);
 #define EMLINK  32
 #define ECHILD  33
 
+#define ELASTNUM ECHILD
+
 #endif // _ERRNO_H

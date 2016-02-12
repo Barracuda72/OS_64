@@ -37,6 +37,6 @@ uintmax_t strtoumax(const char * restrict nptr,
   }
 
   if (endptr != NULL)
-    *endptr = nptr;
+    *endptr = (char *)nptr;
   return res;
 }

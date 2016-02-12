@@ -38,6 +38,6 @@ uintmax_t wcstoumax(const wchar_t * restrict nptr,
   }
 
   if (endptr != NULL)
-    *endptr = nptr;
+    *endptr = (wchar_t *)nptr;
   return res;
 }

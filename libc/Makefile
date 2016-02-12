@@ -36,6 +36,22 @@ STDARG= \
 	stdarg/_va_end.o \
 	stdarg/_va_start.o
 
+STRING= \
+  string/strncmp.o \
+  string/strncpy.o \
+  string/strncat.o \
+  string/strcat.o \
+  string/strxfrm.o \
+  string/memset.o \
+  string/strcmp.o \
+  string/strcpy.o \
+  string/strlen.o \
+  string/memmove.o \
+  string/memcmp.o \
+  string/strcoll.o \
+  string/memcpy.o \
+  string/strerror.o
+
 TIME= \
   time/asctime.o \
 	time/clock.o \
@@ -57,7 +73,7 @@ PLATFORM= \
 	crt0.o
 
 INC=-I. -I./include
-IGN=-D__IGNORE_UNIMPLEMENTED_STDIO
+IGN=-D__IGNORE_UNIMPLEMENTED_STDIO -D__IGNORE_UNIMPLEMENTED_STRING
 
 CPPFLAGS:=-m64 -nostdinc -fPIC ${INC} ${IGN}
 CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -Wextra -std=c11
@@ -72,7 +88,7 @@ RANLIB:=$(PREFIX)ranlib
 NM:=$(PREFIX)nm
 AR:=$(PREFIX)ar
 
-OBJS=$(CTYPE) $(INTTYPES) $(LOCALE) $(SETJMP) $(STDARG) $(TIME) $(UCHAR) $(PLATFORM)
+OBJS=$(CTYPE) $(INTTYPES) $(LOCALE) $(SETJMP) $(STDARG) $(STRING) $(TIME) $(UCHAR) $(PLATFORM)
 
 all: static dynamic
 
@@ -84,7 +100,7 @@ libc.a: $(OBJS)
 	$(AR) rcs $@ $^
 
 libc.so: $(OBJS)
-	$(CC) -shared $^ -o $@
+	$(CC) -shared -nostdlib -nodefaultlibs $^ -o $@
 
 clean:
 	-rm $(OBJS)

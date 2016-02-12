@@ -51,6 +51,11 @@ int islower(int c);
 int isupper(int c);
 
 /*
+ * Проверяет, является ли символ отображаемым
+ */
+int isprint(int c);
+
+/*
  * Проверяет, является ли символ пунктуационным
  */
 int ispunct(int c);
