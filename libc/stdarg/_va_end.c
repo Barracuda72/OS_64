@@ -12,5 +12,6 @@
 
 void _va_end(va_list *ap)
 {
-  *ap = NULL;
+  //TODO: это должно быть исправлено!!!!
+  //*ap = NULL;
 }

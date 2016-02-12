@@ -15,7 +15,7 @@ static const char *deflocale = "C";
 
 char *setlocale(int category, const char *locale)
 {
-  if ((locale == NULL) || (!strncmp(deflocale, locale, 2))
+  if ((locale == NULL) || (!strncmp(deflocale, locale, 2)))
     return deflocale;
   else
     return NULL;

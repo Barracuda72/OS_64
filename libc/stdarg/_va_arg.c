@@ -12,6 +12,7 @@
 void *_va_arg(va_list *ap, int size)
 {
   void *ptr = (void *)*((long *)*ap);
-  (*ap) += 8;//size;
+  // TODO: это должно быть исправлено!!!!
+  //(*ap) += 8;//size;
   return ptr;
 }

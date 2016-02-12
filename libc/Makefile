@@ -27,7 +27,7 @@ LOCALE= \
 	locale/setlocale.o
 
 SETJMP= \
-  setjmp/setjmp.o \
+  setjmp/_setjmp.o \
 	setjmp/longjmp.o
 
 STDARG= \
@@ -53,9 +53,10 @@ UCHAR= \
   uchar/mbrtoc16.o
 
 INC=-I. -I./include
+IGN=-D__IGNORE_UNIMPLEMENTED_STDIO
 
-CPPFLAGS:=-m64 -nostdinc ${INC}
-CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -Wextra -std=c11
+CPPFLAGS:=-m64 -nostdinc ${INC} ${IGN}
+CFLAGS:=${CPPFLAGS} -g -fPIC -ffreestanding -nostdlib -nodefaultlibs -Wall -Wextra -std=c11
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
 
@@ -65,6 +66,7 @@ CC:=$(PREFIX)gcc$(VERSION)
 LD:=$(PREFIX)ld
 RANLIB:=$(PREFIX)ranlib
 NM:=$(PREFIX)nm
+AR:=$(PREFIX)ar
 
 OBJS=$(CTYPE) $(INTTYPES) $(LOCALE) $(SETJMP) $(STDARG) $(TIME) $(UCHAR)
 
@@ -75,8 +77,10 @@ static: libc.a
 dynamic: libc.so
 
 libc.a: $(OBJS)
+	$(AR) rcs $@ $^
 
 libc.so: $(OBJS)
+	$(CC) -shared $^ -o $@
 
 clean:
 	-rm $(OBJS)

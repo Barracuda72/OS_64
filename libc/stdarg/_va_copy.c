@@ -11,5 +11,6 @@
 
 void _va_copy(va_list *dest, va_list *src)
 {
-  *dest = *src;
+  // TODO: Это должно быть исправлено!!!!
+  //*dest = *src;
 }
