@@ -88,7 +88,7 @@ MISC := \
   kernel.lds
 
 PREFIX:=x86_64-pc-linux-gnu-
-VERSION:=-4.9.3
+VERSION:=-4.9.5
 CC:=$(PREFIX)gcc$(VERSION)
 LD:=$(PREFIX)ld
 RANLIB:=$(PREFIX)ranlib

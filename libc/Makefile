@@ -81,7 +81,7 @@ ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
 
 PREFIX:=x86_64-pc-linux-gnu-
-VERSION:=-4.9.3
+VERSION:=-4.9.5
 CC:=$(PREFIX)gcc$(VERSION)
 LD:=$(PREFIX)ld
 RANLIB:=$(PREFIX)ranlib
