@@ -144,7 +144,8 @@ void phys_init(uint64_t *last, uint64_t size,
                (uint64_t) mmap->length);
 */
        for (i = (mmap->base_addr >> 18);
-            i < ((mmap->base_addr + mmap->length) >> 18);
+            (i < ((mmap->base_addr + mmap->length) >> 18)) && 
+            (i < phys_size); // Иногда почему-то base_addr + length превышают объем доступной физической памяти
             i++)
          phys_map[i] = 0L;
     }

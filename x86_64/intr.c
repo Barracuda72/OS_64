@@ -33,7 +33,8 @@
 uint64_t IDT[256*2];
 
 char *IDT_addr;
-char *IDT_reg;
+
+uint64_t IDT_reg[2]; // Используется только 64 + 16 = 80 бит
 
 #define SYS_CODE_SELECTOR 0x8
 #define SYS_IST 1 // Стек для прерываний
@@ -101,7 +102,6 @@ void IDT_load()
 
 void intr_setup()
 {
-  IDT_reg = (char *)((uint64_t)IDT_addr + 256*16);
   uint16_t *table_limit;
   uint64_t *table_address;
   table_limit = (uint16_t *)IDT_reg;
@@ -193,7 +193,6 @@ void intr_init()
 
 void intr_init_ap()
 {
-  IDT_reg = (char *)((uint64_t)IDT_addr + 256*16);
   uint16_t *table_limit;
   uint64_t *table_address;
   table_limit = (uint16_t *)IDT_reg;
