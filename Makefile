@@ -16,7 +16,7 @@ OBJ_PLATFORM:= \
 	x86_64/intr.o \
 	x86_64/gdt.o \
 	x86_64/smp.o \
-	x86_64/mutex.o \
+	x86_64/spinlock.o \
 	x86_64/timer.o \
 	x86_64/apic.o \
 	x86_64/regs.o \
