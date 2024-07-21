@@ -8,7 +8,7 @@
 #include <phys.h>
 #include <page.h>
 #include <multiboot.h>
-#include <mutex.h>
+#include <spinlock.h>
 #include <apic.h>
 
 #include <ata_pio.h>
