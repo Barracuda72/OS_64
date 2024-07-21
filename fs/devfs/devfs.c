@@ -63,7 +63,7 @@ struct dirent *devfs_readdir(vfs_node_t *node, uint64_t index)
     d->inode = nodes[index]->inode;
     return d;
   } else
-    return (struct dirent*)-EINVAL;
+    return (struct dirent*)EINVAL;
 }
 
 vfs_node_t *devfs_finddir(vfs_node_t *node, char *name)
@@ -76,7 +76,7 @@ vfs_node_t *devfs_finddir(vfs_node_t *node, char *name)
       return nodes[i];
   }
 
-  return (vfs_node_t*)-ENOENT;
+  return (vfs_node_t*)ENOENT;
 }
 
 int devfs_add(vfs_node_t *node)

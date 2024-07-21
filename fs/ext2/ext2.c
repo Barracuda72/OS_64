@@ -431,7 +431,7 @@ uint64_t ext2_close(vfs_node_t *node)
 struct dirent *ext2_readdir(vfs_node_t *node, uint64_t index)
 {
   if (node == NULL)
-    return (struct dirent*)-EINVAL;
+    return (struct dirent*)EINVAL;
 
   int i;
 
@@ -473,7 +473,7 @@ struct dirent *ext2_readdir(vfs_node_t *node, uint64_t index)
 vfs_node_t *ext2_finddir(vfs_node_t *node, char *name)
 {
   if (node == NULL)
-    return (vfs_node_t*)-EINVAL;
+    return (vfs_node_t*)EINVAL;
 
   ext2_inode *in = ext2_read_inode(node);
   char *data = ext2_read_inode_data(node, in);

@@ -24,15 +24,18 @@ void fs_print_dir(vfs_node_t *dir)
   int i = 0;
   struct dirent *de = NULL;
   //BREAK();
-  while ((de = vfs_readdir(dir, i)) != EINVAL)
+  do 
   {
-    if (de != EBADF)
+    de = vfs_readdir(dir, i);
+    if (de != EBADF && de != EINVAL && de != NULL)
     {
       kprintf ("Found file %s\n", de->name);
       kfree(de);
+    } else {
+      break;
     }
     i++;
-  }
+  } while (1);
   kprintf("---\n");
 }
 
