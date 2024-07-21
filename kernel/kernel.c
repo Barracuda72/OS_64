@@ -77,8 +77,8 @@ long kernel_run(void)
   serial_init();
   fs_init();
   //BREAK();
-  smp_init();
   task_init();
+  smp_init();
 
   kprintf("Kernel alive, up and running!\n");
 
