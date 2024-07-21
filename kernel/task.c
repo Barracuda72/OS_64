@@ -4,10 +4,12 @@
 #include <mem.h>
 #include <multiboot.h>
 #include <stdint.h>
+#include <string.h>
 #include <intr.h>
 #include <smp.h>
 #include <apic.h>
 #include <fs.h>
+#include <page.h>
 
 #include <debug.h>
 
@@ -53,7 +55,7 @@ void tss_init_cpu(uint8_t id)
 {
   uint16_t s = 0;  // Селектор задачи ядра
 
-  s = GDT_smartaput(&IntrTss[id], sizeof(TSS64), SEG_PRESENT | SEG_TSS64 | SEG_DPL3);
+  s = GDT_smartaput((uint64_t)&IntrTss[id], sizeof(TSS64), SEG_PRESENT | SEG_TSS64 | SEG_DPL3);
   s = CALC_SELECTOR(s, SEG_GDT | SEG_RPL3);
   
   //BREAK();
@@ -74,8 +76,8 @@ void task_init()
   zeromem(&(curr[0]->r), sizeof(all_regs));
   curr[0]->next = curr[0]; // Закольцовываем
   curr[0]->state = TASK_RUNNING;
-  alloc_pages_user(TLS_ADDR, sizeof(thread_ls));
-  curr[0]->tls = TLS_ADDR;
+  alloc_pages_user((thread_ls*)TLS_ADDR, sizeof(thread_ls));
+  curr[0]->tls = (thread_ls*)TLS_ADDR;
 
   int i;
   for (i = 0; i < MAX_OPEN_FILES; i++)
@@ -90,8 +92,8 @@ void task_init_cpu(uint8_t id)
   curr[id]->pid = next_pid++;
   zeromem(&(curr[id]->r), sizeof(all_regs));
   curr[id]->state = TASK_RUNNING;
-  alloc_pages_user(TLS_ADDR, sizeof(thread_ls));
-  curr[id]->tls = TLS_ADDR;
+  alloc_pages_user((thread_ls*)TLS_ADDR, sizeof(thread_ls));
+  curr[id]->tls = (thread_ls*)TLS_ADDR;
   task *tmp = curr[0]->next;
   curr[0]->next = curr[id]; // Закольцовываем
   curr[id]->next = tmp;
@@ -114,7 +116,7 @@ uint64_t copy_stack()
   uint64_t stack_old = kernel_stack_new; //&stack;
   uint64_t stack_end = (uint64_t) stack_old + STACK_SIZE;
   uint64_t *new_stack = kmalloc(STACK_SIZE);
-  memcpy(new_stack, stack_old, STACK_SIZE);
+  memcpy(new_stack, (const void*)stack_old, STACK_SIZE);
   uint64_t offset = (uint64_t)new_stack - (uint64_t)stack_old;
   uint64_t i;
   for (i = 0; i < STACK_SIZE; i++)
@@ -204,13 +206,13 @@ int task_fork()
   intr_disable();
   
   off = copy_stack();
-  cr3 = copy_pages();
+  cr3 = (uint64_t)copy_pages();
 
   // Родительская задача - готовим все
   task *new = kmalloc(sizeof(task));
   new->pid = next_pid++;
   //BREAK();
-  rip = read_rip(cr3, off, (((uint64_t)&(new->r)) + sizeof(all_regs)));
+  rip = read_rip(cr3, off, (all_regs*)(((uint64_t)&(new->r)) + sizeof(all_regs)));
   if (rip == 0)
     return 0; // Дочерняя задача
 
@@ -241,9 +243,9 @@ uint64_t task_switch(all_regs *r)
       } while(curr[id]->state != TASK_ACTIVE);
     }
     // Стек, с которого будем восстанавливать регистры
-    return &(curr[id]->r);
+    return (uint64_t)&(curr[id]->r);
   }
-  return r;
+  return (uint64_t)r;
 }
 /*
 void get_c()

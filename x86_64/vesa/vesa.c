@@ -6,6 +6,7 @@
  */
 
 #include <page.h>
+#include <mem.h>
 #include <vesa/vesa.h>
 #include <vesa/font.h>
 #include <string.h>
@@ -47,7 +48,9 @@ void putpixel(int x, int y)
   uint16_t *fb16;
   uint32_t *fb32;
 
-  fb8 = fb16 = fb32 = VESA_FB_ADDR;
+  fb8 = VESA_FB_ADDR;
+  fb16 = VESA_FB_ADDR;
+  fb32 = VESA_FB_ADDR;
 
   switch (vesa_bpp)
   {

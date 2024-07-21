@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 // Не определен стандартом
 typedef unsigned long off_t;
@@ -211,7 +212,7 @@ char *ext2_read_inode_data_ex(vfs_node_t *node, ext2_inode *in, off_t offset, si
   if ((size > 0) && (offset < bytes_in_sibp))
   {
     uint32_t *sibp = kmalloc(BLKSZ(super));
-    ext2_read_block_data(node, in->s_indirect, 0, BLKSZ(super), sibp);
+    ext2_read_block_data(node, in->s_indirect, 0, BLKSZ(super), (void*)sibp);
 
     sz = (offset + size) > bytes_in_sibp ? (bytes_in_sibp - offset) : size;
     ext2_read_block_chain(node, sibp, offset, sz, ptr);
@@ -229,7 +230,7 @@ char *ext2_read_inode_data_ex(vfs_node_t *node, ext2_inode *in, off_t offset, si
   {
     uint32_t *sibp = kmalloc(BLKSZ(super));
     uint32_t *dibp = kmalloc(BLKSZ(super));
-    ext2_read_block_data(node, in->d_indirect, 0, BLKSZ(super), dibp);
+    ext2_read_block_data(node, in->d_indirect, 0, BLKSZ(super), (void*)dibp);
 
     // Ищем SIBP, с которого начнется чтение
     for (i = 0; i < ptrs_in_block && offset > bytes_in_sibp; i++)
@@ -240,7 +241,7 @@ char *ext2_read_inode_data_ex(vfs_node_t *node, ext2_inode *in, off_t offset, si
     while (sz > 0)
     {
       int sz2 = (offset + sz) > bytes_in_sibp ? (bytes_in_sibp - offset) : sz;
-      ext2_read_block_data(node, dibp[i], 0, BLKSZ(super), sibp);
+      ext2_read_block_data(node, dibp[i], 0, BLKSZ(super), (void*)sibp);
       ext2_read_block_chain(node, sibp, offset, sz2, ptr);
       sz -= sz2;
       size -= sz2;
@@ -430,7 +431,7 @@ uint64_t ext2_close(vfs_node_t *node)
 struct dirent *ext2_readdir(vfs_node_t *node, uint64_t index)
 {
   if (node == NULL)
-    return EINVAL;
+    return (struct dirent*)-EINVAL;
 
   int i;
 
@@ -472,7 +473,7 @@ struct dirent *ext2_readdir(vfs_node_t *node, uint64_t index)
 vfs_node_t *ext2_finddir(vfs_node_t *node, char *name)
 {
   if (node == NULL)
-    return EINVAL;
+    return (vfs_node_t*)-EINVAL;
 
   ext2_inode *in = ext2_read_inode(node);
   char *data = ext2_read_inode_data(node, in);

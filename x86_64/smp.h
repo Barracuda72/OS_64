@@ -14,7 +14,7 @@
 #define SMP_CONFIG_MAGIC 0x504D4350  // "PCMP"
 
 // Структура SMP
-typedef struct
+typedef struct __attribute((packed))
 {
   uint32_t magic;    // "_MP_"
   uint32_t config;    // Указатель на структуру, описывающую систему
@@ -25,7 +25,7 @@ typedef struct
 } SMP;
 
 // Структура конфигурации
-typedef struct
+typedef struct __attribute((packed))
 {
   uint32_t magic;    // "PCMP"
   uint16_t lenght;    // Размер структуры
@@ -39,10 +39,10 @@ typedef struct
   uint32_t lapic_addr;  // Адрес локального APIC
   uint16_t e_lenght;  // Размер расширенной таблицы
   uint8_t e_chksum;    // Контрольная сумма для расширенной таблицы, если таблицы нет - 0
-} SMP_config __attribute((packed));
+} SMP_config;
 
 // Описание процессора
-typedef struct
+typedef struct __attribute((packed))
 {
   uint8_t type;    // Всегда 0 - это процессор
   uint8_t apic_id;    // Local APIC ID
@@ -53,28 +53,28 @@ typedef struct
   uint32_t cpu_sig;    // Сигнатура процессора (как по CPUID)
   uint32_t cpu_features;  // Возможности процессора (как по CPUID)
   uint32_t reserved2;    // Дополним до 20 байт
-} SMP_proc __attribute((packed));
+} SMP_proc;
 
 // Описание шины
-typedef struct
+typedef struct __attribute((packed))
 {
   uint8_t type; // 1 - Шина
   uint8_t id;
   uint8_t name[6];
-} SMP_bus __attribute((packed));
+} SMP_bus;
 
 // Описание IO APIC
-typedef struct
+typedef struct __attribute((packed))
 {
   uint8_t type; // 2 - IO APIC
   uint8_t apic_id;
   uint8_t apic_version;
   uint8_t flags;
   uint32_t address;  
-} SMP_ioapic __attribute((packed));
+} SMP_ioapic;
 
 // Описание источника прерываний
-typedef struct
+typedef struct __attribute((packed))
 {
   uint8_t type; // 3 - источник прерываний
   uint8_t irq_type;
@@ -83,15 +83,15 @@ typedef struct
   uint8_t src_bus_irq;
   uint8_t dst_apic;
   uint8_t dst_irq;
-} SMP_intrsrc __attribute((packed));
+} SMP_intrsrc;
 
-enum
+enum SMP_ENT
 {
   SMP_PROCESSOR = 0,
   SMP_BUS,
   SMP_IOAPIC,
   SMP_INTRSRC
-} SMP_ENT;
+};
 
 // Инициализация SMP
 void smp_init(void);

@@ -5,6 +5,7 @@
 #include <intr.h>
 #include <page.h>
 #include <smp.h>
+#include <kprintf.h>
 
 #include <debug.h>
 
@@ -79,7 +80,7 @@ void apic_init(uint32_t lapic_a)
   // ядра отображено ПЗУ BIOS. Зачем оно нам?
   lapic_addr = APIC_LAPIC_ADDR;
   lapic_hw_addr = lapic_a;
-  mount_page_hw(lapic_a, lapic_addr);
+  mount_page_hw((void*)lapic_a, lapic_addr);
   // Установим прерывания
   //ext_intr_install(0x20, apic_tmr_isr);
   ext_intr_install(0x27, apic_spur_isr);
@@ -157,7 +158,7 @@ void apic_init(uint32_t lapic_a)
 
 void apic_init_ap()
 {
-  mount_page_hw(lapic_hw_addr, lapic_addr);
+  mount_page_hw((void*)lapic_hw_addr, lapic_addr);
 
   lapic_addr[APIC_DFR] = 0xFFFFFFFF;
   lapic_addr[APIC_LDR] = (lapic_addr[APIC_LDR]&0x00FFFFFF)|1;
@@ -215,7 +216,7 @@ void apic_enable()
 void ioapic_init(uint32_t ioapic_phys)
 {
   ioapic_addr = APIC_IOAPIC_ADDR;
-  mount_page_hw(ioapic_phys, ioapic_addr);
+  mount_page_hw((void*)ioapic_phys, ioapic_addr);
 
   // Маскируем IRQ0 (это PIC)
   ioapic_write(0x10, 0x10000);

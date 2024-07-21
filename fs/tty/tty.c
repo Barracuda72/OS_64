@@ -5,8 +5,10 @@
 
 #include <vfs.h>
 #include <tty.h>
+#include <ktty.h>
 
 #include <stddef.h>
+#include <string.h>
 
 vfs_driver_t tty_drv = {
   tty_read,

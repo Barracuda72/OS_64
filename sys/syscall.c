@@ -1,5 +1,6 @@
 #include <syscall.h>
 #include <stdint.h>
+#include <kprintf.h>
 
 void test_out(char *, uint64_t);
 

@@ -29,7 +29,7 @@ void ap_init(uint8_t apic_id);
  * Регистры APIC
  * >>2, поскольку используются как индексы в массиве lapic_addr
  */
-enum
+enum APIC_REGS
 {
   APIC_APICID           = 0x020>>2,
   APIC_APICVER          = 0x030>>2,
@@ -50,7 +50,7 @@ enum
   APIC_LAST             = 0x38F>>2,
   APIC_TMRCURRCNT       = 0x390>>2,
   APIC_TMRDIV           = 0x3E0>>2,
-} APIC_REGS;
+};
 /*
 Local APIC Register Addresses 
 Offset  Register Name  Software Read/Write
@@ -95,8 +95,8 @@ Offset  Register Name  Software Read/Write
 #define TMR_PERIODIC   0x20000
 #define TMR_BASEDIV    (1<<20)
 
-#define APIC_LAPIC_ADDR 0xFFFFFFFFC00F0000
-#define APIC_IOAPIC_ADDR 0xFFFFFFFFC00F1000
+#define APIC_LAPIC_ADDR ((void*)0xFFFFFFFFC00F0000)
+#define APIC_IOAPIC_ADDR ((void*)0xFFFFFFFFC00F1000)
 
 #define IOAPIC_REGSEL 0x00>>2
 #define IOAPIC_REGWIN 0x10>>2

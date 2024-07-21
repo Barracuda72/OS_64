@@ -36,7 +36,7 @@ void _page_fault(uint64_t addr, all_regs *r)
       (!(r->reg1&PF_PRESENT) && !(r->reg1&PF_USER)))
   {
     //kprintf("Kernel heap fault, recovering...\n");
-    mount_page(alloc_phys_page(), addr&0xFFFFFFFFFFFFF000L);
+    mount_page(alloc_phys_page(), (void*)(addr&0xFFFFFFFFFFFFF000L));
     //BREAK();
     return;
   }
@@ -56,7 +56,7 @@ void _page_fault(uint64_t addr, all_regs *r)
   );
 
   kprintf("Stack unwind:\n");
-  uint64_t *stacktop = r->i.rsp;
+  uint64_t *stacktop = (uint64_t*)(r->i.rsp);
   int32_t i;
   for(i = -5; i < 5; i++)
     kprintf("%c0x%x: 0x%l\n", SIGN(i), ABS(i)<<3, stacktop[i]);

@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 // Логический адрес начала буфера кадров
-#define VESA_FB_ADDR 0xFFFFFFFFB0000000
+#define VESA_FB_ADDR ((void*)0xFFFFFFFFB0000000)
 
 #pragma pack(1)
 typedef struct __attribute__((packed))

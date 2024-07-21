@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 #include <page.h>
 #include <multiboot.h>
 #include <intr.h>
@@ -209,6 +211,7 @@ void mount_page_hw(void *phys, void *log)
 
 void *umount_page(void *log_addr)
 {
+  void* ret = NULL;
   //kprintf("Unmounting 0x%l...", log_addr);
   linear addr;
   addr.h = (uint64_t)log_addr;
@@ -223,7 +226,7 @@ void *umount_page(void *log_addr)
   // Если необходимый каталог не существует
   if(_p.h == 0)
   {
-    return;
+    return ret;
   }
 
   // Монтируем в пространство ядра PDP
@@ -232,7 +235,7 @@ void *umount_page(void *log_addr)
   umount_page_t();
   if(_p.h == 0)
   { 
-    return;
+    return ret;
   }
 
   // PD
@@ -241,13 +244,13 @@ void *umount_page(void *log_addr)
   umount_page_t();
   if(_p.h == 0)
   { 
-    return;
+    return ret;
   }
 
   // PT
   mount_page_t((void *)(_p.h&0xFFFFFFFFFFFFF000));
 
-  void *ret = p[addr.l.pt].h;
+  ret = (void*)(p[addr.l.pt].h);
   p[addr.l.pt].h = p[addr.l.pt].h&0xFFFFFFFFFFFFFFFE;
 
   umount_page_t();
@@ -258,7 +261,7 @@ void *umount_page(void *log_addr)
 
 void read_page(void *phys_addr, void *buf)
 {
-  volatile void *tmp = TMP_MOUNT_ADDR;
+  volatile void *tmp = (void*)TMP_MOUNT_ADDR;
 
   mount_page_t(phys_addr);
   memcpy(buf, tmp, 4096);
@@ -267,7 +270,7 @@ void read_page(void *phys_addr, void *buf)
 
 void write_page(void *phys_addr, void *buf)
 {
-  volatile void *tmp = TMP_MOUNT_ADDR;
+  volatile void *tmp = (void*)TMP_MOUNT_ADDR;
 
   mount_page_t(phys_addr);
   memcpy(tmp, buf, 4096);
@@ -318,7 +321,7 @@ void *copy_page(void *phys_addr, int k)
 	else
         {
           buf[i].h = (buf[i].h&0x1F)
-                     |(uint64_t)(copy_page(addr, k-1));
+                     |(uint64_t)(copy_page((void*)addr, k-1));
         }
       }
     }
@@ -342,7 +345,7 @@ void *copy_pages()
 
   uint64_t cr3;
   asm("mov %%cr3, %0\n":"=r"(cr3));
-  return copy_page(cr3, 4);
+  return copy_page((void*)cr3, 4);
 }
 
 /*
@@ -448,7 +451,7 @@ void page_init(uint64_t *last_phys_page)
          mov %0, %%cr3"
   ::"r"((uint64_t)PML4):"rax");  //Загрузим PML4
   */
-  cr3_load(PML4);
+  cr3_load((uint64_t)PML4);
   //BREAK();
   intr_enable();
 
@@ -461,10 +464,10 @@ void page_init_ap()
 {
   // Сначала просто загрузим PML4
   intr_disable();  //Отключим прерывания
-  cr3_load(PML4);
+  cr3_load((uint64_t)PML4);
   // Теперь создадим свою на ее основе
 
-  volatile uint64_t *addr = TMP_MOUNT_ADDR;
+  volatile uint64_t *addr = (void*)TMP_MOUNT_ADDR;
 
   uint64_t *pml4 = alloc_phys_page();
   uint64_t *pdp = alloc_phys_page();
@@ -482,11 +485,11 @@ void page_init_ap()
 
   mount_page_t(pd);
   zeromem(addr, 4096);
-  addr[0] = calc_page(((uint64_t)kernel_pt)&0x0FFFFFFF).h;
+  addr[0] = calc_page((void*)(((uint64_t)kernel_pt)&0x0FFFFFFF)).h;
   umount_page_t();
 
   // Загрузим окончательный вариант PML4
-  cr3_load(pml4);
+  cr3_load((uint64_t)pml4);
 
   intr_enable(); 
 }

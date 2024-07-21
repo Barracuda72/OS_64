@@ -82,7 +82,7 @@ typedef struct __attribute__((packed))
   uint32_t size;    // Размер файла
 } fat32_direntry;
 
-enum
+enum FAT32_ATTRIBUTES
 {
   FAT32_DIREND    = 0x00,  // Конец каталога
   FAT32_READONLY  = 0x01,  // Только чтение
@@ -93,7 +93,7 @@ enum
   FAT32_DIRECTORY = 0x10,  // Каталог
   FAT32_ARCHIVE   = 0x20,  // Архивный
   FAT32_DELETED   = 0xE5,  // Файл удален
-} FAT32_ATTRIBUTES;
+};
 
 vfs_node_t *fat32_init(vfs_node_t *node);
 int fat32_fini(vfs_node_t *node);

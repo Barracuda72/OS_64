@@ -2,6 +2,11 @@
 #include <stdint.h>
 #include <multiboot.h>
 
+#include <phys.h>
+#include <page.h>
+
+#include <kprintf.h>
+
 #include <debug.h>
 
 kmem_header *kernel_heap;
@@ -34,23 +39,23 @@ void *kmalloc(uint64_t size)
     return 0;
 
   kmem_header *head = kernel_heap;
-  while ((head < ((uint64_t)kernel_heap + kernel_hlim)) && 
+  while (((uint64_t)head < ((uint64_t)kernel_heap + kernel_hlim)) && 
     ((head->size < size) || !(head->free)))
   {
     //kprintf("MM: chunk %l, s %d - %d\n", 
     //  head, head->size, head->free);
-    head = (uint64_t)head + head->size + sizeof(kmem_header);
+    head = (kmem_header*)((uint64_t)head + head->size + sizeof(kmem_header));
   }
 
   // Если кончилась память
-  if (head >= ((uint64_t)kernel_heap + kernel_hlim))
+  if ((uint64_t)head >= ((uint64_t)kernel_heap + kernel_hlim))
     return 0;
   //BREAK();
   //kprintf("H: %l\n", head);
   // Если фрагмент можно и нужно разбить на два
   if (head->size > (size + sizeof(kmem_header)))
   {
-    kmem_header *next = (uint64_t)head + size + sizeof(kmem_header);
+    kmem_header *next = (kmem_header*)((uint64_t)head + size + sizeof(kmem_header));
     next->size = head->size - size - sizeof(kmem_header);
     next->free = 1;
     next->magic = KMEM_MAGIC;
@@ -59,15 +64,14 @@ void *kmalloc(uint64_t size)
     if (((uint64_t)head + head->size) < 
     ((uint64_t)kernel_heap + kernel_hlim))
     {
-      kmem_header *wnext = (uint64_t)head 
-        + head->size + sizeof(kmem_header);
+      kmem_header *wnext = (kmem_header*)((uint64_t)head + head->size + sizeof(kmem_header));
       wnext -> prev = next;
     }
 
     head -> size = size;
   }
   head -> free = 0;
-  return (uint64_t)head + sizeof(kmem_header);
+  return (void*)((uint64_t)head + sizeof(kmem_header));
 }
 
 void kfree(void *p)
@@ -85,7 +89,7 @@ void kfree(void *p)
    * памяти под временные буфера - большей частью они будут оставаться
    * на протяжении всего выполнения программы.
    */
-  kmem_header *ptr = (uint64_t)p - sizeof(kmem_header);
+  kmem_header *ptr = (kmem_header*)((uint64_t)p - sizeof(kmem_header));
   ptr->free = 1;
   kmem_header *prev = ptr->prev;
   if ((prev != 0) && (prev->magic == KMEM_MAGIC) && (prev->free == 1))
@@ -98,7 +102,7 @@ void kfree(void *p)
     ptr = prev;
   }
 
-  kmem_header *next = (uint64_t)ptr + ptr->size + sizeof(kmem_header);
+  kmem_header *next = (kmem_header*)((uint64_t)ptr + ptr->size + sizeof(kmem_header));
   if ((next != 0) &&
       ((uint64_t)next < (uint64_t)kernel_heap + kernel_hlim) 
       && (next->magic == KMEM_MAGIC) && (next->free == 1))
@@ -107,7 +111,7 @@ void kfree(void *p)
       next->magic = 0;
       next->size = 0;
       next->prev = 0;
-      next = (uint64_t)ptr + ptr->size + sizeof(kmem_header);
+      next = (kmem_header*)((uint64_t)ptr + ptr->size + sizeof(kmem_header));
   }
 
   if ((next != 0) &&

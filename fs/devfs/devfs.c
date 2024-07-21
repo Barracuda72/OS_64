@@ -11,6 +11,7 @@
 #include <ext2.h>
 
 #include <stddef.h>
+#include <string.h>
 
 #define MAXNODES 100
 
@@ -62,7 +63,7 @@ struct dirent *devfs_readdir(vfs_node_t *node, uint64_t index)
     d->inode = nodes[index]->inode;
     return d;
   } else
-    return EINVAL;
+    return (struct dirent*)-EINVAL;
 }
 
 vfs_node_t *devfs_finddir(vfs_node_t *node, char *name)
@@ -75,7 +76,7 @@ vfs_node_t *devfs_finddir(vfs_node_t *node, char *name)
       return nodes[i];
   }
 
-  return ENOENT;
+  return (vfs_node_t*)-ENOENT;
 }
 
 int devfs_add(vfs_node_t *node)

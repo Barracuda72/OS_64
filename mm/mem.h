@@ -18,7 +18,7 @@
  */
 #pragma pack(1)
 // Заголовок кусочка памяти в куче
-typedef struct __attribute((packed))
+typedef struct __attribute((packed)) _kmem_header
 {
   uint32_t magic;  // Магическое число
   uint32_t size : 31;  // Размер кусочка

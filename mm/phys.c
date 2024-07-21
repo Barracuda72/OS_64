@@ -2,6 +2,8 @@
 #include <phys.h>
 #include <page.h>
 
+#include <kprintf.h>
+
 #include <debug.h>
 
 /*
@@ -105,7 +107,7 @@ void phys_init(uint64_t *last, uint64_t size,
   int sz;
   for (sz = 0; sz < size; sz += 128)
   {
-    mount_page(*last, 0xFFFFFFFFC0000000|(*last));
+    mount_page((void*)(*last), (void*)(0xFFFFFFFFC0000000|(*last)));
     *last += 0x1000;
   }
   // Помечаем всю карту как занятую, за исключением явно указанных
@@ -116,10 +118,10 @@ void phys_init(uint64_t *last, uint64_t size,
           phys_map[i] = 0xFFFFFFFFFFFFFFFFL;
 
   // Сверхопасный трюк - выдергивание себя самое за шнурки!
-  mount_page(mb, 0xFFFFFFFFC0000000|(uint64_t)mb);
+  mount_page(mb, (void*)(0xFFFFFFFFC0000000|(uint64_t)mb));
   mb = (multiboot_info_t *)(0xFFFFFFFFC0000000|(uint64_t)mb);
   mmap_info_t *mmap = (mmap_info_t *) (mb->mmap_addr);
-  mount_page(mmap, 0xFFFFFFFFC0000000|(uint64_t)mmap);
+  mount_page(mmap, (void*)(0xFFFFFFFFC0000000|(uint64_t)mmap));
   mmap = (mmap_info_t *)(0xFFFFFFFFC0000000|(uint64_t)mmap);
 
   //BREAK();
@@ -147,7 +149,7 @@ void phys_init(uint64_t *last, uint64_t size,
          phys_map[i] = 0L;
     }
   umount_page(mb);
-  umount_page(0xFFFFFFFFC0000000|(uint64_t)(mb->mmap_addr));
+  umount_page((void*)(0xFFFFFFFFC0000000|(uint64_t)(mb->mmap_addr)));
   kprintf("Init phys mem map complete - %dMB\n", size);
 }
 

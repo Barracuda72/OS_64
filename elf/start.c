@@ -3,8 +3,13 @@
 #include <task.h>
 #include <smp.h>
 #include <apic.h>
+#include <ktty.h>
+#include <intr.h>
+#include <page.h>
+#include <mem.h>
 
 #include <stddef.h>
+#include <string.h>
 
 #include <debug.h>
 
@@ -86,9 +91,9 @@ int start_process(void *buffer)
     intr_disable();
     curr[id]->state = TASK_STARTING;
     memset(&(curr[id]->r.c), 0, sizeof(comm_regs));
-    curr[id]->r.i.rip = entry;
+    curr[id]->r.i.rip = (uint64_t)entry;
     curr[id]->r.i.cs = CALC_SELECTOR(3, SEG_GDT | SEG_RPL3);
-    alloc_pages_user(0x100000000, 0x2000);
+    alloc_pages_user((void*)0x100000000, 0x2000);
     curr[id]->r.i.rsp = 0x100001FF0;
     curr[id]->r.i.ss = CALC_SELECTOR(4, SEG_GDT | SEG_RPL3);
 

@@ -2,6 +2,7 @@
 #include <kprintf.h>
 #include <ktty.h>
 #include <stdint.h>
+#include <string.h>
 #include <page.h>
 #include <apic.h>
 
@@ -18,7 +19,7 @@ void smp_init(void)
 /*
  * Попытка прочитать SMP
  */
-  uint32_t *addr = 0xFFFFFFFFC0000000;  // По этому адресу отображен первый мегабайт памяти
+  uint32_t *addr = (uint32_t*)0xFFFFFFFFC0000000;  // По этому адресу отображен первый мегабайт памяти
   int i;
   uint8_t found = 0;
 /*
@@ -30,7 +31,7 @@ void smp_init(void)
  * Посему проверим только варианты 2 и 3
  */
   // Подключим страницу, ее нет в адресном пространстве адра
-  mount_page(0x9F000, 0xFFFFFFFFC009F000);
+  mount_page((void*)0x9F000, (void*)0xFFFFFFFFC009F000);
   for(i = (0x9FC00>>2); i < (0xA0000>>2); i++)
     if(addr[i] == SMP_MAGIC)
     {
@@ -123,6 +124,6 @@ void smp_init(void)
     }
   }
   // Отмонтируем
-  umount_page(0xFFFFFFFFC009F000);
+  umount_page((void*)0xFFFFFFFFC009F000);
 }
 

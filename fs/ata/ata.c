@@ -1,10 +1,12 @@
 #include <vfs.h>
 #include <ata.h>
+#include <ata_pio.h>
 #include <mem.h>
 #include <kprintf.h>
 #include <errno.h>
 
 #include <stddef.h>
+#include <string.h>
 
 /*
  * Драйвер ATA VFS

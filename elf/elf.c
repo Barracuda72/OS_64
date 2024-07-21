@@ -5,6 +5,8 @@
 
 #include <elf.h>
 
+#include <ktty.h>
+#include <page.h>
 #include <debug.h>
 
 /*
@@ -186,7 +188,7 @@ int elf64_do_rela(Elf64_Ehdr *hdr, Elf64_Rela *rel, Elf64_Shdr *reltab)
     ref = (long *)(addr + rel->r_offset);
   else // ET_EXEC
     // TODO!!!!
-    ref = rel->r_offset;
+    ref = (long *)rel->r_offset;
   // Выбор явного или неявного значения корректировки
   long addend = 0;
   if (reltab->sh_type == SHT_REL)
@@ -230,7 +232,7 @@ int elf64_do_rela(Elf64_Ehdr *hdr, Elf64_Rela *rel, Elf64_Shdr *reltab)
     case R_X86_64_IRELATIVE:
       // Значение функции, лежащей по адресу = символ + базовый адрес
       //irela = DO_AMD64_RELATIVE(elf64_get_baseaddr(hdr), addend);
-      irela = addend;
+      irela = (long (*)())addend;
       *ref = irela();
       break;
 
@@ -340,14 +342,14 @@ int elf64_load_stage3(Elf64_Ehdr *hdr)
       remap_pages(addr, segment->p_vaddr & (~0xFFF), segment->p_memsz + tail);
 #else
       //BREAK();
-      alloc_pages_user(segment->p_vaddr & (~0xFFF), segment->p_memsz + tail);
+      alloc_pages_user((void*)(segment->p_vaddr & (~0xFFF)), segment->p_memsz + tail);
 #endif
       // Теперь нас интересует только виртуальный адрес
-      addr = segment->p_vaddr;
+      addr = (char*)segment->p_vaddr;
       // Забъем нулями весь сегмент
       memset(addr, 0, segment->p_memsz);
       // Скопируем туда данные из файла
-      memcpy(addr, (long)hdr + segment->p_offset, segment->p_filesz);
+      memcpy(addr, (const void*)((long)hdr + segment->p_offset), segment->p_filesz);
     }
   }
 
