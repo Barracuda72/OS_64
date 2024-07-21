@@ -5,7 +5,7 @@ INCLUDES:=-I. -I./mm -I./x86_64 -I./kernel \
 	-I./fs/devfs -I./fs/ext2 -I./fs/fat32 -I./fs/tty \
 	-I./libc -I./elf -I./sys -I./fs -I./libc/include
 CPPFLAGS:=-m64 -nostdinc ${INCLUDES}
-CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -mcmodel=kernel -mno-red-zone -Wconversion -std=gnu11 -D__IGNORE_UNIMPLEMENTED_STRING
+CFLAGS:=${CPPFLAGS} -g -ffreestanding -nostdlib -nodefaultlibs -Wall -fno-pie -mcmodel=kernel -mno-red-zone -Wconversion -std=gnu11 -D__IGNORE_UNIMPLEMENTED_STRING
 ASFLAGS:=${CPPFLAGS} -Wa,--64 -Wa,-g
 #ASFLAGS:= --64 -g
 LDFLAGS:=-z max-page-size=0x1000 -m elf_x86_64
@@ -88,7 +88,7 @@ MISC := \
   kernel.lds
 
 PREFIX:=x86_64-pc-linux-gnu-
-VERSION:=-4.9.5
+VERSION:=-14
 CC:=$(PREFIX)gcc$(VERSION)
 LD:=$(PREFIX)ld
 RANLIB:=$(PREFIX)ranlib
@@ -132,41 +132,33 @@ disk.img:
 
 disk.img.grub2:
 	@echo "BXImage..."
-	@bximage -hd -mode=flat -size=100 -q $@
+	@bximage -func=create -imgmode=flat -hd=100M -q $@
 	@echo "FDisk..."
 	@echo -e "o\nn\np\n1\n\n\nt\n83\na\n1\nw\n" | /sbin/fdisk -u -C203 -S63 -H16 $@ 2> /dev/null > /dev/null
-	@mkdir -p mnt
 	@sudo losetup /dev/loop0 $@
-	@echo "0 `ls -l $@ | cut -d' ' -f5 | awk '{print $$1/512}'` linear `ls -l /dev/loop0 | cut -d' ' -f5,6 |  sed 's/, /:/g'` 0" | sudo dmsetup create sdz
-	@sudo partprobe
-	@sudo mkfs.ext2 /dev/mapper/sdz1
-	@sudo mount -t ext2 /dev/mapper/sdz1 mnt
-	@sudo mkdir mnt/boot/grub -p
-	@echo "(hd9) /dev/mapper/sdz\n(hd9,1) /dev/mapper/sdz1" | sudo tee mnt/boot/grub/device.map
-	@sudo grub-install --force --root-directory=mnt "(hd9)"
-	@echo "menuentry 'MyOS' {\nmultiboot /boot.elf\n}" | sudo tee mnt/boot/grub/grub.cfg
-	@sudo umount mnt
-	@sudo kpartx -d /dev/mapper/sdz
-	@sudo dmsetup remove sdz
+	@sudo losetup /dev/loop1 $@ -o 1048576
+	@sudo mkfs.ext2 /dev/loop1
+	@sudo mount -t ext2 /dev/loop1 /mnt
+	@sudo mkdir /mnt/boot/grub -p
+	@sudo grub-install --root-directory=/mnt --no-floppy --modules="normal part_msdos ext2 multiboot biosdisk" /dev/loop0
+	@echo "menuentry 'MyOS' { multiboot /boot.elf }" | sudo tee /mnt/boot/grub/grub.cfg
+	@sudo umount /mnt
+	@sudo losetup -d /dev/loop1
 	@sudo losetup -d /dev/loop0
-	@rmdir mnt
 #	@rm disk.img
 
 du:
-	@sudo umount mnt
+	@sudo umount /mnt
 	@sudo kpartx -d /dev/mapper/sdz
 	@sudo dmsetup remove sdz
 	@sudo losetup -d /dev/loop0
-	@sudo rmdir mnt
 
 cp: $(TARGET)
-	@mkdir -p mnt
-	@sudo mount -o loop,offset=1048576 disk.img mnt
-	@sudo cp boot.elf mnt
-	@sudo cp elf/test.elf mnt
+	@sudo mount -o loop,offset=1048576 disk.img /mnt
+	@sudo cp boot.elf /mnt
+	@sudo cp elf/test.elf /mnt
 	@sync
-	@sudo umount mnt
-	@rmdir mnt
+	@sudo umount /mnt
 
 dist:
 	@export CD="`echo ${PWD} | sed -e 's|.*/||'`"
