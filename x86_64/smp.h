@@ -39,6 +39,7 @@ typedef struct __attribute((packed))
   uint32_t lapic_addr;  // Адрес локального APIC
   uint16_t e_lenght;  // Размер расширенной таблицы
   uint8_t e_chksum;    // Контрольная сумма для расширенной таблицы, если таблицы нет - 0
+  uint8_t reserved;
 } SMP_config;
 
 // Описание процессора
